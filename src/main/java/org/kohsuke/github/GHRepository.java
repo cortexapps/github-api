@@ -3139,19 +3139,23 @@ public class GHRepository extends GHObject {
     }
 
     /**
-     * Set the topics for this repository. See
-     * https://developer.github.com/v3/repos/#replace-all-topics-for-a-repository
+     * Set/Update a repository secret
+     * "https://docs.github.com/rest/reference/actions#create-or-update-a-repository-secret"
      *
      * @param secretName
      *            the name of the secret
+     * @param encryptedValue
+     *            The encrypted value for this secret
+     * @param publicKeyId
+     *             The id of the Public Key used to encrypt this secret
      * @throws IOException
      *             the io exception
      */
-    public void createSecret(String secretName, String encryptedValue, String pbKeyId) throws IOException {
+    public void createSecret(String secretName, String encryptedValue, String publicKeyId) throws IOException {
         root.createRequest()
                 .method("PUT")
                 .with("encrypted_value", encryptedValue)
-                .with("key_id", pbKeyId)
+                .with("key_id", publicKeyId)
                 .withUrlPath(getApiTailUrl("actions/secrets") + "/" + secretName)
                 .send();
     }
