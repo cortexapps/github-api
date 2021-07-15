@@ -1,16 +1,32 @@
-# Description
+## Change description
 
-<!-- Describe your change here -->
+> Description here
 
-# Before submitting a PR:
-We love getting PRs, but we hate asking people for the same basic changes every time.
+## Type of change
+- [ ] Bug fix (fixes an issue)
+- [ ] New feature (adds functionality)
+- [ ] Improvement (improves codebase without changing functionality)
 
-- [ ] Push your changes to a branch other than `main`. Create your PR from that branch.
-- [ ] Add JavaDocs and other comments
-- [ ] Write tests that run and pass in CI. See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to capture snapshot data.
-- [ ] Run `mvn -D enable-ci clean install site` locally. If this command doesn't succeed, your change will not pass CI.
+## Related issues
 
-# When creating a PR: 
+> Fix [#1]() 
 
-- [ ] Fill in the "Description" above.
-- [ ] Enable "Allow edits from maintainers".
+## Checklists
+
+### Development
+
+- [ ] Lint rules pass locally
+- [ ] Application changes have been tested thoroughly
+- [ ] Automated tests covering modified code pass
+
+### Security
+
+- [ ] Security impact of change has been considered
+- [ ] Code follows company security practices and guidelines
+
+### Code review 
+
+- [ ] Pull request has a descriptive title and context useful to a reviewer. Screenshots or screencasts are attached as necessary
+- [ ] "Ready for review" label attached and reviewers assigned
+- [ ] Changes have been reviewed by at least one other contributor
+- [ ] Pull request linked to task tracker where applicable
