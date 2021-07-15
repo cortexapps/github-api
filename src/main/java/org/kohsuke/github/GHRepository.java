@@ -3085,6 +3085,20 @@ public class GHRepository extends GHObject {
                 .wrapUp(this);
     }
 
+    /**
+     * Gets the public key for the given repo
+     *
+     * @return the public key
+     * @throws IOException
+     *             the io exception
+     */
+    public GHRepositoryPublicKey getPublicKey() throws IOException {
+        return root.createRequest()
+                .withUrlPath(getApiTailUrl("/actions/secrets/public-key"))
+                .fetch(GHRepositoryPublicKey.class)
+                .wrapUp(this);
+    }
+
     // Only used within listTopics().
     private static class Topics {
         public List<String> names;
@@ -3124,6 +3138,23 @@ public class GHRepository extends GHObject {
                 .send();
     }
 
+    /**
+     * Set the topics for this repository. See
+     * https://developer.github.com/v3/repos/#replace-all-topics-for-a-repository
+     *
+     * @param secretName
+     *            the name of the secret
+     * @throws IOException
+     *             the io exception
+     */
+    public void createSecret(String secretName, String encryptedValue, String pbKeyId) throws IOException {
+        root.createRequest()
+                .method("PUT")
+                .with("encrypted_value", encryptedValue)
+                .with("key_id", pbKeyId)
+                .withUrlPath(getApiTailUrl("actions/secrets") + "/" + secretName)
+                .send();
+    }
     /**
      * Create a tag. See https://developer.github.com/v3/git/tags/#create-a-tag-object
      *
