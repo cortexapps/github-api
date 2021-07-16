@@ -20,6 +20,7 @@ import java.util.stream.Collectors;
 
 import static org.hamcrest.Matchers.*;
 import static org.hamcrest.core.IsInstanceOf.instanceOf;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThrows;
 import static org.kohsuke.github.GHVerification.Reason.*;
 
@@ -655,6 +656,16 @@ public class GHRepositoryTest extends AbstractGitHubWireMockTest {
         assertThat(refs, notNullValue());
         assertThat(refs.length, equalTo(1));
         assertThat(refs[0].getRef(), equalTo("refs/heads/main"));
+    }
+
+
+    @Test
+    public void getPublicKey() throws Exception {
+        GHRepository repo = getRepository(gitHub);
+        GHRepositoryPublicKey publicKey = repo.getPublicKey();
+        assertNotNull(publicKey);
+        assertThat(publicKey.getKey(), equalTo("test-key"));
+        assertThat(publicKey.getKeyId(), equalTo("key-id"));
     }
 
     @Test
