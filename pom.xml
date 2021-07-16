@@ -115,92 +115,92 @@
               </configuration>
             </execution>
             <!-- attached to Maven test phase -->
-<!--            <execution>-->
-<!--              <id>report</id>-->
-<!--              <phase>test</phase>-->
-<!--              <goals>-->
-<!--                <goal>report</goal>-->
-<!--              </goals>-->
-<!--            </execution>-->
-<!--            <execution>-->
-<!--              <id>check</id>-->
-<!--              <phase>test</phase>-->
-<!--              <goals>-->
-<!--                <goal>check</goal>-->
-<!--              </goals>-->
-<!--              <configuration>-->
-<!--                <rules>-->
-<!--                  <rule>-->
-<!--                    <element>BUNDLE</element>-->
-<!--                    <limits>-->
-<!--                      <limit>-->
-<!--                        <counter>METHOD</counter>-->
-<!--                        <value>COVEREDRATIO</value>-->
-<!--                        <minimum>${jacoco.coverage.target.bundle.method}</minimum>-->
-<!--                      </limit>-->
-<!--                    </limits>-->
-<!--                  </rule>-->
-<!--                  <rule>-->
-<!--                    &lt;!&ndash;We end up with chatty logs, but it shows us which particular classes    &ndash;&gt;-->
-<!--                    &lt;!&ndash;are lacking in coverage. If this is too much, just remove the           &ndash;&gt;-->
-<!--                    &lt;!&ndash;<element>CLASS</element> tag below.                                     &ndash;&gt;-->
-<!--                    <element>CLASS</element>-->
-<!--                    <limits>-->
-<!--                      <limit>-->
-<!--                        <counter>METHOD</counter>-->
-<!--                        <value>COVEREDRATIO</value>-->
-<!--                        <minimum>${jacoco.coverage.target.class.method}</minimum>-->
-<!--                      </limit>-->
-<!--                    </limits>-->
-<!--                    <excludes>-->
-<!--                      &lt;!&ndash; Code implemented externally &ndash;&gt;-->
-<!--                      <exclude>org.kohsuke.github.extras.okhttp3.ObsoleteUrlFactory.**</exclude>-->
-<!--                      <exclude>org.kohsuke.github.extras.okhttp3.ObsoleteUrlFactory</exclude>-->
+            <execution>
+              <id>report</id>
+              <phase>test</phase>
+              <goals>
+                <goal>report</goal>
+              </goals>
+            </execution>
+            <execution>
+              <id>check</id>
+              <phase>test</phase>
+              <goals>
+                <goal>check</goal>
+              </goals>
+              <configuration>
+                <rules>
+                  <rule>
+                    <element>BUNDLE</element>
+                    <limits>
+                      <limit>
+                        <counter>METHOD</counter>
+                        <value>COVEREDRATIO</value>
+                        <minimum>${jacoco.coverage.target.bundle.method}</minimum>
+                      </limit>
+                    </limits>
+                  </rule>
+                  <rule>
+                    <!--We end up with chatty logs, but it shows us which particular classes    -->
+                    <!--are lacking in coverage. If this is too much, just remove the           -->
+                    <!--<element>CLASS</element> tag below.                                     -->
+                    <element>CLASS</element>
+                    <limits>
+                      <limit>
+                        <counter>METHOD</counter>
+                        <value>COVEREDRATIO</value>
+                        <minimum>${jacoco.coverage.target.class.method}</minimum>
+                      </limit>
+                    </limits>
+                    <excludes>
+                      <!-- Code implemented externally -->
+                      <exclude>org.kohsuke.github.extras.okhttp3.ObsoleteUrlFactory.**</exclude>
+                      <exclude>org.kohsuke.github.extras.okhttp3.ObsoleteUrlFactory</exclude>
 
-<!--                      &lt;!&ndash; Sample only &ndash;&gt;-->
-<!--                      <exclude>org.kohsuke.github.example.*</exclude>-->
+                      <!-- Sample only -->
+                      <exclude>org.kohsuke.github.example.*</exclude>
 
 
-<!--                      &lt;!&ndash; Deprecated &ndash;&gt;-->
-<!--                      <exclude>org.kohsuke.github.extras.OkHttpConnector</exclude>-->
-<!--                      <exclude>org.kohsuke.github.extras.OkHttp3Connector</exclude>-->
-<!--                      <exclude>org.kohsuke.github.EnforcementLevel</exclude>-->
-<!--                      <exclude>org.kohsuke.github.GHPerson.1</exclude>-->
-<!--                      -->
-<!--                      &lt;!&ndash; TODO: Some coverage, but more needed &ndash;&gt;-->
-<!--                      <exclude>org.kohsuke.github.GHPullRequestReviewBuilder.DraftReviewComment</exclude>-->
-<!--                      <exclude>org.kohsuke.github.GHIssue.PullRequest</exclude>-->
-<!--                      <exclude>org.kohsuke.github.GHCommitSearchBuilder</exclude>-->
-<!--                      <exclude>org.kohsuke.github.GHRepositorySearchBuilder</exclude>-->
-<!--                      <exclude>org.kohsuke.github.GHUserSearchBuilder</exclude>-->
+                      <!-- Deprecated -->
+                      <exclude>org.kohsuke.github.extras.OkHttpConnector</exclude>
+                      <exclude>org.kohsuke.github.extras.OkHttp3Connector</exclude>
+                      <exclude>org.kohsuke.github.EnforcementLevel</exclude>
+                      <exclude>org.kohsuke.github.GHPerson.1</exclude>
 
-<!--                      &lt;!&ndash; TODO: These still need test coverage &ndash;&gt;-->
-<!--                      <exclude>org.kohsuke.github.GHBranchProtection.RequiredSignatures</exclude>-->
-<!--                      <exclude>org.kohsuke.github.GHBranchProtectionBuilder.Restrictions</exclude>-->
-<!--                      <exclude>org.kohsuke.github.GHBranchProtection.Restrictions</exclude>-->
-<!--                      <exclude>org.kohsuke.github.GHCommentAuthorAssociation</exclude>-->
-<!--                      <exclude>org.kohsuke.github.GHCompare.Commit</exclude>-->
-<!--                      <exclude>org.kohsuke.github.GHCompare.InnerCommit</exclude>-->
-<!--                      <exclude>org.kohsuke.github.GHCompare.Tree</exclude>-->
-<!--                      <exclude>org.kohsuke.github.GHCompare.User</exclude>-->
-<!--                      <exclude>org.kohsuke.github.GHCompare</exclude>-->
-<!--                      <exclude>org.kohsuke.github.GHDeployKey</exclude>-->
-<!--                      <exclude>org.kohsuke.github.GHEmail</exclude>-->
-<!--                      <exclude>org.kohsuke.github.GHInvitation</exclude>-->
-<!--                      <exclude>org.kohsuke.github.GHPullRequestCommitDetail.Authorship</exclude>-->
-<!--                      <exclude>org.kohsuke.github.GHPullRequestCommitDetail.Commit</exclude>-->
-<!--                      <exclude>org.kohsuke.github.GHPullRequestCommitDetail.CommitPointer</exclude>-->
-<!--                      <exclude>org.kohsuke.github.GHPullRequestCommitDetail.Tree</exclude>-->
-<!--                      <exclude>org.kohsuke.github.GHPullRequestCommitDetail</exclude>-->
-<!--                      <exclude>org.kohsuke.github.GHPullRequestFileDetail</exclude>-->
-<!--                      <exclude>org.kohsuke.github.GHReleaseUpdater</exclude>-->
-<!--                      <exclude>org.kohsuke.github.GHRequestedAction</exclude>-->
-<!--                      <exclude>org.kohsuke.github.GHVerifiedKey</exclude>-->
-<!--                    </excludes>-->
-<!--                  </rule>-->
-<!--                </rules>-->
-<!--              </configuration>-->
-<!--            </execution>-->
+                      <!-- TODO: Some coverage, but more needed -->
+                      <exclude>org.kohsuke.github.GHPullRequestReviewBuilder.DraftReviewComment</exclude>
+                      <exclude>org.kohsuke.github.GHIssue.PullRequest</exclude>
+                      <exclude>org.kohsuke.github.GHCommitSearchBuilder</exclude>
+                      <exclude>org.kohsuke.github.GHRepositorySearchBuilder</exclude>
+                      <exclude>org.kohsuke.github.GHUserSearchBuilder</exclude>
+
+                      <!-- TODO: These still need test coverage -->
+                      <exclude>org.kohsuke.github.GHBranchProtection.RequiredSignatures</exclude>
+                      <exclude>org.kohsuke.github.GHBranchProtectionBuilder.Restrictions</exclude>
+                      <exclude>org.kohsuke.github.GHBranchProtection.Restrictions</exclude>
+                      <exclude>org.kohsuke.github.GHCommentAuthorAssociation</exclude>
+                      <exclude>org.kohsuke.github.GHCompare.Commit</exclude>
+                      <exclude>org.kohsuke.github.GHCompare.InnerCommit</exclude>
+                      <exclude>org.kohsuke.github.GHCompare.Tree</exclude>
+                      <exclude>org.kohsuke.github.GHCompare.User</exclude>
+                      <exclude>org.kohsuke.github.GHCompare</exclude>
+                      <exclude>org.kohsuke.github.GHDeployKey</exclude>
+                      <exclude>org.kohsuke.github.GHEmail</exclude>
+                      <exclude>org.kohsuke.github.GHInvitation</exclude>
+                      <exclude>org.kohsuke.github.GHPullRequestCommitDetail.Authorship</exclude>
+                      <exclude>org.kohsuke.github.GHPullRequestCommitDetail.Commit</exclude>
+                      <exclude>org.kohsuke.github.GHPullRequestCommitDetail.CommitPointer</exclude>
+                      <exclude>org.kohsuke.github.GHPullRequestCommitDetail.Tree</exclude>
+                      <exclude>org.kohsuke.github.GHPullRequestCommitDetail</exclude>
+                      <exclude>org.kohsuke.github.GHPullRequestFileDetail</exclude>
+                      <exclude>org.kohsuke.github.GHReleaseUpdater</exclude>
+                      <exclude>org.kohsuke.github.GHRequestedAction</exclude>
+                      <exclude>org.kohsuke.github.GHVerifiedKey</exclude>
+                    </excludes>
+                  </rule>
+                </rules>
+              </configuration>
+            </execution>
           </executions>
         </plugin>
         <plugin>
@@ -277,15 +277,15 @@
 
       <plugin>
         <artifactId>maven-surefire-plugin</artifactId>
-<!--        <executions>-->
-<!--          <execution>-->
-<!--            <id>default-test</id>-->
-<!--            <configuration>-->
-<!--              <excludesFile>src/test/resources/slow-or-flaky-tests.txt</excludesFile>-->
-<!--              <argLine>@{jacoco.surefire.argLine} ${surefire.argLine}</argLine>-->
-<!--            </configuration>-->
-<!--          </execution>-->
-<!--        </executions>-->
+        <executions>
+          <execution>
+            <id>default-test</id>
+            <configuration>
+              <excludesFile>src/test/resources/slow-or-flaky-tests.txt</excludesFile>
+              <argLine>@{jacoco.surefire.argLine} ${surefire.argLine}</argLine>
+            </configuration>
+          </execution>
+        </executions>
       </plugin>
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
@@ -298,15 +298,15 @@
             <version>1.0</version>
           </signature>
         </configuration>
-<!--        <executions>-->
-<!--          <execution>-->
-<!--            <id>ensure-java-1.8-class-library</id>-->
-<!--            <phase>test</phase>-->
-<!--            <goals>-->
-<!--              <goal>check</goal>-->
-<!--            </goals>-->
-<!--          </execution>-->
-<!--        </executions>-->
+        <executions>
+          <execution>
+            <id>ensure-java-1.8-class-library</id>
+            <phase>test</phase>
+            <goals>
+              <goal>check</goal>
+            </goals>
+          </execution>
+        </executions>
       </plugin>
       <plugin>
         <groupId>com.infradna.tool</groupId>
@@ -324,16 +324,16 @@
         <groupId>com.diffplug.spotless</groupId>
         <artifactId>spotless-maven-plugin</artifactId>
         <version>2.11.1</version>
-<!--        <executions>-->
-<!--          <execution>-->
-<!--            <id>spotless-check</id>-->
-<!--            &lt;!&ndash; runs in verify phase by default &ndash;&gt;-->
-<!--            <goals>-->
-<!--              &lt;!&ndash; can be disabled using -Dspotless.check.skip=true &ndash;&gt;-->
-<!--              <goal>check</goal>-->
-<!--            </goals>-->
-<!--          </execution>-->
-<!--        </executions>-->
+        <executions>
+          <execution>
+            <id>spotless-check</id>
+            <!-- runs in verify phase by default -->
+            <goals>
+              <!-- can be disabled using -Dspotless.check.skip=true -->
+              <goal>check</goal>
+            </goals>
+          </execution>
+        </executions>
         <configuration>
           <java>
             <eclipse>
