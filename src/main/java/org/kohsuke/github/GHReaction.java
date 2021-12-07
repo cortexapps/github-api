@@ -1,5 +1,7 @@
 package org.kohsuke.github;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 import java.io.IOException;
 import java.net.URL;
 
@@ -17,12 +19,6 @@ public class GHReaction extends GHObject {
     private GHUser user;
     private ReactionContent content;
 
-    GHReaction wrap(GitHub root) {
-        this.root = root;
-        user.wrapUp(root);
-        return this;
-    }
-
     /**
      * The kind of reaction left.
      *
@@ -37,6 +33,7 @@ public class GHReaction extends GHObject {
      *
      * @return the user
      */
+    @SuppressFBWarnings(value = { "EI_EXPOSE_REP" }, justification = "Expected behavior")
     public GHUser getUser() {
         return user;
     }
@@ -56,6 +53,6 @@ public class GHReaction extends GHObject {
      *             the io exception
      */
     public void delete() throws IOException {
-        root.createRequest().method("DELETE").withPreview(SQUIRREL_GIRL).withUrlPath("/reactions/" + getId()).send();
+        root().createRequest().method("DELETE").withPreview(SQUIRREL_GIRL).withUrlPath("/reactions/" + getId()).send();
     }
 }

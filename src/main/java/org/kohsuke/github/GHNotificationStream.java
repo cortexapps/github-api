@@ -30,7 +30,7 @@ public class GHNotificationStream extends GitHubInteractiveObject implements Ite
     private boolean nonBlocking = false;
 
     GHNotificationStream(GitHub root, String apiUrl) {
-        this.root = root;
+        super(root);
         this.apiUrl = apiUrl;
     }
 
@@ -99,7 +99,7 @@ public class GHNotificationStream extends GitHubInteractiveObject implements Ite
      */
     public Iterator<GHThread> iterator() {
         // capture the configuration setting here
-        final Requester req = root.createRequest()
+        final Requester req = root().createRequest()
                 .with("all", all)
                 .with("participating", participating)
                 .with("since", since);
@@ -160,7 +160,7 @@ public class GHNotificationStream extends GitHubInteractiveObject implements Ite
                             long nt = n.getUpdatedAt().getTime();
                             if (nt >= lastUpdated) {
                                 lastUpdated = nt;
-                                return n.wrap(root);
+                                return n;
                             }
                         }
 
@@ -192,7 +192,7 @@ public class GHNotificationStream extends GitHubInteractiveObject implements Ite
                         idx = threads.length - 1;
 
                         nextCheckTime = calcNextCheckTime(response);
-                        lastModified = response.headerField("Last-Modified");
+                        lastModified = response.header("Last-Modified");
                     }
                 } catch (IOException | InterruptedException e) {
                     throw new RuntimeException(e);
@@ -200,7 +200,7 @@ public class GHNotificationStream extends GitHubInteractiveObject implements Ite
             }
 
             private long calcNextCheckTime(GitHubResponse<GHThread[]> response) {
-                String v = response.headerField("X-Poll-Interval");
+                String v = response.header("X-Poll-Interval");
                 if (v == null)
                     v = "60";
                 long seconds = Integer.parseInt(v);
@@ -228,7 +228,7 @@ public class GHNotificationStream extends GitHubInteractiveObject implements Ite
      *             the io exception
      */
     public void markAsRead(long timestamp) throws IOException {
-        final Requester req = root.createRequest();
+        final Requester req = root().createRequest();
         if (timestamp >= 0)
             req.with("last_read_at", GitHubClient.printDate(new Date(timestamp)));
         req.withUrlPath(apiUrl).fetchHttpStatusCode();

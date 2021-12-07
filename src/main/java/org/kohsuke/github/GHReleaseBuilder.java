@@ -1,5 +1,7 @@
 package org.kohsuke.github;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 import java.io.IOException;
 
 /**
@@ -19,9 +21,10 @@ public class GHReleaseBuilder {
      * @param tag
      *            the tag
      */
+    @SuppressFBWarnings(value = { "EI_EXPOSE_REP2" }, justification = "Acceptable risk")
     public GHReleaseBuilder(GHRepository ghRepository, String tag) {
         this.repo = ghRepository;
-        this.builder = repo.root.createRequest().method("POST");
+        this.builder = repo.root().createRequest().method("POST");
         builder.with("tag_name", tag);
     }
 

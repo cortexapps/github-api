@@ -2,7 +2,6 @@ package org.kohsuke.github;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Collections;
 import java.util.Date;
@@ -31,11 +30,6 @@ public abstract class GHPerson extends GHObject {
     // other fields (that only show up in full data) that require privileged scope
     protected Integer total_private_repos;
 
-    GHPerson wrapUp(GitHub root) {
-        this.root = root;
-        return this;
-    }
-
     /**
      * Fully populate the data by retrieving missing data.
      * <p>
@@ -48,12 +42,12 @@ public abstract class GHPerson extends GHObject {
         if (super.getCreatedAt() != null) {
             return; // already populated
         }
-        if (root == null || root.isOffline()) {
+        if (isOffline()) {
             return; // cannot populate, will have to live with what we have
         }
         URL url = getUrl();
         if (url != null) {
-            root.createRequest().setRawUrlPath(url.toString()).fetchInto(this);
+            root().createRequest().setRawUrlPath(url.toString()).fetchInto(this);
         }
     }
 
@@ -95,9 +89,9 @@ public abstract class GHPerson extends GHObject {
      * @return the paged iterable
      */
     public PagedIterable<GHRepository> listRepositories(final int pageSize) {
-        return root.createRequest()
+        return root().createRequest()
                 .withUrlPath("/users/" + login + "/repos")
-                .toIterable(GHRepository[].class, item -> item.wrap(root))
+                .toIterable(GHRepository[].class, null)
                 .withPageSize(pageSize);
     }
 
@@ -120,15 +114,11 @@ public abstract class GHPerson extends GHObject {
     public synchronized Iterable<List<GHRepository>> iterateRepositories(final int pageSize) {
         return () -> {
             final PagedIterator<GHRepository> pager;
-            try {
-                GitHubPageIterator<GHRepository[]> iterator = GitHubPageIterator.create(root.getClient(),
-                        GHRepository[].class,
-                        root.createRequest().withUrlPath("users", login, "repos").build(),
-                        pageSize);
-                pager = new PagedIterator<>(iterator, item -> item.wrap(root));
-            } catch (MalformedURLException e) {
-                throw new GHException("Unable to build GitHub API URL", e);
-            }
+            GitHubPageIterator<GHRepository[]> iterator = GitHubPageIterator.create(root().getClient(),
+                    GHRepository[].class,
+                    root().createRequest().withUrlPath("users", login, "repos").build(),
+                    pageSize);
+            pager = new PagedIterator<>(iterator, null);
 
             return new Iterator<List<GHRepository>>() {
                 public boolean hasNext() {
@@ -153,7 +143,7 @@ public abstract class GHPerson extends GHObject {
      */
     public GHRepository getRepository(String name) throws IOException {
         try {
-            return GHRepository.read(root, login, name);
+            return GHRepository.read(root(), login, name);
         } catch (FileNotFoundException e) {
             return null;
         }

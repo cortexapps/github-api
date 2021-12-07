@@ -1,6 +1,5 @@
 package org.kohsuke.github;
 
-import java.net.MalformedURLException;
 import java.util.Iterator;
 
 import javax.annotation.Nonnull;
@@ -16,18 +15,14 @@ class GHArtifactsIterable extends PagedIterable<GHArtifact> {
 
     public GHArtifactsIterable(GHRepository owner, GitHubRequest.Builder<?> requestBuilder) {
         this.owner = owner;
-        try {
-            this.request = requestBuilder.build();
-        } catch (MalformedURLException e) {
-            throw new GHException("Malformed URL", e);
-        }
+        this.request = requestBuilder.build();
     }
 
     @Nonnull
     @Override
     public PagedIterator<GHArtifact> _iterator(int pageSize) {
         return new PagedIterator<>(
-                adapt(GitHubPageIterator.create(owner.getRoot().getClient(), GHArtifactsPage.class, request, pageSize)),
+                adapt(GitHubPageIterator.create(owner.root().getClient(), GHArtifactsPage.class, request, pageSize)),
                 null);
     }
 

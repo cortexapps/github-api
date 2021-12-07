@@ -1,5 +1,6 @@
 package org.kohsuke.github;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.kohsuke.github.internal.Previews;
 
 import java.io.IOException;
@@ -19,9 +20,11 @@ public class GHDeploymentBuilder {
      * @param repo
      *            the repo
      */
+    @SuppressFBWarnings(value = { "EI_EXPOSE_REP2" }, justification = "Acceptable")
     public GHDeploymentBuilder(GHRepository repo) {
         this.repo = repo;
-        this.builder = repo.root.createRequest()
+        this.builder = repo.root()
+                .createRequest()
                 .withPreview(Previews.ANT_MAN)
                 .withPreview(Previews.FLASH)
                 .method("POST");
