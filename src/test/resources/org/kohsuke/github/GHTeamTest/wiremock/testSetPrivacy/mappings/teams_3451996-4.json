@@ -2,7 +2,7 @@
   "id": "70263be8-4b8a-4f60-9e0a-da31aae7519f",
   "name": "teams_3451996",
   "request": {
-    "url": "/teams/3451996",
+    "url": "/orgs/hub4j-test-org/teams/dummy-team",
     "method": "PATCH",
     "headers": {
       "Accept": {
