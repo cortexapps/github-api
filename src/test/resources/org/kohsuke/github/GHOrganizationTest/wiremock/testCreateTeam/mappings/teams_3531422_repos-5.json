@@ -2,7 +2,7 @@
   "id": "9893d54e-bc2f-4246-ba25-b9c157b22845",
   "name": "teams_3531422_repos",
   "request": {
-    "url": "/teams/3531422/repos",
+    "url": "/orgs/hub4j-test-org/teams/create-team-test/repos",
     "method": "GET",
     "headers": {
       "Accept": {
