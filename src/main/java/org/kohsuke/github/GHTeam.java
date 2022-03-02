@@ -57,7 +57,11 @@ public class GHTeam extends GHObject implements Refreshable {
 
     static GHTeam[] wrapUp(GHTeam[] teams, GHPullRequest owner) {
         for (GHTeam t : teams) {
-            t.root = owner.root;
+            try {
+                t.wrapUp(owner.root.getOrganization(owner.getRepository().getOwnerName()));
+            } catch (IOException e) {
+                throw new GHException("Failed to get organization that owns the repository for the PR", e);
+            }
         }
         return teams;
     }

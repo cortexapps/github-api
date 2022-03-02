@@ -2,7 +2,7 @@
   "id": "95da1778-ddf4-4040-8777-5110e25a7615",
   "name": "teams_2384898_members_bitwiseman",
   "request": {
-    "url": "/teams/2384898/members/bitwiseman",
+    "url": "/orgs/cloudbees/teams/cje-reviewers/memberships/bitwiseman",
     "method": "GET",
     "headers": {
       "Accept": {

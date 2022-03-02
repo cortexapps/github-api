@@ -2,7 +2,7 @@
   "id": "189224de-792d-45ba-993a-878171e9a63f",
   "name": "teams_879403_members_bitwiseman",
   "request": {
-    "url": "/teams/879403/members/bitwiseman",
+    "url": "/orgs/cloudbees/teams/team-documentation/memberships/bitwiseman",
     "method": "GET",
     "headers": {
       "Accept": {

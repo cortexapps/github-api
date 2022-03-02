@@ -2,7 +2,7 @@
   "id": "be6df5bf-2958-4489-bf5c-ce8c65cb84d2",
   "name": "teams_820404_members_bitwiseman",
   "request": {
-    "url": "/teams/820404/members/bitwiseman",
+    "url": "/orgs/hub4j-test-org/teams/owners/memberships/bitwiseman",
     "method": "GET",
     "headers": {
       "Accept": {

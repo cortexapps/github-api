@@ -2,7 +2,7 @@
   "id": "b4fb1896-a01e-49a3-873b-2b8712decd5b",
   "name": "teams_2915408_members_bitwiseman",
   "request": {
-    "url": "/teams/2915408/members/bitwiseman",
+    "url": "/orgs/cloudbees/teams/pipeline-team/memberships/bitwiseman",
     "method": "GET",
     "headers": {
       "Accept": {

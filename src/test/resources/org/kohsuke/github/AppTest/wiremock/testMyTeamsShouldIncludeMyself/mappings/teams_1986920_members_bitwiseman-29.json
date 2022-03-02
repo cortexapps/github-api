@@ -2,7 +2,7 @@
   "id": "0dd3d927-287e-4a21-8977-d4f9d7d6cc49",
   "name": "teams_1986920_members_bitwiseman",
   "request": {
-    "url": "/teams/1986920/members/bitwiseman",
+    "url": "/orgs/jenkinsci/teams/workflow-cps-plugin-developers/memberships/bitwiseman",
     "method": "GET",
     "headers": {
       "Accept": {

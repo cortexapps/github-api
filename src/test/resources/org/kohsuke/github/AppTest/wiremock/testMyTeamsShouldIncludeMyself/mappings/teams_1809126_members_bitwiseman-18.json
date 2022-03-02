@@ -2,7 +2,7 @@
   "id": "242ec43b-8f06-48af-bc39-3846b930a448",
   "name": "teams_1809126_members_bitwiseman",
   "request": {
-    "url": "/teams/1809126/members/bitwiseman",
+    "url": "/orgs/jenkinsci/teams/github-branch-source-plugin-developers/memberships/bitwiseman",
     "method": "GET",
     "headers": {
       "Accept": {

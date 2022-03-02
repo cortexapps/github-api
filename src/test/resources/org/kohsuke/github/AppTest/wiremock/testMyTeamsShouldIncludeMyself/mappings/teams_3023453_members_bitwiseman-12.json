@@ -2,7 +2,7 @@
   "id": "2724fa0c-cdc2-4977-85de-0d3022e0680f",
   "name": "teams_3023453_members_bitwiseman",
   "request": {
-    "url": "/teams/3023453/members/bitwiseman",
+    "url": "/orgs/jenkinsci/teams/audit-log-plugin-developers/memberships/bitwiseman",
     "method": "GET",
     "headers": {
       "Accept": {

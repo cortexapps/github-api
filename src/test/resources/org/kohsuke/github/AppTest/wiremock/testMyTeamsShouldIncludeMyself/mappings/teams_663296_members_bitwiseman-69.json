@@ -2,7 +2,7 @@
   "id": "a7553907-7516-490b-be55-84fad2f47610",
   "name": "teams_663296_members_bitwiseman",
   "request": {
-    "url": "/teams/663296/members/bitwiseman",
+    "url": "/orgs/beautify-web/teams/owners/memberships/bitwiseman",
     "method": "GET",
     "headers": {
       "Accept": {

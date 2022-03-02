@@ -2,7 +2,7 @@
   "id": "285fc382-082e-418b-818a-bd0910f734b2",
   "name": "teams_1882929_members_bitwiseman",
   "request": {
-    "url": "/teams/1882929/members/bitwiseman",
+    "url": "/orgs/jenkins-infra/teams/copy-editors/memberships/bitwiseman",
     "method": "GET",
     "headers": {
       "Accept": {

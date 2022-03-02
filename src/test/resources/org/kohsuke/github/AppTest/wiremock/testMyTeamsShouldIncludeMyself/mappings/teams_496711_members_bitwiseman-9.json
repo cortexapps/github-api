@@ -2,7 +2,7 @@
   "id": "9e90f95d-7856-4183-9623-3187ae8ff3bd",
   "name": "teams_496711_members_bitwiseman",
   "request": {
-    "url": "/teams/496711/members/bitwiseman",
+    "url": "/orgs/jenkinsci/teams/scm-api-plugin-developers/memberships/bitwiseman",
     "method": "GET",
     "headers": {
       "Accept": {
