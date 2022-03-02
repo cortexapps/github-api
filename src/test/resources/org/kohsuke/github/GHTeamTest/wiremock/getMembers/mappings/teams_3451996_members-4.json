@@ -2,7 +2,7 @@
   "id": "99fc4e80-a38a-48fd-a710-bf78427cd01f",
   "name": "teams_3451996_members",
   "request": {
-    "url": "/teams/3451996/members?role=all",
+    "url": "/orgs/hub4j-test-org/teams/dummy-team/members?role=all",
     "method": "GET",
     "headers": {
       "Accept": {

@@ -23,6 +23,7 @@ public class GHTeam extends GHObject implements Refreshable {
     private String slug;
     private String description;
     private Privacy privacy;
+    protected GHTeam parent;
 
     private GHOrganization organization; // populated by GET /user/teams where Teams+Orgs are returned together
 
@@ -92,12 +93,33 @@ public class GHTeam extends GHObject implements Refreshable {
     }
 
     /**
+     * Gets parent.
+     *
+     * @return the parent
+     */
+    public GHTeam getParent() {
+        return parent;
+    }
+
+    /**
      * Gets the privacy state.
      *
      * @return the privacy state.
      */
     public Privacy getPrivacy() {
         return privacy;
+    }
+
+    /**
+     * Sets description.
+     *
+     * @param parent
+     *            the description
+     * @throws IOException
+     *             the io exception
+     */
+    public void setParent(GHTeam parent) throws IOException {
+        root().createRequest().method("PATCH").with("parent_team_id", parent.getId()).withUrlPath(api("")).send();
     }
 
     /**
@@ -211,7 +233,7 @@ public class GHTeam extends GHObject implements Refreshable {
      */
     public boolean hasMember(GHUser user) {
         try {
-            root().createRequest().withUrlPath("/teams/" + getId() + "/members/" + user.getLogin()).send();
+            root().createRequest().withUrlPath(api("/memberships/" + user.getLogin())).send();
             return true;
         } catch (IOException ignore) {
             return false;
@@ -286,7 +308,7 @@ public class GHTeam extends GHObject implements Refreshable {
      *             the io exception
      */
     public void remove(GHUser u) throws IOException {
-        root().createRequest().method("DELETE").withUrlPath(api("/members/" + u.getLogin())).send();
+        root().createRequest().method("DELETE").withUrlPath(api("/memberships/" + u.getLogin())).send();
     }
 
     /**
@@ -345,7 +367,7 @@ public class GHTeam extends GHObject implements Refreshable {
     }
 
     private String api(String tail) {
-        return "/teams/" + getId() + tail;
+        return "/orgs/" + organization.login + "/teams/" + getSlug() + tail;
     }
 
     /**

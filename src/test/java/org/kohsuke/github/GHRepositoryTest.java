@@ -689,7 +689,6 @@ public class GHRepositoryTest extends AbstractGitHubWireMockTest {
         assertThat(refs[0].getRef(), equalTo("refs/heads/main"));
     }
 
-
     @Test
     public void getPublicKey() throws Exception {
         GHRepository repo = getRepository(gitHub);
