@@ -55,9 +55,13 @@ public class GHTeam extends GHObject implements Refreshable {
         return wrapUp(organization);
     }
 
-    static GHTeam[] wrapUp(GHTeam[] teams, GitHub root) {
+    static GHTeam[] wrapUp(GHTeam[] teams, GHPullRequest owner) throws IOException {
+        if (teams.length == 0) {
+            return teams;
+        }
+        GHOrganization org = owner.root.getOrganization(owner.getRepository().getOwnerName());
         for (GHTeam t : teams) {
-            t.wrapUp(root);
+            t.wrapUp(org);
         }
         return teams;
     }

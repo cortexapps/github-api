@@ -72,12 +72,12 @@ public class GHPullRequest extends GHIssue implements Refreshable {
     private GHUser[] requested_reviewers;
     private GHTeam[] requested_teams;
 
-    GHPullRequest wrapUp(GHRepository owner) {
+    GHPullRequest wrapUp(GHRepository owner) throws IOException {
         this.wrap(owner);
         return wrapUp(owner.root);
     }
 
-    GHPullRequest wrapUp(GitHub root) {
+    GHPullRequest wrapUp(GitHub root) throws IOException {
         if (owner != null)
             owner.wrap(root);
         if (base != null)
@@ -89,7 +89,7 @@ public class GHPullRequest extends GHIssue implements Refreshable {
         if (requested_reviewers != null)
             GHUser.wrap(requested_reviewers, root);
         if (requested_teams != null)
-            GHTeam.wrapUp(requested_teams, root);
+            GHTeam.wrapUp(requested_teams, this);
         return this;
     }
 

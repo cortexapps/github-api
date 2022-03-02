@@ -1,5 +1,7 @@
 package org.kohsuke.github;
 
+import java.io.IOException;
+
 import static org.kohsuke.github.internal.Previews.SHADOW_CAT;
 
 /**
@@ -90,6 +92,12 @@ public class GHPullRequestQueryBuilder extends GHQueryBuilder<GHPullRequest> {
     public PagedIterable<GHPullRequest> list() {
         return req.withPreview(SHADOW_CAT)
                 .withUrlPath(repo.getApiTailUrl("pulls"))
-                .toIterable(GHPullRequest[].class, item -> item.wrapUp(repo));
+                .toIterable(GHPullRequest[].class, item -> {
+                    try {
+                        item.wrapUp(repo);
+                    } catch (IOException e) {
+                        throw new GHException("Failed to list pull requests", e);
+                    }
+                });
     }
 }
