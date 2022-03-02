@@ -89,7 +89,7 @@ public class GHPullRequest extends GHIssue implements Refreshable {
         if (requested_reviewers != null)
             GHUser.wrap(requested_reviewers, root);
         if (requested_teams != null)
-            GHTeam.wrapUp(requested_teams, this);
+            GHTeam.wrapUp(requested_teams, root);
         return this;
     }
 
