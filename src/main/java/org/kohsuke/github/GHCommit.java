@@ -470,7 +470,13 @@ public class GHCommit {
         return owner.root.createRequest()
                 .withPreview(GROOT)
                 .withUrlPath(String.format("/repos/%s/%s/commits/%s/pulls", owner.getOwnerName(), owner.getName(), sha))
-                .toIterable(GHPullRequest[].class, item -> item.wrapUp(owner));
+                .toIterable(GHPullRequest[].class, item -> {
+                    try {
+                        item.wrapUp(owner);
+                    } catch (IOException e) {
+                        throw new GHException("Failed to list pull requests", e);
+                    }
+                });
     }
 
     /**

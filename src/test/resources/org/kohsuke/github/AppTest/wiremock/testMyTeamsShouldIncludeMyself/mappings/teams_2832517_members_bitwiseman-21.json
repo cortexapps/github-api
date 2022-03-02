@@ -2,7 +2,7 @@
   "id": "bd3f9695-f9e7-43e5-af7b-aeb5f71e352e",
   "name": "teams_2832517_members_bitwiseman",
   "request": {
-    "url": "/teams/2832517/members/bitwiseman",
+    "url": "/orgs/jenkinsci/teams/jep-bdfl-delegates/memberships/bitwiseman",
     "method": "GET",
     "headers": {
       "Accept": {

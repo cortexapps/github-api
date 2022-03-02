@@ -3147,7 +3147,7 @@ public class GHRepository extends GHObject {
      * @param encryptedValue
      *            The encrypted value for this secret
      * @param publicKeyId
-     *             The id of the Public Key used to encrypt this secret
+     *            The id of the Public Key used to encrypt this secret
      * @throws IOException
      *             the io exception
      */

@@ -2,7 +2,7 @@
   "id": "301ee9c8-0469-4653-a4b6-3e3965388517",
   "name": "teams_2185547_members_bitwiseman",
   "request": {
-    "url": "/teams/2185547/members/bitwiseman",
+    "url": "/orgs/jenkinsci/teams/pipeline-model-definition-plugin-developers/memberships/bitwiseman",
     "method": "GET",
     "headers": {
       "Accept": {

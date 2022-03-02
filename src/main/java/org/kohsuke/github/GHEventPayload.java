@@ -107,7 +107,7 @@ public class GHEventPayload extends GitHubInteractiveObject {
         return installation;
     }
 
-    void wrapUp(GitHub root) {
+    void wrapUp(GitHub root) throws IOException {
         this.root = root;
         if (sender != null) {
             sender.wrapUp(root);
@@ -191,7 +191,7 @@ public class GHEventPayload extends GitHubInteractiveObject {
         }
 
         @Override
-        void wrapUp(GitHub root) {
+        void wrapUp(GitHub root) throws IOException {
             super.wrapUp(root);
             if (checkRun == null)
                 throw new IllegalStateException(
@@ -225,7 +225,7 @@ public class GHEventPayload extends GitHubInteractiveObject {
         }
 
         @Override
-        void wrapUp(GitHub root) {
+        void wrapUp(GitHub root) throws IOException {
             super.wrapUp(root);
             if (checkSuite == null)
                 throw new IllegalStateException(
@@ -260,7 +260,7 @@ public class GHEventPayload extends GitHubInteractiveObject {
         };
 
         @Override
-        void wrapUp(GitHub root) {
+        void wrapUp(GitHub root) throws IOException {
             super.wrapUp(root);
             if (getInstallation() == null) {
                 throw new IllegalStateException(
@@ -321,7 +321,7 @@ public class GHEventPayload extends GitHubInteractiveObject {
         }
 
         @Override
-        void wrapUp(GitHub root) {
+        void wrapUp(GitHub root) throws IOException {
             super.wrapUp(root);
             if (getInstallation() == null) {
                 throw new IllegalStateException(
@@ -400,7 +400,7 @@ public class GHEventPayload extends GitHubInteractiveObject {
         }
 
         @Override
-        void wrapUp(GitHub root) {
+        void wrapUp(GitHub root) throws IOException {
             super.wrapUp(root);
             if (pullRequest == null)
                 throw new IllegalStateException(
@@ -445,7 +445,7 @@ public class GHEventPayload extends GitHubInteractiveObject {
         }
 
         @Override
-        void wrapUp(GitHub root) {
+        void wrapUp(GitHub root) throws IOException {
             super.wrapUp(root);
             if (review == null)
                 throw new IllegalStateException(
@@ -493,7 +493,7 @@ public class GHEventPayload extends GitHubInteractiveObject {
         }
 
         @Override
-        void wrapUp(GitHub root) {
+        void wrapUp(GitHub root) throws IOException {
             super.wrapUp(root);
             if (comment == null)
                 throw new IllegalStateException(
@@ -563,7 +563,7 @@ public class GHEventPayload extends GitHubInteractiveObject {
         }
 
         @Override
-        void wrapUp(GitHub root) {
+        void wrapUp(GitHub root) throws IOException {
             super.wrapUp(root);
             GHRepository repository = getRepository();
             if (repository != null) {
@@ -625,7 +625,7 @@ public class GHEventPayload extends GitHubInteractiveObject {
         }
 
         @Override
-        void wrapUp(GitHub root) {
+        void wrapUp(GitHub root) throws IOException {
             super.wrapUp(root);
             GHRepository repository = getRepository();
             if (repository != null) {
@@ -668,7 +668,7 @@ public class GHEventPayload extends GitHubInteractiveObject {
         }
 
         @Override
-        void wrapUp(GitHub root) {
+        void wrapUp(GitHub root) throws IOException {
             super.wrapUp(root);
             GHRepository repository = getRepository();
             if (repository != null) {
@@ -795,7 +795,7 @@ public class GHEventPayload extends GitHubInteractiveObject {
         }
 
         @Override
-        void wrapUp(GitHub root) {
+        void wrapUp(GitHub root) throws IOException {
             super.wrapUp(root);
             GHRepository repository = getRepository();
             if (repository != null) {
@@ -855,7 +855,7 @@ public class GHEventPayload extends GitHubInteractiveObject {
         }
 
         @Override
-        void wrapUp(GitHub root) {
+        void wrapUp(GitHub root) throws IOException {
             super.wrapUp(root);
             GHRepository repository = getRepository();
             if (repository != null) {
@@ -895,7 +895,7 @@ public class GHEventPayload extends GitHubInteractiveObject {
         }
 
         @Override
-        void wrapUp(GitHub root) {
+        void wrapUp(GitHub root) throws IOException {
             super.wrapUp(root);
             forkee.wrap(root);
         }
@@ -1317,7 +1317,7 @@ public class GHEventPayload extends GitHubInteractiveObject {
         }
 
         @Override
-        void wrapUp(GitHub root) {
+        void wrapUp(GitHub root) throws IOException {
             super.wrapUp(root);
             if (state == null) {
                 throw new IllegalStateException(
@@ -1405,7 +1405,7 @@ public class GHEventPayload extends GitHubInteractiveObject {
         }
 
         @Override
-        void wrapUp(GitHub root) {
+        void wrapUp(GitHub root) throws IOException {
             super.wrapUp(root);
             if (workflowRun == null || workflow == null) {
                 throw new IllegalStateException(

@@ -2,7 +2,7 @@
   "id": "89727f43-cf60-42af-bf7f-c5016281db3b",
   "name": "teams_2478842_members_bitwiseman",
   "request": {
-    "url": "/teams/2478842/members/bitwiseman",
+    "url": "/orgs/jenkinsci/teams/jep-editors/memberships/bitwiseman",
     "method": "GET",
     "headers": {
       "Accept": {

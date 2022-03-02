@@ -2,7 +2,7 @@
   "id": "9bec5681-b961-4122-b399-39d654daf95a",
   "name": "teams_2300722_members_bitwiseman",
   "request": {
-    "url": "/teams/2300722/members/bitwiseman",
+    "url": "/orgs/jenkinsci/teams/declarative-rfc-reviewers/memberships/bitwiseman",
     "method": "GET",
     "headers": {
       "Accept": {

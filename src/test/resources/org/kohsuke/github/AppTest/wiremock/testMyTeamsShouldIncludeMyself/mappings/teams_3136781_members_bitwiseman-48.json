@@ -2,7 +2,7 @@
   "id": "ea7a1b90-f299-4265-a22d-ef286bb1229e",
   "name": "teams_3136781_members_bitwiseman",
   "request": {
-    "url": "/teams/3136781/members/bitwiseman",
+    "url": "/orgs/cloudbees/teams/certification-reviewers/memberships/bitwiseman",
     "method": "GET",
     "headers": {
       "Accept": {

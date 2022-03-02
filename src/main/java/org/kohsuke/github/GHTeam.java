@@ -55,9 +55,13 @@ public class GHTeam extends GHObject implements Refreshable {
         return wrapUp(organization);
     }
 
-    static GHTeam[] wrapUp(GHTeam[] teams, GHPullRequest owner) {
+    static GHTeam[] wrapUp(GHTeam[] teams, GHPullRequest owner) throws IOException {
+        if (teams.length == 0) {
+            return teams;
+        }
+        GHOrganization org = owner.root.getOrganization(owner.getRepository().getOwnerName());
         for (GHTeam t : teams) {
-            t.root = owner.root;
+            t.wrapUp(org);
         }
         return teams;
     }
@@ -221,7 +225,7 @@ public class GHTeam extends GHObject implements Refreshable {
      */
     public boolean hasMember(GHUser user) {
         try {
-            root.createRequest().withUrlPath("/teams/" + getId() + "/members/" + user.getLogin()).send();
+            root.createRequest().withUrlPath(api("/memberships/" + user.getLogin())).send();
             return true;
         } catch (IOException ignore) {
             return false;
@@ -298,7 +302,7 @@ public class GHTeam extends GHObject implements Refreshable {
      *             the io exception
      */
     public void remove(GHUser u) throws IOException {
-        root.createRequest().method("DELETE").withUrlPath(api("/members/" + u.getLogin())).send();
+        root.createRequest().method("DELETE").withUrlPath(api("/memberships/" + u.getLogin())).send();
     }
 
     /**
@@ -354,7 +358,7 @@ public class GHTeam extends GHObject implements Refreshable {
     }
 
     private String api(String tail) {
-        return "/teams/" + getId() + tail;
+        return "/orgs/" + organization.login + "/teams/" + getSlug() + tail;
     }
 
     /**

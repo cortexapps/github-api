@@ -2,7 +2,7 @@
   "id": "094e4d6c-83dc-46cb-9ad3-587e52fd380d",
   "name": "teams_1941826_members_bitwiseman",
   "request": {
-    "url": "/teams/1941826/members/bitwiseman",
+    "url": "/orgs/jenkins-inc/teams/engineering/memberships/bitwiseman",
     "method": "GET",
     "headers": {
       "Accept": {

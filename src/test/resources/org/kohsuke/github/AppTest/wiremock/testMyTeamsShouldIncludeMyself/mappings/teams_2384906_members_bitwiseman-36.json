@@ -2,7 +2,7 @@
   "id": "f56cc484-a4ed-4467-908d-8bcd914912b2",
   "name": "teams_2384906_members_bitwiseman",
   "request": {
-    "url": "/teams/2384906/members/bitwiseman",
+    "url": "/orgs/cloudbees/teams/legacy-training-reviewers/memberships/bitwiseman",
     "method": "GET",
     "headers": {
       "Accept": {

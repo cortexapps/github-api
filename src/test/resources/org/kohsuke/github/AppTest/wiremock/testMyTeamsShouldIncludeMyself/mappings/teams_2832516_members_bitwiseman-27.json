@@ -2,7 +2,7 @@
   "id": "01adc070-798a-4862-b0cf-6d96ca6ac5e2",
   "name": "teams_2832516_members_bitwiseman",
   "request": {
-    "url": "/teams/2832516/members/bitwiseman",
+    "url": "/orgs/jenkinsci/teams/jep-sponsors/memberships/bitwiseman",
     "method": "GET",
     "headers": {
       "Accept": {

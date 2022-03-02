@@ -2,7 +2,7 @@
   "id": "0a39104c-3aa9-4b48-a988-87fc0323775e",
   "name": "teams_2510135_members_bitwiseman",
   "request": {
-    "url": "/teams/2510135/members/bitwiseman",
+    "url": "/orgs/jenkins-infra/teams/hacktoberfest/memberships/bitwiseman",
     "method": "GET",
     "headers": {
       "Accept": {
