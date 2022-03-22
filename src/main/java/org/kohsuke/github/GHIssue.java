@@ -75,21 +75,17 @@ public class GHIssue extends GHObject implements Reactable {
     GHIssue wrap(GHRepository owner) {
         this.owner = owner;
         if (milestone != null)
-            milestone.wrap(owner);
-        return wrap(owner.root);
+            milestone.lateBind(owner);
+        return this;
     }
 
-    GHIssue wrap(GitHub root) {
-        this.root = root;
-        if (assignee != null)
-            assignee.wrapUp(root);
-        if (assignees != null)
-            GHUser.wrap(assignees, root);
-        if (user != null)
-            user.wrapUp(root);
-        if (closed_by != null)
-            closed_by.wrapUp(root);
-        return this;
+    private String getRepositoryUrlPath() {
+        String url = getUrl().toString();
+        int index = url.indexOf("/issues");
+        if (index == -1) {
+            index = url.indexOf("/pulls");
+        }
+        return url.substring(0, index);
     }
 
     /**
@@ -97,7 +93,18 @@ public class GHIssue extends GHObject implements Reactable {
      *
      * @return the repository
      */
+    @SuppressFBWarnings(value = { "EI_EXPOSE_REP" }, justification = "Expected behavior")
     public GHRepository getRepository() {
+        try {
+            synchronized (this) {
+                if (owner == null) {
+                    String repositoryUrlPath = getRepositoryUrlPath();
+                    wrap(root().createRequest().withUrlPath(repositoryUrlPath).fetch(GHRepository.class));
+                }
+            }
+        } catch (IOException e) {
+            throw new GHException("Failed to fetch repository", e);
+        }
         return owner;
     }
 
@@ -192,7 +199,7 @@ public class GHIssue extends GHObject implements Reactable {
      *             the io exception
      */
     public void lock() throws IOException {
-        root.createRequest().method("PUT").withUrlPath(getApiRoute() + "/lock").send();
+        root().createRequest().method("PUT").withUrlPath(getApiRoute() + "/lock").send();
     }
 
     /**
@@ -202,7 +209,7 @@ public class GHIssue extends GHObject implements Reactable {
      *             the io exception
      */
     public void unlock() throws IOException {
-        root.createRequest().method("PUT").withUrlPath(getApiRoute() + "/lock").send();
+        root().createRequest().method("DELETE").withUrlPath(getApiRoute() + "/lock").send();
     }
 
     /**
@@ -216,7 +223,7 @@ public class GHIssue extends GHObject implements Reactable {
      */
     @WithBridgeMethods(void.class)
     public GHIssueComment comment(String message) throws IOException {
-        GHIssueComment r = root.createRequest()
+        GHIssueComment r = root().createRequest()
                 .method("POST")
                 .with("body", message)
                 .withUrlPath(getIssuesApiRoute() + "/comments")
@@ -225,18 +232,18 @@ public class GHIssue extends GHObject implements Reactable {
     }
 
     private void edit(String key, Object value) throws IOException {
-        root.createRequest().with(key, value).method("PATCH").withUrlPath(getApiRoute()).send();
+        root().createRequest().with(key, value).method("PATCH").withUrlPath(getApiRoute()).send();
     }
 
     /**
      * Identical to edit(), but allows null for the value.
      */
     private void editNullable(String key, Object value) throws IOException {
-        root.createRequest().withNullable(key, value).method("PATCH").withUrlPath(getApiRoute()).send();
+        root().createRequest().withNullable(key, value).method("PATCH").withUrlPath(getApiRoute()).send();
     }
 
     private void editIssue(String key, Object value) throws IOException {
-        root.createRequest().withNullable(key, value).method("PATCH").withUrlPath(getIssuesApiRoute()).send();
+        root().createRequest().withNullable(key, value).method("PATCH").withUrlPath(getIssuesApiRoute()).send();
     }
 
     /**
@@ -372,7 +379,7 @@ public class GHIssue extends GHObject implements Reactable {
     }
 
     private List<GHLabel> _addLabels(Collection<String> names) throws IOException {
-        return Arrays.asList(root.createRequest()
+        return Arrays.asList(root().createRequest()
                 .with("labels", names)
                 .method("POST")
                 .withUrlPath(getIssuesApiRoute() + "/labels")
@@ -392,7 +399,7 @@ public class GHIssue extends GHObject implements Reactable {
      */
     @WithBridgeMethods(void.class)
     public List<GHLabel> removeLabel(String name) throws IOException {
-        return Arrays.asList(root.createRequest()
+        return Arrays.asList(root().createRequest()
                 .method("DELETE")
                 .withUrlPath(getIssuesApiRoute() + "/labels", name)
                 .fetch(GHLabel[].class));
@@ -479,28 +486,27 @@ public class GHIssue extends GHObject implements Reactable {
      *             the io exception
      */
     public PagedIterable<GHIssueComment> listComments() throws IOException {
-        return root.createRequest()
+        return root().createRequest()
                 .withUrlPath(getIssuesApiRoute() + "/comments")
                 .toIterable(GHIssueComment[].class, item -> item.wrapUp(this));
     }
 
     @Preview(SQUIRREL_GIRL)
     public GHReaction createReaction(ReactionContent content) throws IOException {
-        return root.createRequest()
+        return root().createRequest()
                 .method("POST")
                 .withPreview(SQUIRREL_GIRL)
                 .with("content", content.getContent())
                 .withUrlPath(getApiRoute() + "/reactions")
-                .fetch(GHReaction.class)
-                .wrap(root);
+                .fetch(GHReaction.class);
     }
 
     @Preview(SQUIRREL_GIRL)
     public PagedIterable<GHReaction> listReactions() {
-        return root.createRequest()
+        return root().createRequest()
                 .withPreview(SQUIRREL_GIRL)
                 .withUrlPath(getApiRoute() + "/reactions")
-                .toIterable(GHReaction[].class, item -> item.wrap(root));
+                .toIterable(GHReaction[].class, null);
     }
 
     /**
@@ -524,7 +530,7 @@ public class GHIssue extends GHObject implements Reactable {
      *             the io exception
      */
     public void addAssignees(Collection<GHUser> assignees) throws IOException {
-        root.createRequest()
+        root().createRequest()
                 .method("POST")
                 .with(ASSIGNEES, getLogins(assignees))
                 .withUrlPath(getIssuesApiRoute() + "/assignees")
@@ -552,7 +558,7 @@ public class GHIssue extends GHObject implements Reactable {
      *             the io exception
      */
     public void setAssignees(Collection<GHUser> assignees) throws IOException {
-        root.createRequest()
+        root().createRequest()
                 .method("PATCH")
                 .with(ASSIGNEES, getLogins(assignees))
                 .withUrlPath(getIssuesApiRoute())
@@ -580,7 +586,7 @@ public class GHIssue extends GHObject implements Reactable {
      *             the io exception
      */
     public void removeAssignees(Collection<GHUser> assignees) throws IOException {
-        root.createRequest()
+        root().createRequest()
                 .method("DELETE")
                 .with(ASSIGNEES, getLogins(assignees))
                 .inBody()
@@ -606,9 +612,10 @@ public class GHIssue extends GHObject implements Reactable {
         if (owner == null) {
             // Issues returned from search to do not have an owner. Attempt to use url.
             final URL url = Objects.requireNonNull(getUrl(), "Missing instance URL!");
-            return StringUtils.prependIfMissing(url.toString().replace(root.getApiUrl(), ""), "/");
+            return StringUtils.prependIfMissing(url.toString().replace(root().getApiUrl(), ""), "/");
         }
-        return "/repos/" + owner.getOwnerName() + "/" + owner.getName() + "/issues/" + number;
+        GHRepository repo = getRepository();
+        return "/repos/" + repo.getOwnerName() + "/" + repo.getName() + "/issues/" + number;
     }
 
     /**
@@ -619,7 +626,7 @@ public class GHIssue extends GHObject implements Reactable {
      *             the io exception
      */
     public GHUser getAssignee() throws IOException {
-        return root.intern(assignee);
+        return root().intern(assignee);
     }
 
     /**
@@ -639,7 +646,7 @@ public class GHIssue extends GHObject implements Reactable {
      *             the io exception
      */
     public GHUser getUser() throws IOException {
-        return root.intern(user);
+        return root().intern(user);
     }
 
     /**
@@ -661,7 +668,7 @@ public class GHIssue extends GHObject implements Reactable {
         /*
          * if (closed_by==null) { closed_by = owner.getIssue(number).getClosed_by(); }
          */
-        return root.intern(closed_by);
+        return root().intern(closed_by);
     }
 
     /**
@@ -696,6 +703,7 @@ public class GHIssue extends GHObject implements Reactable {
      *
      * @return the milestone
      */
+    @SuppressFBWarnings(value = { "EI_EXPOSE_REP" }, justification = "Expected behavior")
     public GHMilestone getMilestone() {
         return milestone;
     }
@@ -703,8 +711,7 @@ public class GHIssue extends GHObject implements Reactable {
     /**
      * The type PullRequest.
      */
-    @SuppressFBWarnings(value = { "UWF_UNWRITTEN_PUBLIC_OR_PROTECTED_FIELD", "UWF_UNWRITTEN_FIELD" },
-            justification = "JSON API")
+    @SuppressFBWarnings(value = { "UWF_UNWRITTEN_FIELD" }, justification = "JSON API")
     public static class PullRequest {
         private String diff_url, patch_url, html_url;
 
@@ -752,8 +759,8 @@ public class GHIssue extends GHObject implements Reactable {
      *             the io exception
      */
     public PagedIterable<GHIssueEvent> listEvents() throws IOException {
-        return root.createRequest()
-                .withUrlPath(owner.getApiTailUrl(String.format("/issues/%s/events", number)))
+        return root().createRequest()
+                .withUrlPath(getRepository().getApiTailUrl(String.format("/issues/%s/events", number)))
                 .toIterable(GHIssueEvent[].class, item -> item.wrapUp(this));
     }
 }

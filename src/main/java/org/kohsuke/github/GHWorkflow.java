@@ -1,6 +1,7 @@
 package org.kohsuke.github;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.IOException;
@@ -65,6 +66,7 @@ public class GHWorkflow extends GHObject {
      *
      * @return the repository
      */
+    @SuppressFBWarnings(value = { "EI_EXPOSE_REP" }, justification = "Expected behavior")
     public GHRepository getRepository() {
         return owner;
     }
@@ -85,7 +87,7 @@ public class GHWorkflow extends GHObject {
      *             the io exception
      */
     public void disable() throws IOException {
-        root.createRequest().method("PUT").withUrlPath(getApiRoute(), "disable").fetchHttpStatusCode();
+        root().createRequest().method("PUT").withUrlPath(getApiRoute(), "disable").fetchHttpStatusCode();
     }
 
     /**
@@ -95,7 +97,7 @@ public class GHWorkflow extends GHObject {
      *             the io exception
      */
     public void enable() throws IOException {
-        root.createRequest().method("PUT").withUrlPath(getApiRoute(), "enable").fetchHttpStatusCode();
+        root().createRequest().method("PUT").withUrlPath(getApiRoute(), "enable").fetchHttpStatusCode();
     }
 
     /**
@@ -122,7 +124,7 @@ public class GHWorkflow extends GHObject {
      *             the io exception
      */
     public void dispatch(String ref, Map<String, Object> inputs) throws IOException {
-        Requester requester = root.createRequest()
+        Requester requester = root().createRequest()
                 .method("POST")
                 .withUrlPath(getApiRoute(), "dispatches")
                 .with("ref", ref);
@@ -134,11 +136,20 @@ public class GHWorkflow extends GHObject {
         requester.fetchHttpStatusCode();
     }
 
+    /**
+     * Lists the workflow runs belong to this workflow.
+     *
+     * @return the paged iterable
+     */
+    public PagedIterable<GHWorkflowRun> listRuns() {
+        return new GHWorkflowRunsIterable(owner, root().createRequest().withUrlPath(getApiRoute(), "runs"));
+    }
+
     private String getApiRoute() {
         if (owner == null) {
             // Workflow runs returned from search to do not have an owner. Attempt to use url.
             final URL url = Objects.requireNonNull(getUrl(), "Missing instance URL!");
-            return StringUtils.prependIfMissing(url.toString().replace(root.getApiUrl(), ""), "/");
+            return StringUtils.prependIfMissing(url.toString().replace(root().getApiUrl(), ""), "/");
 
         }
         return "/repos/" + owner.getOwnerName() + "/" + owner.getName() + "/actions/workflows/" + getId();
@@ -146,13 +157,7 @@ public class GHWorkflow extends GHObject {
 
     GHWorkflow wrapUp(GHRepository owner) {
         this.owner = owner;
-        return wrapUp(owner.root);
-    }
-
-    GHWorkflow wrapUp(GitHub root) {
-        this.root = root;
-        if (owner != null)
-            owner.wrap(root);
         return this;
     }
+
 }

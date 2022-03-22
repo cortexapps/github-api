@@ -1,6 +1,7 @@
 package org.kohsuke.github;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.apache.commons.lang3.StringUtils;
 import org.kohsuke.github.function.InputStreamFunction;
 import org.kohsuke.github.internal.EnumUtils;
@@ -178,6 +179,7 @@ public class GHWorkflowRun extends GHObject {
      *
      * @return head repository
      */
+    @SuppressFBWarnings(value = { "EI_EXPOSE_REP" }, justification = "Expected behavior")
     public GHRepository getHeadRepository() {
         return headRepository;
     }
@@ -218,6 +220,7 @@ public class GHWorkflowRun extends GHObject {
      *
      * @return the repository
      */
+    @SuppressFBWarnings(value = { "EI_EXPOSE_REP" }, justification = "Expected behavior")
     public GHRepository getRepository() {
         return owner;
     }
@@ -250,7 +253,7 @@ public class GHWorkflowRun extends GHObject {
      *             the io exception
      */
     public void cancel() throws IOException {
-        root.createRequest().method("POST").withUrlPath(getApiRoute(), "cancel").fetchHttpStatusCode();
+        root().createRequest().method("POST").withUrlPath(getApiRoute(), "cancel").fetchHttpStatusCode();
     }
 
     /**
@@ -260,7 +263,7 @@ public class GHWorkflowRun extends GHObject {
      *             the io exception
      */
     public void delete() throws IOException {
-        root.createRequest().method("DELETE").withUrlPath(getApiRoute()).fetchHttpStatusCode();
+        root().createRequest().method("DELETE").withUrlPath(getApiRoute()).fetchHttpStatusCode();
     }
 
     /**
@@ -270,7 +273,7 @@ public class GHWorkflowRun extends GHObject {
      *             the io exception
      */
     public void rerun() throws IOException {
-        root.createRequest().method("POST").withUrlPath(getApiRoute(), "rerun").fetchHttpStatusCode();
+        root().createRequest().method("POST").withUrlPath(getApiRoute(), "rerun").fetchHttpStatusCode();
     }
 
     /**
@@ -279,7 +282,7 @@ public class GHWorkflowRun extends GHObject {
      * @return the paged iterable
      */
     public PagedIterable<GHArtifact> listArtifacts() {
-        return new GHArtifactsIterable(owner, root.createRequest().withUrlPath(getApiRoute(), "artifacts"));
+        return new GHArtifactsIterable(owner, root().createRequest().withUrlPath(getApiRoute(), "artifacts"));
     }
 
     /**
@@ -300,7 +303,7 @@ public class GHWorkflowRun extends GHObject {
     public <T> T downloadLogs(InputStreamFunction<T> streamFunction) throws IOException {
         requireNonNull(streamFunction, "Stream function must not be null");
 
-        return root.createRequest().method("GET").withUrlPath(getApiRoute(), "logs").fetchStream(streamFunction);
+        return root().createRequest().method("GET").withUrlPath(getApiRoute(), "logs").fetchStream(streamFunction);
     }
 
     /**
@@ -310,7 +313,7 @@ public class GHWorkflowRun extends GHObject {
      *             the io exception
      */
     public void deleteLogs() throws IOException {
-        root.createRequest().method("DELETE").withUrlPath(getApiRoute(), "logs").fetchHttpStatusCode();
+        root().createRequest().method("DELETE").withUrlPath(getApiRoute(), "logs").fetchHttpStatusCode();
     }
 
     /**
@@ -335,7 +338,7 @@ public class GHWorkflowRun extends GHObject {
         if (owner == null) {
             // Workflow runs returned from search to do not have an owner. Attempt to use url.
             final URL url = Objects.requireNonNull(getUrl(), "Missing instance URL!");
-            return StringUtils.prependIfMissing(url.toString().replace(root.getApiUrl(), ""), "/");
+            return StringUtils.prependIfMissing(url.toString().replace(root().getApiUrl(), ""), "/");
 
         }
         return "/repos/" + owner.getOwnerName() + "/" + owner.getName() + "/actions/runs/" + getId();
@@ -343,25 +346,16 @@ public class GHWorkflowRun extends GHObject {
 
     GHWorkflowRun wrapUp(GHRepository owner) {
         this.owner = owner;
-        return wrapUp(owner.root);
+        return wrapUp(owner.root());
     }
 
     GHWorkflowRun wrapUp(GitHub root) {
-        this.root = root;
         if (owner != null) {
-            owner.wrap(root);
             if (pullRequests != null) {
                 for (GHPullRequest singlePull : pullRequests) {
                     singlePull.wrap(owner);
                 }
             }
-        } else if (pullRequests != null) {
-            for (GHPullRequest singlePull : pullRequests) {
-                singlePull.wrap(root);
-            }
-        }
-        if (headRepository != null) {
-            headRepository.wrap(root);
         }
         return this;
     }

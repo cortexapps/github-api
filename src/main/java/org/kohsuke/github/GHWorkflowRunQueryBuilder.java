@@ -2,8 +2,6 @@ package org.kohsuke.github;
 
 import org.kohsuke.github.GHWorkflowRun.Status;
 
-import java.net.MalformedURLException;
-
 /**
  * Lists up workflow runs with some filtering and sorting.
  *
@@ -14,7 +12,7 @@ public class GHWorkflowRunQueryBuilder extends GHQueryBuilder<GHWorkflowRun> {
     private final GHRepository repo;
 
     GHWorkflowRunQueryBuilder(GHRepository repo) {
-        super(repo.root);
+        super(repo.root());
         this.repo = repo;
     }
 
@@ -92,10 +90,6 @@ public class GHWorkflowRunQueryBuilder extends GHQueryBuilder<GHWorkflowRun> {
 
     @Override
     public PagedIterable<GHWorkflowRun> list() {
-        try {
-            return new GHWorkflowRunsIterable(repo, req.withUrlPath(repo.getApiTailUrl("actions/runs")).build());
-        } catch (MalformedURLException e) {
-            throw new GHException(e.getMessage(), e);
-        }
+        return new GHWorkflowRunsIterable(repo, req.withUrlPath(repo.getApiTailUrl("actions/runs")));
     }
 }

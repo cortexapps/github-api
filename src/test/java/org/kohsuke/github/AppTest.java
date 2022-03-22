@@ -4,6 +4,7 @@ import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.SystemUtils;
+import org.junit.Assert;
 import org.junit.Assume;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -17,8 +18,10 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.Map.Entry;
+import java.util.stream.Collectors;
 
 import static org.hamcrest.Matchers.*;
+import static org.junit.Assert.assertThrows;
 
 /**
  * Unit test for simple App.
@@ -138,9 +141,13 @@ public class AppTest extends AbstractGitHubWireMockTest {
         List<GHIssueComment> v = i.getComments();
         // System.out.println(v);
         assertThat(v, is(empty()));
+    }
 
-        i = repository.getIssue(3);
-        v = i.getComments();
+    @Test
+    public void testIssueWithComment() throws IOException {
+        GHRepository repository = gitHub.getRepository("kohsuke/test");
+        GHIssue i = repository.getIssue(3);
+        List<GHIssueComment> v = i.getComments();
         // System.out.println(v);
         assertThat(v.size(), equalTo(3));
         assertThat(v.get(0).getHtmlUrl().toString(),
@@ -160,10 +167,33 @@ public class AppTest extends AbstractGitHubWireMockTest {
         assertThat(v.get(1).getUser().getLogin(), equalTo("kohsuke"));
         List<GHReaction> reactions = v.get(1).listReactions().toList();
         assertThat(reactions.size(), equalTo(3));
+        assertThat(reactions.stream().map(item -> item.getContent()).collect(Collectors.toList()),
+                containsInAnyOrder(ReactionContent.EYES, ReactionContent.HOORAY, ReactionContent.ROCKET));
 
         // TODO: Add comment CRUD test
-        // TODO: Add reactions CRUD test
 
+        GHReaction reaction = null;
+        try {
+            reaction = v.get(1).createReaction(ReactionContent.CONFUSED);
+            v = i.getComments();
+            reactions = v.get(1).listReactions().toList();
+            assertThat(reactions.stream().map(item -> item.getContent()).collect(Collectors.toList()),
+                    containsInAnyOrder(ReactionContent.CONFUSED,
+                            ReactionContent.EYES,
+                            ReactionContent.HOORAY,
+                            ReactionContent.ROCKET));
+
+            reaction.delete();
+            reaction = null;
+            v = i.getComments();
+            reactions = v.get(1).listReactions().toList();
+            assertThat(reactions.stream().map(item -> item.getContent()).collect(Collectors.toList()),
+                    containsInAnyOrder(ReactionContent.EYES, ReactionContent.HOORAY, ReactionContent.ROCKET));
+        } finally {
+            if (reaction != null) {
+                reaction.delete();
+            }
+        }
     }
 
     @Test
@@ -179,6 +209,17 @@ public class AppTest extends AbstractGitHubWireMockTest {
                 .milestone(milestone)
                 .create();
         assertThat(o, notNullValue());
+        assertThat(o.getBody(), equalTo("this is body"));
+
+        // test locking
+        assertThat(o.isLocked(), is(false));
+        o.lock();
+        o = repository.getIssue(o.getNumber());
+        assertThat(o.isLocked(), is(true));
+        o.unlock();
+        o = repository.getIssue(o.getNumber());
+        assertThat(o.isLocked(), is(false));
+
         o.close();
     }
 
@@ -249,6 +290,77 @@ public class AppTest extends AbstractGitHubWireMockTest {
         // prior to using PagedIterable GHRepository.getIssues(GHIssueState) would only retrieve 30 issues
         assertThat(closedIssues.size(), greaterThan(150));
         String readRepoString = GitHub.getMappingObjectWriter().writeValueAsString(closedIssues.get(0));
+    }
+
+    @Test
+    public void testQueryIssues() throws IOException {
+        final GHRepository repo = gitHub.getOrganization("hub4j-test-org").getRepository("testQueryIssues");
+        List<GHIssue> openBugIssues = repo.queryIssues()
+                .milestone("1")
+                .creator(gitHub.getMyself().getLogin())
+                .state(GHIssueState.OPEN)
+                .label("bug")
+                .pageSize(10)
+                .list()
+                .toList();
+        GHIssue issueWithMilestone = openBugIssues.get(0);
+        assertThat(openBugIssues, is(not(empty())));
+        assertThat(openBugIssues, hasSize(1));
+        assertThat(issueWithMilestone.getTitle(), is("Issue with milestone"));
+        assertThat(issueWithMilestone.getAssignee().getLogin(), is("bloslo"));
+        assertThat(issueWithMilestone.getBody(), containsString("@bloslo"));
+
+        List<GHIssue> openIssuesWithAssignee = repo.queryIssues()
+                .assignee(gitHub.getMyself().getLogin())
+                .state(GHIssueState.OPEN)
+                .list()
+                .toList();
+        GHIssue issueWithAssignee = openIssuesWithAssignee.get(0);
+        assertThat(openIssuesWithAssignee, is(not(empty())));
+        assertThat(openIssuesWithAssignee, hasSize(1));
+        assertThat(issueWithAssignee.getLabels(), hasSize(2));
+        assertThat(issueWithAssignee.getMilestone(), is(notNullValue()));
+
+        List<GHIssue> allIssuesSince = repo.queryIssues()
+                .mentioned(gitHub.getMyself().getLogin())
+                .state(GHIssueState.ALL)
+                .since(1632411646L)
+                .sort(GHIssueQueryBuilder.Sort.COMMENTS)
+                .direction(GHDirection.ASC)
+                .list()
+                .toList();
+        GHIssue issueSince = allIssuesSince.get(3);
+        assertThat(allIssuesSince, is(not(empty())));
+        assertThat(allIssuesSince, hasSize(4));
+        assertThat(issueSince.getBody(), is("Test closed issue @bloslo"));
+        assertThat(issueSince.getState(), is(GHIssueState.CLOSED));
+
+        List<GHIssue> allIssuesWithLabels = repo.queryIssues()
+                .label("bug")
+                .label("test-label")
+                .state(GHIssueState.ALL)
+                .list()
+                .toList();
+        GHIssue issueWithLabel = allIssuesWithLabels.get(0);
+        assertThat(allIssuesWithLabels, is(not(empty())));
+        assertThat(allIssuesWithLabels, hasSize(5));
+        assertThat(issueWithLabel.getComments(), hasSize(2));
+        assertThat(issueWithLabel.getTitle(), is("Issue with comments"));
+
+        List<GHIssue> issuesWithLabelNull = repo.queryIssues().label(null).list().toList();
+        GHIssue issueWithLabelNull = issuesWithLabelNull.get(2);
+        assertThat(issuesWithLabelNull, is(not(empty())));
+        assertThat(issuesWithLabelNull, hasSize(6));
+        assertThat(issueWithLabelNull.getTitle(), is("Closed issue"));
+        assertThat(issueWithLabelNull.getBody(), is("Test closed issue @bloslo"));
+        assertThat(issueWithLabelNull.getState(), is(GHIssueState.OPEN));
+
+        List<GHIssue> issuesWithLabelEmptyString = repo.queryIssues().label("").state(GHIssueState.ALL).list().toList();
+        GHIssue issueWithLabelEmptyString = issuesWithLabelEmptyString.get(0);
+        assertThat(issuesWithLabelEmptyString, is(not(empty())));
+        assertThat(issuesWithLabelEmptyString, hasSize(8));
+        assertThat(issueWithLabelEmptyString.getTitle(), is("Closed issue"));
+        assertThat(issueWithLabelEmptyString.getBody(), is("Test closed issue @bloslo"));
     }
 
     private GHRepository getTestRepository() throws IOException {
@@ -333,15 +445,12 @@ public class AppTest extends AbstractGitHubWireMockTest {
     }
 
     @Test
-    public void testShouldFetchTeam() throws Exception {
+    @SuppressWarnings("deprecation")
+    public void testFetchingTeamFromGitHubInstanceThrowsException() throws Exception {
         GHOrganization organization = gitHub.getOrganization(GITHUB_API_TEST_ORG);
         GHTeam teamByName = organization.getTeams().get("Core Developers");
 
-        GHTeam teamById = gitHub.getTeam((int) teamByName.getId());
-        assertThat(teamById, notNullValue());
-
-        assertThat(teamById.getId(), equalTo(teamByName.getId()));
-        assertThat(teamById.getDescription(), equalTo(teamByName.getDescription()));
+        assertThrows(UnsupportedOperationException.class, () -> gitHub.getTeam((int) teamByName.getId()));
     }
 
     @Test
@@ -414,6 +523,7 @@ public class AppTest extends AbstractGitHubWireMockTest {
     public void testGetMyself() throws Exception {
         GHMyself me = gitHub.getMyself();
         assertThat(me, notNullValue());
+        assertThat(me.root(), sameInstance(gitHub));
         assertThat(gitHub.getUser("bitwiseman"), notNullValue());
         PagedIterable<GHRepository> ghRepositories = me.listRepositories();
         assertThat(ghRepositories, is(not(emptyIterable())));
@@ -580,8 +690,8 @@ public class AppTest extends AbstractGitHubWireMockTest {
 
     @Test
     public void tryHook() throws Exception {
-        GHOrganization o = gitHub.getOrganization(GITHUB_API_TEST_ORG);
-        GHRepository r = o.getRepository("github-api");
+        final GHOrganization o = gitHub.getOrganization(GITHUB_API_TEST_ORG);
+        final GHRepository r = o.getRepository("github-api");
         try {
             GHHook hook = r.createWebHook(new URL("http://www.google.com/"));
             assertThat(hook.getName(), equalTo("web"));
@@ -598,6 +708,15 @@ public class AppTest extends AbstractGitHubWireMockTest {
             assertThat(hook2.isActive(), equalTo(true));
             hook2.ping();
             hook2.delete();
+            final GHHook finalRepoHook = hook;
+            GHFileNotFoundException e = Assert.assertThrows(GHFileNotFoundException.class,
+                    () -> r.getHook((int) finalRepoHook.getId()));
+            assertThat(e.getMessage(),
+                    containsString("repos/hub4j-test-org/github-api/hooks/" + finalRepoHook.getId()));
+            assertThat(e.getMessage(), containsString("rest/reference/repos#get-a-repository-webhook"));
+
+            hook = r.createWebHook(new URL("http://www.google.com/"));
+            r.deleteHook((int) hook.getId());
 
             hook = o.createWebHook(new URL("http://www.google.com/"));
             assertThat(hook.getName(), equalTo("web"));
@@ -615,11 +734,21 @@ public class AppTest extends AbstractGitHubWireMockTest {
             hook2.ping();
             hook2.delete();
 
+            final GHHook finalOrgHook = hook;
+            GHFileNotFoundException e2 = Assert.assertThrows(GHFileNotFoundException.class,
+                    () -> o.getHook((int) finalOrgHook.getId()));
+            assertThat(e2.getMessage(), containsString("orgs/hub4j-test-org/hooks/" + finalOrgHook.getId()));
+            assertThat(e2.getMessage(), containsString("rest/reference/orgs#get-an-organization-webhook"));
+
+            hook = o.createWebHook(new URL("http://www.google.com/"));
+            o.deleteHook((int) hook.getId());
+
             // System.out.println(hook);
         } finally {
             if (mockGitHub.isUseProxy()) {
-                r = getNonRecordingGitHub().getOrganization(GITHUB_API_TEST_ORG).getRepository("github-api");
-                for (GHHook h : r.getHooks()) {
+                GHRepository cleanupRepo = getNonRecordingGitHub().getOrganization(GITHUB_API_TEST_ORG)
+                        .getRepository("github-api");
+                for (GHHook h : cleanupRepo.getHooks()) {
                     h.delete();
                 }
             }
@@ -771,6 +900,7 @@ public class AppTest extends AbstractGitHubWireMockTest {
         // System.out.println(state);
         assertThat(state.getDescription(), equalTo("testing!"));
         assertThat(state.getTargetUrl(), equalTo("http://kohsuke.org/"));
+        assertThat(state.getCreator().getLogin(), equalTo("kohsuke"));
     }
 
     @Test

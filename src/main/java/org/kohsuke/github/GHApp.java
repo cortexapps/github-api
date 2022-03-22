@@ -1,9 +1,11 @@
 package org.kohsuke.github;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.kohsuke.github.internal.EnumUtils;
 
 import java.io.IOException;
 import java.net.URL;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -32,6 +34,7 @@ public class GHApp extends GHObject {
      *
      * @return the owner
      */
+    @SuppressFBWarnings(value = { "EI_EXPOSE_REP" }, justification = "Expected behavior")
     public GHUser getOwner() {
         return owner;
     }
@@ -45,7 +48,7 @@ public class GHApp extends GHObject {
      */
     @Deprecated
     public void setOwner(GHUser owner) {
-        this.owner = owner;
+        throw new RuntimeException("Do not use this method.");
     }
 
     /**
@@ -66,7 +69,7 @@ public class GHApp extends GHObject {
      */
     @Deprecated
     public void setName(String name) {
-        this.name = name;
+        throw new RuntimeException("Do not use this method.");
     }
 
     /**
@@ -87,7 +90,7 @@ public class GHApp extends GHObject {
      */
     @Deprecated
     public void setDescription(String description) {
-        this.description = description;
+        throw new RuntimeException("Do not use this method.");
     }
 
     /**
@@ -108,7 +111,7 @@ public class GHApp extends GHObject {
      */
     @Deprecated
     public void setExternalUrl(String externalUrl) {
-        this.externalUrl = externalUrl;
+        throw new RuntimeException("Do not use this method.");
     }
 
     /**
@@ -131,7 +134,7 @@ public class GHApp extends GHObject {
      */
     @Deprecated
     public void setEvents(List<GHEvent> events) {
-        this.events = events.stream().map(GHEvent::symbol).collect(Collectors.toList());
+        throw new RuntimeException("Do not use this method.");
     }
 
     /**
@@ -152,7 +155,7 @@ public class GHApp extends GHObject {
      */
     @Deprecated
     public void setInstallationsCount(long installationsCount) {
-        this.installationsCount = installationsCount;
+        throw new RuntimeException("Do not use this method.");
     }
 
     public URL getHtmlUrl() {
@@ -165,7 +168,7 @@ public class GHApp extends GHObject {
      * @return the permissions
      */
     public Map<String, String> getPermissions() {
-        return permissions;
+        return Collections.unmodifiableMap(permissions);
     }
 
     /**
@@ -177,12 +180,7 @@ public class GHApp extends GHObject {
      */
     @Deprecated
     public void setPermissions(Map<String, String> permissions) {
-        this.permissions = permissions;
-    }
-
-    GHApp wrapUp(GitHub root) {
-        this.root = root;
-        return this;
+        throw new RuntimeException("Do not use this method.");
     }
 
     /**
@@ -195,10 +193,10 @@ public class GHApp extends GHObject {
      */
     @Preview(MACHINE_MAN)
     public PagedIterable<GHAppInstallation> listInstallations() {
-        return root.createRequest()
+        return root().createRequest()
                 .withPreview(MACHINE_MAN)
                 .withUrlPath("/app/installations")
-                .toIterable(GHAppInstallation[].class, item -> item.wrapUp(root));
+                .toIterable(GHAppInstallation[].class, null);
     }
 
     /**
@@ -215,11 +213,10 @@ public class GHApp extends GHObject {
      */
     @Preview(MACHINE_MAN)
     public GHAppInstallation getInstallationById(long id) throws IOException {
-        return root.createRequest()
+        return root().createRequest()
                 .withPreview(MACHINE_MAN)
                 .withUrlPath(String.format("/app/installations/%d", id))
-                .fetch(GHAppInstallation.class)
-                .wrapUp(root);
+                .fetch(GHAppInstallation.class);
     }
 
     /**
@@ -237,11 +234,10 @@ public class GHApp extends GHObject {
      */
     @Preview(MACHINE_MAN)
     public GHAppInstallation getInstallationByOrganization(String name) throws IOException {
-        return root.createRequest()
+        return root().createRequest()
                 .withPreview(MACHINE_MAN)
                 .withUrlPath(String.format("/orgs/%s/installation", name))
-                .fetch(GHAppInstallation.class)
-                .wrapUp(root);
+                .fetch(GHAppInstallation.class);
     }
 
     /**
@@ -261,11 +257,10 @@ public class GHApp extends GHObject {
      */
     @Preview(MACHINE_MAN)
     public GHAppInstallation getInstallationByRepository(String ownerName, String repositoryName) throws IOException {
-        return root.createRequest()
+        return root().createRequest()
                 .withPreview(MACHINE_MAN)
                 .withUrlPath(String.format("/repos/%s/%s/installation", ownerName, repositoryName))
-                .fetch(GHAppInstallation.class)
-                .wrapUp(root);
+                .fetch(GHAppInstallation.class);
     }
 
     /**
@@ -282,11 +277,10 @@ public class GHApp extends GHObject {
      */
     @Preview(MACHINE_MAN)
     public GHAppInstallation getInstallationByUser(String name) throws IOException {
-        return root.createRequest()
+        return root().createRequest()
                 .withPreview(MACHINE_MAN)
                 .withUrlPath(String.format("/users/%s/installation", name))
-                .fetch(GHAppInstallation.class)
-                .wrapUp(root);
+                .fetch(GHAppInstallation.class);
     }
 
 }

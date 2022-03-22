@@ -47,19 +47,11 @@ public class GHBranch extends GitHubInteractiveObject {
     }
 
     /**
-     * Gets root.
-     *
-     * @return the root
-     */
-    public GitHub getRoot() {
-        return root;
-    }
-
-    /**
      * Gets owner.
      *
      * @return the repository that this branch is in.
      */
+    @SuppressFBWarnings(value = { "EI_EXPOSE_REP" }, justification = "Expected behavior")
     public GHRepository getOwner() {
         return owner;
     }
@@ -102,11 +94,10 @@ public class GHBranch extends GitHubInteractiveObject {
      */
     @Preview(Previews.LUKE_CAGE)
     public GHBranchProtection getProtection() throws IOException {
-        return root.createRequest()
+        return root().createRequest()
                 .withPreview(Previews.LUKE_CAGE)
                 .setRawUrlPath(protection_url)
-                .fetch(GHBranchProtection.class)
-                .wrap(this);
+                .fetch(GHBranchProtection.class);
     }
 
     /**
@@ -125,7 +116,7 @@ public class GHBranch extends GitHubInteractiveObject {
      *             if disabling protection fails
      */
     public void disableProtection() throws IOException {
-        root.createRequest().method("DELETE").setRawUrlPath(protection_url).send();
+        root().createRequest().method("DELETE").setRawUrlPath(protection_url).send();
     }
 
     /**
@@ -203,7 +194,7 @@ public class GHBranch extends GitHubInteractiveObject {
      */
     @CheckForNull
     public GHCommit merge(String head, String commitMessage) throws IOException {
-        GHCommit result = root.createRequest()
+        GHCommit result = root().createRequest()
                 .withUrlPath(owner.getApiTailUrl("merges"))
                 .method("POST")
                 .with("commit_message", commitMessage)
@@ -230,7 +221,6 @@ public class GHBranch extends GitHubInteractiveObject {
 
     GHBranch wrap(GHRepository repo) {
         this.owner = repo;
-        this.root = repo.root;
         return this;
     }
 }

@@ -10,6 +10,7 @@ import java.util.Locale;
  * @see <a href="https://developer.github.com/v3/activity/events/types/">Event type reference</a>
  */
 public enum GHEvent {
+    BRANCH_PROTECTION_RULE,
     CHECK_RUN,
     CHECK_SUITE,
     CODE_SCANNING_ALERT,
@@ -38,6 +39,7 @@ public enum GHEvent {
     MARKETPLACE_PURCHASE,
     MEMBER,
     MEMBERSHIP,
+    MERGE_QUEUE_ENTRY,
     META,
     MILESTONE,
     ORGANIZATION,
@@ -52,6 +54,7 @@ public enum GHEvent {
     PULL_REQUEST,
     PULL_REQUEST_REVIEW,
     PULL_REQUEST_REVIEW_COMMENT,
+    PULL_REQUEST_REVIEW_THREAD,
     PUSH,
     REGISTRY_PACKAGE,
     RELEASE,
@@ -66,6 +69,7 @@ public enum GHEvent {
     TEAM,
     TEAM_ADD,
     WATCH,
+    WORKFLOW_JOB,
     WORKFLOW_DISPATCH,
     WORKFLOW_RUN,
 

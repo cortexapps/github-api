@@ -19,6 +19,7 @@ public class GHTeamTest extends AbstractGitHubWireMockTest {
 
         // Set the description.
         GHTeam team = gitHub.getOrganization(GITHUB_API_TEST_ORG).getTeamBySlug(teamSlug);
+        assertThat(team.getHtmlUrl(), notNullValue());
         team.setDescription(description);
 
         // Check that it was set correctly.
@@ -36,7 +37,35 @@ public class GHTeamTest extends AbstractGitHubWireMockTest {
     }
 
     @Test
-    public void testlistMembersAdmin() throws IOException {
+    public void getMembers() throws IOException {
+        String teamSlug = "dummy-team";
+
+        GHTeam team = gitHub.getOrganization(GITHUB_API_TEST_ORG).getTeamBySlug(teamSlug);
+
+        Set<GHUser> admins = team.getMembers();
+
+        assertThat(admins, notNullValue());
+        assertThat("One admin in dummy team", admins.size(), equalTo(1));
+        assertThat("Specific user in admin team",
+                admins.stream().anyMatch(ghUser -> ghUser.getLogin().equals("bitwiseman")));
+    }
+
+    @Test
+    public void listMembers() throws IOException {
+        String teamSlug = "dummy-team";
+
+        GHTeam team = gitHub.getOrganization(GITHUB_API_TEST_ORG).getTeamBySlug(teamSlug);
+
+        List<GHUser> admins = team.listMembers().toList();
+
+        assertThat(admins, notNullValue());
+        assertThat("One admin in dummy team", admins.size(), equalTo(1));
+        assertThat("Specific user in admin team",
+                admins.stream().anyMatch(ghUser -> ghUser.getLogin().equals("bitwiseman")));
+    }
+
+    @Test
+    public void listMembersAdmin() throws IOException {
         String teamSlug = "dummy-team";
 
         GHTeam team = gitHub.getOrganization(GITHUB_API_TEST_ORG).getTeamBySlug(teamSlug);
@@ -50,7 +79,7 @@ public class GHTeamTest extends AbstractGitHubWireMockTest {
     }
 
     @Test
-    public void testlistMembersNoMatch() throws IOException {
+    public void listMembersNoMatch() throws IOException {
         String teamSlug = "dummy-team";
 
         GHTeam team = gitHub.getOrganization(GITHUB_API_TEST_ORG).getTeamBySlug(teamSlug);
@@ -62,7 +91,9 @@ public class GHTeamTest extends AbstractGitHubWireMockTest {
 
     @Test
     public void testSetPrivacy() throws IOException {
-        String teamSlug = "dummy-team";
+        // we need to use a team that doesn't have child teams
+        // as secret privacy is not supported for parent teams
+        String teamSlug = "simple-team";
         Privacy privacy = Privacy.CLOSED;
 
         // Set the privacy.
