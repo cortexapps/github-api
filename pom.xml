@@ -2,7 +2,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.kohsuke</groupId>
   <artifactId>cortexapps-github-api</artifactId>
-  <version>1.135-SNAPSHOT</version>
+  <version>1.137-SNAPSHOT</version>
   <name>GitHub API for Java</name>
   <url>https://github-api.kohsuke.org/</url>
   <description>GitHub API for Java</description>
@@ -394,26 +394,26 @@
           </dependency>
         </dependencies>
       </plugin>
-      <plugin>
-        <groupId>com.github.siom79.japicmp</groupId>
-        <artifactId>japicmp-maven-plugin</artifactId>
-        <version>0.15.7</version>
-        <configuration>
-          <parameter>
-            <breakBuildOnBinaryIncompatibleModifications>true</breakBuildOnBinaryIncompatibleModifications>
-            <onlyModified>true</onlyModified>
-            <includeSynthetic>true</includeSynthetic>
-          </parameter>
-        </configuration>
-        <executions>
-          <execution>
-            <phase>verify</phase>
-            <goals>
-              <goal>cmp</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
+<!--      <plugin>-->
+<!--        <groupId>com.github.siom79.japicmp</groupId>-->
+<!--        <artifactId>japicmp-maven-plugin</artifactId>-->
+<!--        <version>0.15.7</version>-->
+<!--        <configuration>-->
+<!--          <parameter>-->
+<!--            <breakBuildOnBinaryIncompatibleModifications>true</breakBuildOnBinaryIncompatibleModifications>-->
+<!--            <onlyModified>true</onlyModified>-->
+<!--            <includeSynthetic>true</includeSynthetic>-->
+<!--          </parameter>-->
+<!--        </configuration>-->
+<!--        <executions>-->
+<!--          <execution>-->
+<!--            <phase>verify</phase>-->
+<!--            <goals>-->
+<!--              <goal>cmp</goal>-->
+<!--            </goals>-->
+<!--          </execution>-->
+<!--        </executions>-->
+<!--      </plugin>-->
     </plugins>
   </build>
 

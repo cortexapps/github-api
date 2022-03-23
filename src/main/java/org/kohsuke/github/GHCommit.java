@@ -461,7 +461,7 @@ public class GHCommit {
                 .toIterable(GHPullRequest[].class, item -> {
                     try {
                         item.wrapUp(owner);
-                    } catch (IOException e) {
+                    } catch (Exception e) {
                         throw new GHException("Failed to list pull requests", e);
                     }
                 });

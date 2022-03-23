@@ -95,7 +95,7 @@ public class GHPullRequestQueryBuilder extends GHQueryBuilder<GHPullRequest> {
                 .toIterable(GHPullRequest[].class, item -> {
                     try {
                         item.wrapUp(repo);
-                    } catch (IOException e) {
+                    } catch (Exception e) {
                         throw new GHException("Failed to list pull requests", e);
                     }
                 });

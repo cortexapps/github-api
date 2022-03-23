@@ -87,9 +87,17 @@ public class OkHttpGitHubConnector implements GitHubConnector {
         if (request.hasBody()) {
             body = RequestBody.create(IOUtils.toByteArray(request.body()));
         }
+
         builder.method(request.method(), body);
         Request okhttpRequest = builder.build();
+
+//        System.out.println("HI ADDI hi: addi: client cache is " + client.cache().directory());
+        System.out.println("HI ADDI hi: addi: client request headers are " + okhttpRequest.headers());
+
         Response okhttpResponse = client.newCall(okhttpRequest).execute();
+
+        System.out.println("HI ADDI hi: LITERAL RESPONSE CODE FROM GITHUB IS " + okhttpResponse.code());
+        System.out.println("HI ADDI hi: LITERAL RESPONSE CODE FROM GITHUB IS " + okhttpResponse.message());
 
         return new OkHttpGitHubConnectorResponse(request, okhttpResponse);
     }

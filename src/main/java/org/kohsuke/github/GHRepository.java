@@ -3119,7 +3119,7 @@ public class GHRepository extends GHObject {
      *             the io exception
      */
     public GHRepositoryPublicKey getPublicKey() throws IOException {
-        return root.createRequest()
+        return root().createRequest()
                 .withUrlPath(getApiTailUrl("/actions/secrets/public-key"))
                 .fetch(GHRepositoryPublicKey.class)
                 .wrapUp(this);
@@ -3178,7 +3178,7 @@ public class GHRepository extends GHObject {
      *             the io exception
      */
     public void createSecret(String secretName, String encryptedValue, String publicKeyId) throws IOException {
-        root.createRequest()
+        root().createRequest()
                 .method("PUT")
                 .with("encrypted_value", encryptedValue)
                 .with("key_id", publicKeyId)

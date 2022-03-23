@@ -33,14 +33,14 @@ public class GHRepositoryPublicKey extends GHObject {
 
     GHRepositoryPublicKey wrapUp(GHRepository owner) {
         this.owner = owner;
-        return wrapUp(owner.root);
-    }
-
-    GHRepositoryPublicKey wrapUp(GitHub root) {
-        this.root = root;
-        if (owner != null) {
-            owner.wrap(root);
-        }
         return this;
     }
+
+//    GHRepositoryPublicKey wrapUp(GitHub root) {
+//        this.root = root;
+//        if (owner != null) {
+//            owner.wrap(root);
+//        }
+//        return this;
+//    }
 }
