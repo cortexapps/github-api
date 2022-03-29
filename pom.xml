@@ -595,6 +595,7 @@
           <plugin>
             <artifactId>maven-surefire-plugin</artifactId>
             <executions>
+<!--
               <execution>
                 <id>okhttp-test</id>
                 <phase>integration-test</phase>
@@ -607,6 +608,7 @@
                   <argLine>@{jacoco.surefire.argLine} ${surefire.argLine} -Dtest.github.connector=okhttp</argLine>
                 </configuration>
               </execution>
+-->
               <execution>
                 <id>slow-or-flaky-test</id>
                 <phase>integration-test</phase>
