@@ -617,14 +617,12 @@
                 <configuration>
                   <classesDirectory>${project.basedir}/target/github-api-${project.version}.jar</classesDirectory>
                   <rerunFailingTestsCount>2</rerunFailingTestsCount>
-                  <!-- There are some tests that take longer or are a little
-                    flaky. Run them here. -->
                   <includesFile>src/test/resources/slow-or-flaky-tests.txt</includesFile>
                   <argLine>@{jacoco.surefire.argLine} ${surefire.argLine}</argLine>
                 </configuration>
               </execution>
             </executions>
--->
+--> 
           </plugin>
         </plugins>
       </build>
