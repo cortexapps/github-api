@@ -594,8 +594,8 @@
         <plugins>
           <plugin>
             <artifactId>maven-surefire-plugin</artifactId>
-            <executions>
 <!--
+            <executions>
               <execution>
                 <id>okhttp-test</id>
                 <phase>integration-test</phase>
@@ -623,8 +623,8 @@
                   <argLine>@{jacoco.surefire.argLine} ${surefire.argLine}</argLine>
                 </configuration>
               </execution>
--->
             </executions>
+-->
           </plugin>
         </plugins>
       </build>
