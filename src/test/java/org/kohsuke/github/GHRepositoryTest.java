@@ -698,7 +698,7 @@ public class GHRepositoryTest extends AbstractGitHubWireMockTest {
 
     @Test
     public void getPublicKey() throws Exception {
-        GHRepository repo = getRepository(gitHub);
+        GHRepository repo = getTempRepository();
         GHRepositoryPublicKey publicKey = repo.getPublicKey();
         assertThat(publicKey, notNullValue());
         assertThat(publicKey.getKey(), equalTo("test-key"));
