@@ -1,7 +1,5 @@
 package org.kohsuke.github;
 
-import java.io.IOException;
-
 import static org.kohsuke.github.internal.Previews.SHADOW_CAT;
 
 /**

@@ -89,7 +89,6 @@ public class OkHttpGitHubConnector implements GitHubConnector {
         }
         builder.method(request.method(), body);
         Request okhttpRequest = builder.build();
-
         Response okhttpResponse = client.newCall(okhttpRequest).execute();
         return new OkHttpGitHubConnectorResponse(request, okhttpResponse);
     }
