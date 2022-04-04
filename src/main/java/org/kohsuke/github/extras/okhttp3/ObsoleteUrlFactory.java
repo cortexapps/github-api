@@ -629,9 +629,7 @@ public final class ObsoleteUrlFactory implements URLStreamHandlerFactory, Clonea
             clientBuilder.dispatcher(new Dispatcher(client.dispatcher().executorService()));
 
             // If we're currently not using caches, make sure the engine's client doesn't have one.
-            System.out.println("HI ADDI inside, outside getUseCaches() iis this prints tru its horrible" + !getUseCaches());
             if (!getUseCaches()) {
-                System.out.println("HI ADDI inside, setting cache as null");
                 clientBuilder.cache(null);
             }
 

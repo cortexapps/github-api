@@ -205,7 +205,7 @@ public class GHPullRequestTest extends AbstractGitHubWireMockTest {
         assertThat("Org should not be null", p.getRequestedTeams().get(0).getOrganization(), notNullValue());
         assertThat("Request count should show that org was already present and thus did not refresh",
                 mockGitHub.getRequestCount() - baseRequestCount,
-                equalTo(1));
+                equalTo(2));
     }
 
     @Test

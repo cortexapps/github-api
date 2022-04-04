@@ -92,12 +92,6 @@ public class GHPullRequestQueryBuilder extends GHQueryBuilder<GHPullRequest> {
     public PagedIterable<GHPullRequest> list() {
         return req.withPreview(SHADOW_CAT)
                 .withUrlPath(repo.getApiTailUrl("pulls"))
-                .toIterable(GHPullRequest[].class, item -> {
-                    try {
-                        item.wrapUp(repo);
-                    } catch (Exception e) {
-                        throw new GHException("Failed to list pull requests", e);
-                    }
-                });
+                .toIterable(GHPullRequest[].class, item -> item.wrapUp(repo));
     }
 }
