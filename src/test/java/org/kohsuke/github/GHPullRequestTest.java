@@ -202,10 +202,8 @@ public class GHPullRequestTest extends AbstractGitHubWireMockTest {
         assertThat("We should not eagerly load organizations for teams",
                 mockGitHub.getRequestCount() - baseRequestCount,
                 equalTo(1));
-        assertThat("Org should be queried for automatically if asked for",
-                p.getRequestedTeams().get(0).getOrganization(),
-                notNullValue());
-        assertThat("Request count should show lazy load occurred",
+        assertThat("Org should not be null", p.getRequestedTeams().get(0).getOrganization(), notNullValue());
+        assertThat("Request count should show that org was already present and thus did not refresh",
                 mockGitHub.getRequestCount() - baseRequestCount,
                 equalTo(2));
     }
