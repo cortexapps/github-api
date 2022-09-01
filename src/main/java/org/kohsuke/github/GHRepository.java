@@ -94,7 +94,7 @@ public class GHRepository extends GHObject {
 
     private GHUser owner; // not fully populated. beware.
 
-    private boolean has_issues, has_wiki, fork, has_downloads, has_pages, archived, has_projects;
+    private boolean has_issues, has_wiki, fork, has_downloads, has_pages, archived, disabled, has_projects;
 
     private boolean allow_squash_merge;
 
@@ -113,11 +113,11 @@ public class GHRepository extends GHObject {
 
     private String pushed_at;
 
-    private Map<Integer, GHMilestone> milestones = new WeakHashMap<Integer, GHMilestone>();
+    private Map<Integer, GHMilestone> milestones = Collections.synchronizedMap(new WeakHashMap<>());
 
     private String default_branch, language;
 
-    private Map<String, GHCommit> commits = new WeakHashMap<String, GHCommit>();
+    private Map<String, GHCommit> commits = Collections.synchronizedMap(new WeakHashMap<>());
 
     @SkipFromToString
     private GHRepoPermission permissions;
@@ -661,6 +661,15 @@ public class GHRepository extends GHObject {
     }
 
     /**
+     * Is disabled boolean.
+     *
+     * @return the boolean
+     */
+    public boolean isDisabled() {
+        return disabled;
+    }
+
+    /**
      * Is allow squash merge boolean.
      *
      * @return the boolean
@@ -1014,6 +1023,21 @@ public class GHRepository extends GHObject {
     }
 
     /**
+     * Checks if the given user is a collaborator for this repository.
+     *
+     * @param user
+     *            a {@link GHUser}
+     * @return true if the user is a collaborator for this repository
+     * @throws IOException
+     *             the io exception
+     */
+    public boolean isCollaborator(GHUser user) throws IOException {
+        return root().createRequest()
+                .withUrlPath(getApiTailUrl("collaborators/" + user.getLogin()))
+                .fetchHttpStatusCode() == 204;
+    }
+
+    /**
      * Obtain permission for a given user in this repository.
      *
      * @param user
@@ -1043,6 +1067,36 @@ public class GHRepository extends GHObject {
     }
 
     /**
+     * Check if a user has at least the given permission in this repository.
+     *
+     * @param user
+     *            a {@link GHUser#getLogin}
+     * @param permission
+     *            the permission to check
+     * @return true if the user has at least this permission level
+     * @throws IOException
+     *             the io exception
+     */
+    public boolean hasPermission(String user, GHPermissionType permission) throws IOException {
+        return getPermission(user).implies(permission);
+    }
+
+    /**
+     * Check if a user has at least the given permission in this repository.
+     *
+     * @param user
+     *            the user
+     * @param permission
+     *            the permission to check
+     * @return true if the user has at least this permission level
+     * @throws IOException
+     *             the io exception
+     */
+    public boolean hasPermission(GHUser user, GHPermissionType permission) throws IOException {
+        return hasPermission(user.getLogin(), permission);
+    }
+
+    /**
      * If this repository belongs to an organization, return a set of teams.
      *
      * @return the teams
@@ -1060,14 +1114,31 @@ public class GHRepository extends GHObject {
     /**
      * Add collaborators.
      *
-     * @param users
-     *            the users
      * @param permission
      *            the permission level
+     * @param users
+     *            the users
+     * @throws IOException
+     *             the io exception
+     * @deprecated #addCollaborators(GHOrganization.RolePermission, GHUser)
+     */
+    @Deprecated
+    public void addCollaborators(GHOrganization.Permission permission, GHUser... users) throws IOException {
+        addCollaborators(asList(users), permission);
+    }
+
+    /**
+     * Add collaborators.
+     *
+     * @param permission
+     *            the permission level
+     * @param users
+     *            the users
+     *
      * @throws IOException
      *             the io exception
      */
-    public void addCollaborators(GHOrganization.Permission permission, GHUser... users) throws IOException {
+    public void addCollaborators(GHOrganization.RepositoryRole permission, GHUser... users) throws IOException {
         addCollaborators(asList(users), permission);
     }
 
@@ -1104,8 +1175,25 @@ public class GHRepository extends GHObject {
      *            the permission level
      * @throws IOException
      *             the io exception
+     * @deprecated #addCollaborators(Collection, GHOrganization.RolePermission)
      */
+    @Deprecated
     public void addCollaborators(Collection<GHUser> users, GHOrganization.Permission permission) throws IOException {
+        modifyCollaborators(users, "PUT", GHOrganization.RepositoryRole.from(permission));
+    }
+
+    /**
+     * Add collaborators.
+     *
+     * @param users
+     *            the users
+     * @param permission
+     *            the permission level
+     * @throws IOException
+     *             the io exception
+     */
+    public void addCollaborators(Collection<GHUser> users, GHOrganization.RepositoryRole permission)
+            throws IOException {
         modifyCollaborators(users, "PUT", permission);
     }
 
@@ -1135,14 +1223,14 @@ public class GHRepository extends GHObject {
 
     private void modifyCollaborators(@NonNull Collection<GHUser> users,
             @NonNull String method,
-            @CheckForNull GHOrganization.Permission permission) throws IOException {
+            @CheckForNull GHOrganization.RepositoryRole permission) throws IOException {
         Requester requester = root().createRequest().method(method);
         if (permission != null) {
-            requester = requester.with("permission", permission).inBody();
+            requester = requester.with("permission", permission.toString()).inBody();
         }
 
         // Make sure that the users collection doesn't have any duplicates
-        for (GHUser user : new LinkedHashSet<GHUser>(users)) {
+        for (GHUser user : new LinkedHashSet<>(users)) {
             requester.withUrlPath(getApiTailUrl("collaborators/" + user.getLogin())).send();
         }
     }
@@ -1156,7 +1244,7 @@ public class GHRepository extends GHObject {
      *             the io exception
      */
     public void setEmailServiceHook(String address) throws IOException {
-        Map<String, String> config = new HashMap<String, String>();
+        Map<String, String> config = new HashMap<>();
         config.put("address", address);
         root().createRequest()
                 .method("POST")
