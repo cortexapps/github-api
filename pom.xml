@@ -99,117 +99,117 @@
           <artifactId>maven-gpg-plugin</artifactId>
           <version>3.0.1</version>
         </plugin>
-        <plugin>
-          <groupId>org.jacoco</groupId>
-          <artifactId>jacoco-maven-plugin</artifactId>
-          <version>0.8.7</version>
-          <configuration>
-            <!-- no need to get data about external code. It dramatically reduces performance of JaCoCo for nothing -->
-            <excludes>
-              <exclude>/org/kohsuke/github/extras/HttpClient*</exclude>
-              <exclude>/org/kohsuke/github/example/*</exclude>
-              <exclude>/org/kohsuke/github/extras/OkHttpConnector*</exclude>
-              <exclude>/org/kohsuke/github/extras/OkHttp3Connector*</exclude>
-              <exclude>/org/kohsuke/github/extras/okhttp3/ObsoleteUrlFactory*</exclude>
-            </excludes>
-          </configuration>
-          <executions>
-            <execution>
-              <goals>
-                <goal>prepare-agent-integration</goal>
-              </goals>
-              <configuration>
-                <propertyName>jacoco.surefire.argLine</propertyName>
-              </configuration>
-            </execution>
-            <!-- attached to Maven test phase -->
-            <execution>
-              <id>report</id>
-              <goals>
-                <goal>report-integration</goal>
-              </goals>
-            </execution>
-            <execution>
-              <id>check</id>
-              <phase>verify</phase>
-              <goals>
-                <goal>check</goal>
-              </goals>
-              <configuration>
-                <dataFile>${project.build.directory}/jacoco-it.exec</dataFile>
-                <rules>
-                  <rule>
-                    <element>BUNDLE</element>
-                    <limits>
-                      <limit>
-                        <counter>METHOD</counter>
-                        <value>COVEREDRATIO</value>
-                        <minimum>${jacoco.coverage.target.bundle.method}</minimum>
-                      </limit>
-                    </limits>
-                  </rule>
-                  <rule>
-                    <!--We end up with chatty logs, but it shows us which particular classes    -->
-                    <!--are lacking in coverage. If this is too much, just remove the           -->
-                    <!--<element>CLASS</element> tag below.                                     -->
-                    <element>CLASS</element>
-                    <limits>
-                      <limit>
-                        <counter>METHOD</counter>
-                        <value>COVEREDRATIO</value>
-                        <minimum>${jacoco.coverage.target.class.method}</minimum>
-                      </limit>
-                    </limits>
-                    <excludes>
-                      <!-- Java 11 multi-release overlay problems -->
-                      <exclude>org.kohsuke.github.extras.HttpClientGitHubConnector.**</exclude>
-                      <exclude>org.kohsuke.github.extras.HttpClientGitHubConnector</exclude>
+<!--        <plugin>-->
+<!--          <groupId>org.jacoco</groupId>-->
+<!--          <artifactId>jacoco-maven-plugin</artifactId>-->
+<!--          <version>0.8.7</version>-->
+<!--          <configuration>-->
+<!--            &lt;!&ndash; no need to get data about external code. It dramatically reduces performance of JaCoCo for nothing &ndash;&gt;-->
+<!--            <excludes>-->
+<!--              <exclude>/org/kohsuke/github/extras/HttpClient*</exclude>-->
+<!--              <exclude>/org/kohsuke/github/example/*</exclude>-->
+<!--              <exclude>/org/kohsuke/github/extras/OkHttpConnector*</exclude>-->
+<!--              <exclude>/org/kohsuke/github/extras/OkHttp3Connector*</exclude>-->
+<!--              <exclude>/org/kohsuke/github/extras/okhttp3/ObsoleteUrlFactory*</exclude>-->
+<!--            </excludes>-->
+<!--          </configuration>-->
+<!--          <executions>-->
+<!--            <execution>-->
+<!--              <goals>-->
+<!--                <goal>prepare-agent-integration</goal>-->
+<!--              </goals>-->
+<!--              <configuration>-->
+<!--                <propertyName>jacoco.surefire.argLine</propertyName>-->
+<!--              </configuration>-->
+<!--            </execution>-->
+<!--            &lt;!&ndash; attached to Maven test phase &ndash;&gt;-->
+<!--            <execution>-->
+<!--              <id>report</id>-->
+<!--              <goals>-->
+<!--                <goal>report-integration</goal>-->
+<!--              </goals>-->
+<!--            </execution>-->
+<!--            <execution>-->
+<!--              <id>check</id>-->
+<!--              <phase>verify</phase>-->
+<!--              <goals>-->
+<!--                <goal>check</goal>-->
+<!--              </goals>-->
+<!--              <configuration>-->
+<!--                <dataFile>${project.build.directory}/jacoco-it.exec</dataFile>-->
+<!--                <rules>-->
+<!--                  <rule>-->
+<!--                    <element>BUNDLE</element>-->
+<!--                    <limits>-->
+<!--                      <limit>-->
+<!--                        <counter>METHOD</counter>-->
+<!--                        <value>COVEREDRATIO</value>-->
+<!--                        <minimum>${jacoco.coverage.target.bundle.method}</minimum>-->
+<!--                      </limit>-->
+<!--                    </limits>-->
+<!--                  </rule>-->
+<!--                  <rule>-->
+<!--                    &lt;!&ndash;We end up with chatty logs, but it shows us which particular classes    &ndash;&gt;-->
+<!--                    &lt;!&ndash;are lacking in coverage. If this is too much, just remove the           &ndash;&gt;-->
+<!--                    &lt;!&ndash;<element>CLASS</element> tag below.                                     &ndash;&gt;-->
+<!--                    <element>CLASS</element>-->
+<!--                    <limits>-->
+<!--                      <limit>-->
+<!--                        <counter>METHOD</counter>-->
+<!--                        <value>COVEREDRATIO</value>-->
+<!--                        <minimum>${jacoco.coverage.target.class.method}</minimum>-->
+<!--                      </limit>-->
+<!--                    </limits>-->
+<!--                    <excludes>-->
+<!--                      &lt;!&ndash; Java 11 multi-release overlay problems &ndash;&gt;-->
+<!--                      <exclude>org.kohsuke.github.extras.HttpClientGitHubConnector.**</exclude>-->
+<!--                      <exclude>org.kohsuke.github.extras.HttpClientGitHubConnector</exclude>-->
 
-                      <!-- Code implemented externally -->
-                      <exclude>org.kohsuke.github.extras.okhttp3.ObsoleteUrlFactory.**</exclude>
-                      <exclude>org.kohsuke.github.extras.okhttp3.ObsoleteUrlFactory</exclude>
+<!--                      &lt;!&ndash; Code implemented externally &ndash;&gt;-->
+<!--                      <exclude>org.kohsuke.github.extras.okhttp3.ObsoleteUrlFactory.**</exclude>-->
+<!--                      <exclude>org.kohsuke.github.extras.okhttp3.ObsoleteUrlFactory</exclude>-->
 
-                      <!-- Sample only -->
-                      <exclude>org.kohsuke.github.example.*</exclude>
+<!--                      &lt;!&ndash; Sample only &ndash;&gt;-->
+<!--                      <exclude>org.kohsuke.github.example.*</exclude>-->
 
-                      <!-- Deprecated -->
-                      <exclude>org.kohsuke.github.extras.OkHttpConnector</exclude>
-                      <exclude>org.kohsuke.github.extras.OkHttp3Connector</exclude>
-                      <exclude>org.kohsuke.github.EnforcementLevel</exclude>
-                      <exclude>org.kohsuke.github.GHPerson.1</exclude>
-                      <exclude>org.kohsuke.github.GHCompare.User</exclude>
+<!--                      &lt;!&ndash; Deprecated &ndash;&gt;-->
+<!--                      <exclude>org.kohsuke.github.extras.OkHttpConnector</exclude>-->
+<!--                      <exclude>org.kohsuke.github.extras.OkHttp3Connector</exclude>-->
+<!--                      <exclude>org.kohsuke.github.EnforcementLevel</exclude>-->
+<!--                      <exclude>org.kohsuke.github.GHPerson.1</exclude>-->
+<!--                      <exclude>org.kohsuke.github.GHCompare.User</exclude>-->
 
-                      <!-- TODO: Some coverage, but more needed -->
-                      <exclude>org.kohsuke.github.GHPullRequestReviewBuilder.DraftReviewComment</exclude>
-                      <exclude>org.kohsuke.github.GHIssue.PullRequest</exclude>
-                      <exclude>org.kohsuke.github.GHCommitSearchBuilder</exclude>
-                      <exclude>org.kohsuke.github.GHRepositorySearchBuilder</exclude>
-                      <exclude>org.kohsuke.github.GHUserSearchBuilder</exclude>
+<!--                      &lt;!&ndash; TODO: Some coverage, but more needed &ndash;&gt;-->
+<!--                      <exclude>org.kohsuke.github.GHPullRequestReviewBuilder.DraftReviewComment</exclude>-->
+<!--                      <exclude>org.kohsuke.github.GHIssue.PullRequest</exclude>-->
+<!--                      <exclude>org.kohsuke.github.GHCommitSearchBuilder</exclude>-->
+<!--                      <exclude>org.kohsuke.github.GHRepositorySearchBuilder</exclude>-->
+<!--                      <exclude>org.kohsuke.github.GHUserSearchBuilder</exclude>-->
 
-                      <!-- TODO: These still need test coverage -->
-                      <exclude>org.kohsuke.github.GHBranchProtection.RequiredSignatures</exclude>
-                      <exclude>org.kohsuke.github.GHBranchProtectionBuilder.Restrictions</exclude>
-                      <exclude>org.kohsuke.github.GHBranchProtection.Restrictions</exclude>
-                      <exclude>org.kohsuke.github.GHCommentAuthorAssociation</exclude>
-                      <exclude>org.kohsuke.github.GHDeployKey</exclude>
-                      <exclude>org.kohsuke.github.GHEmail</exclude>
-                      <exclude>org.kohsuke.github.GHInvitation</exclude>
-                      <exclude>org.kohsuke.github.GHPullRequestCommitDetail.Authorship</exclude>
-                      <exclude>org.kohsuke.github.GHPullRequestCommitDetail.Commit</exclude>
-                      <exclude>org.kohsuke.github.GHPullRequestCommitDetail.CommitPointer</exclude>
-                      <exclude>org.kohsuke.github.GHPullRequestCommitDetail.Tree</exclude>
-                      <exclude>org.kohsuke.github.GHPullRequestCommitDetail</exclude>
-                      <exclude>org.kohsuke.github.GHPullRequestFileDetail</exclude>
-                      <exclude>org.kohsuke.github.GHReleaseUpdater</exclude>
-                      <exclude>org.kohsuke.github.GHRequestedAction</exclude>
-                      <exclude>org.kohsuke.github.GHVerifiedKey</exclude>
-                    </excludes>
-                  </rule>
-                </rules>
-              </configuration>
-            </execution>
-          </executions>
-        </plugin>
+<!--                      &lt;!&ndash; TODO: These still need test coverage &ndash;&gt;-->
+<!--                      <exclude>org.kohsuke.github.GHBranchProtection.RequiredSignatures</exclude>-->
+<!--                      <exclude>org.kohsuke.github.GHBranchProtectionBuilder.Restrictions</exclude>-->
+<!--                      <exclude>org.kohsuke.github.GHBranchProtection.Restrictions</exclude>-->
+<!--                      <exclude>org.kohsuke.github.GHCommentAuthorAssociation</exclude>-->
+<!--                      <exclude>org.kohsuke.github.GHDeployKey</exclude>-->
+<!--                      <exclude>org.kohsuke.github.GHEmail</exclude>-->
+<!--                      <exclude>org.kohsuke.github.GHInvitation</exclude>-->
+<!--                      <exclude>org.kohsuke.github.GHPullRequestCommitDetail.Authorship</exclude>-->
+<!--                      <exclude>org.kohsuke.github.GHPullRequestCommitDetail.Commit</exclude>-->
+<!--                      <exclude>org.kohsuke.github.GHPullRequestCommitDetail.CommitPointer</exclude>-->
+<!--                      <exclude>org.kohsuke.github.GHPullRequestCommitDetail.Tree</exclude>-->
+<!--                      <exclude>org.kohsuke.github.GHPullRequestCommitDetail</exclude>-->
+<!--                      <exclude>org.kohsuke.github.GHPullRequestFileDetail</exclude>-->
+<!--                      <exclude>org.kohsuke.github.GHReleaseUpdater</exclude>-->
+<!--                      <exclude>org.kohsuke.github.GHRequestedAction</exclude>-->
+<!--                      <exclude>org.kohsuke.github.GHVerifiedKey</exclude>-->
+<!--                    </excludes>-->
+<!--                  </rule>-->
+<!--                </rules>-->
+<!--              </configuration>-->
+<!--            </execution>-->
+<!--          </executions>-->
+<!--        </plugin>-->
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-javadoc-plugin</artifactId>
@@ -700,23 +700,23 @@
             <artifactId>maven-enforcer-plugin</artifactId>
             <version>3.0.0</version>
             <executions>
-              <execution>
-                <id>enforce-jacoco-exist</id>
-                <phase>verify</phase>
-                <goals>
-                  <goal>enforce</goal>
-                </goals>
-                <configuration>
-                  <rules>
-                    <requireFilesExist>
-                      <files>
-                        <file>${project.build.directory}/jacoco-it.exec</file>
-                      </files>
-                    </requireFilesExist>
-                  </rules>
-                  <fail>true</fail>
-                </configuration>
-              </execution>
+<!--              <execution>-->
+<!--&lt;!&ndash;                <id>enforce-jacoco-exist</id>&ndash;&gt;-->
+<!--                <phase>verify</phase>-->
+<!--                <goals>-->
+<!--                  <goal>enforce</goal>-->
+<!--                </goals>-->
+<!--                <configuration>-->
+<!--                  <rules>-->
+<!--                    <requireFilesExist>-->
+<!--                      <files>-->
+<!--                        <file>${project.build.directory}/jacoco-it.exec</file>-->
+<!--                      </files>-->
+<!--                    </requireFilesExist>-->
+<!--                  </rules>-->
+<!--                  <fail>true</fail>-->
+<!--                </configuration>-->
+<!--              </execution>-->
             </executions>
           </plugin>
         </plugins>
