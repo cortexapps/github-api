@@ -2,7 +2,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.kohsuke</groupId>
   <artifactId>cortexapps-github-api</artifactId>
-  <version>1.305-SNAPSHOT</version>
+  <version>1.305</version>
   <name>GitHub API for Java</name>
   <url>https://github-api.kohsuke.org/</url>
   <description>GitHub API for Java</description>
@@ -220,17 +220,17 @@
             <doclint>all</doclint>
           </configuration>
         </plugin>
-        <plugin>
-          <groupId>org.sonatype.plugins</groupId>
-          <artifactId>nexus-staging-maven-plugin</artifactId>
-          <version>1.6.12</version>
-          <extensions>true</extensions>
-          <configuration>
-            <serverId>sonatype-nexus-staging</serverId>
-            <nexusUrl>https://oss.sonatype.org/</nexusUrl>
-            <autoReleaseAfterClose>true</autoReleaseAfterClose>
-          </configuration>
-        </plugin>
+<!--        <plugin>-->
+<!--          <groupId>org.sonatype.plugins</groupId>-->
+<!--          <artifactId>nexus-staging-maven-plugin</artifactId>-->
+<!--          <version>1.6.12</version>-->
+<!--          <extensions>true</extensions>-->
+<!--          <configuration>-->
+<!--            <serverId>sonatype-nexus-staging</serverId>-->
+<!--            <nexusUrl>https://oss.sonatype.org/</nexusUrl>-->
+<!--            <autoReleaseAfterClose>true</autoReleaseAfterClose>-->
+<!--          </configuration>-->
+<!--        </plugin>-->
         <plugin>
           <groupId>org.codehaus.mojo</groupId>
           <artifactId>animal-sniffer-maven-plugin</artifactId>
@@ -393,26 +393,26 @@
           </dependency>
         </dependencies>
       </plugin>
-      <plugin>
-        <groupId>com.github.siom79.japicmp</groupId>
-        <artifactId>japicmp-maven-plugin</artifactId>
-        <version>0.15.7</version>
-        <configuration>
-          <parameter>
-            <breakBuildOnBinaryIncompatibleModifications>true</breakBuildOnBinaryIncompatibleModifications>
-            <onlyModified>true</onlyModified>
-            <includeSynthetic>true</includeSynthetic>
-          </parameter>
-        </configuration>
-        <executions>
-          <execution>
-            <phase>verify</phase>
-            <goals>
-              <goal>cmp</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
+<!--      <plugin>-->
+<!--        <groupId>com.github.siom79.japicmp</groupId>-->
+<!--        <artifactId>japicmp-maven-plugin</artifactId>-->
+<!--        <version>0.15.7</version>-->
+<!--        <configuration>-->
+<!--          <parameter>-->
+<!--            <breakBuildOnBinaryIncompatibleModifications>true</breakBuildOnBinaryIncompatibleModifications>-->
+<!--            <onlyModified>true</onlyModified>-->
+<!--            <includeSynthetic>true</includeSynthetic>-->
+<!--          </parameter>-->
+<!--        </configuration>-->
+<!--        <executions>-->
+<!--          <execution>-->
+<!--            <phase>verify</phase>-->
+<!--            <goals>-->
+<!--              <goal>cmp</goal>-->
+<!--            </goals>-->
+<!--          </execution>-->
+<!--        </executions>-->
+<!--      </plugin>-->
     </plugins>
   </build>
 
