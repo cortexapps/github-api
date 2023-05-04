@@ -46,8 +46,8 @@
     <jacoco.haltOnFailure>false</jacoco.haltOnFailure>
     <jjwt.suite.version>0.11.5</jjwt.suite.version>
 
-    <jacoco.surefire.argLine />
-    <surefire.argLine />
+    <jacoco.surefire.argLine/>
+    <surefire.argLine/>
   </properties>
 
   <build>
@@ -359,10 +359,10 @@
             <importOrder>
               <file>${basedir}/src/build/eclipse/eclipse.importorder</file>
             </importOrder>
-            <removeUnusedImports />
+            <removeUnusedImports/>
 
-            <trimTrailingWhitespace />
-            <endWithNewline />
+            <trimTrailingWhitespace/>
+            <endWithNewline/>
 
           </java>
         </configuration>
@@ -549,7 +549,7 @@
     <dependency>
       <groupId>com.squareup.okhttp3</groupId>
       <artifactId>okhttp-urlconnection</artifactId>
-      <version>3.12.3</version>
+      <version>3.14.9</version>
       <optional>true</optional>
     </dependency>
     <dependency>
