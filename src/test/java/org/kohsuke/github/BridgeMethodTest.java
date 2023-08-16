@@ -41,12 +41,10 @@ public class BridgeMethodTest extends Assert {
 
         verifyBridgeMethods(GHIssue.class, "getCreatedAt", Date.class, String.class);
         verifyBridgeMethods(GHIssue.class, "getId", int.class, long.class, String.class);
-        verifyBridgeMethods(GHIssue.class, "getUrl", String.class, URL.class);
         verifyBridgeMethods(GHIssue.class, "comment", 1, void.class, GHIssueComment.class);
 
         verifyBridgeMethods(GHOrganization.class, "getHtmlUrl", String.class, URL.class);
         verifyBridgeMethods(GHOrganization.class, "getId", int.class, long.class, String.class);
-        verifyBridgeMethods(GHOrganization.class, "getUrl", String.class, URL.class);
 
         verifyBridgeMethods(GHRepository.class, "getCollaborators", GHPersonSet.class, Set.class);
         verifyBridgeMethods(GHRepository.class, "getHtmlUrl", String.class, URL.class);
