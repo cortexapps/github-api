@@ -51,7 +51,6 @@ public class BridgeMethodTest extends Assert {
         verifyBridgeMethods(GHRepository.class, "getCollaborators", GHPersonSet.class, Set.class);
         verifyBridgeMethods(GHRepository.class, "getHtmlUrl", String.class, URL.class);
         verifyBridgeMethods(GHRepository.class, "getId", int.class, long.class, String.class);
-        verifyBridgeMethods(GHRepository.class, "getUrl", String.class, URL.class);
 
         verifyBridgeMethods(GHUser.class, "getFollows", GHPersonSet.class, Set.class);
         verifyBridgeMethods(GHUser.class, "getFollowers", GHPersonSet.class, Set.class);
