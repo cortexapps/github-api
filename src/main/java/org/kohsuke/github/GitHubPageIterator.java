@@ -171,7 +171,13 @@ class GitHubPageIterator<T> implements Iterator<T> {
                     // found the next page. This should look something like
                     // <https://api.github.com/repos?page=3&per_page=100>; rel="next"
                     int idx = token.indexOf('>');
-                    result = nextRequest.toBuilder().setRawUrlPath(token.substring(1, idx)).build();
+                    String nextUrl = token.substring(1, idx);
+
+                    // Adjust the base URL to match the client’s configuration
+                    nextUrl = nextUrl.replace(GitHubClient.GITHUB_URL, client.getApiUrl()); // client.getApiUrl() ==
+                                                                                            // root()
+
+                    result = nextRequest.toBuilder().setRawUrlPath(nextUrl).build();
                     break;
                 }
             }

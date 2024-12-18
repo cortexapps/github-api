@@ -410,10 +410,10 @@ public class GHPullRequest extends GHIssue implements Refreshable {
             return; // cannot populate, will have to live with what we have
         }
 
-        URL url = getUrl();
-        if (url != null) {
-            root().createRequest().withPreview(SHADOW_CAT).setRawUrlPath(url.toString()).fetchInto(this).wrapUp(owner);
-        }
+        root().createRequest()
+                .withPreview(SHADOW_CAT)
+                .withUrlPath("/repos/" + owner.getOwnerName() + "/" + getRepository().getName() + "/pulls/" + number)
+                .fetchInto(this);
     }
 
     /**
