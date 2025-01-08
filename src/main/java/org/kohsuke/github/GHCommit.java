@@ -244,10 +244,10 @@ public class GHCommit {
 
         /** The url. */
         @SuppressFBWarnings(value = "UUF_UNUSED_FIELD", justification = "We don't provide it in API now")
-        String url;
+        public String url;
 
         /** The sha. */
-        String sha;
+        public String sha;
     }
 
     /**
