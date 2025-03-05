@@ -423,13 +423,13 @@ class GitHubClient {
             throws IOException {
         int retries = CONNECTION_ERROR_RETRIES;
         GitHubConnectorRequest connectorRequest = prepareConnectorRequest(request);
-
         do {
             GitHubConnectorResponse connectorResponse = null;
             try {
                 logRequest(connectorRequest);
                 rateLimitChecker.checkRateLimit(this, request.rateLimitTarget());
                 connectorResponse = connector.send(connectorRequest);
+                logResponse(connectorResponse);
                 noteRateLimit(request.rateLimitTarget(), connectorResponse);
                 detectKnownErrors(connectorResponse, request, handler != null);
                 return createResponse(connectorResponse, handler);
@@ -460,6 +460,7 @@ class GitHubClient {
             boolean detectStatusCodeError) throws IOException {
         detectOTPRequired(connectorResponse);
         detectInvalidCached404Response(connectorResponse, request);
+        detectExpiredToken(connectorResponse, request);
         detectRedirect(connectorResponse);
         if (rateLimitHandler.isError(connectorResponse)) {
             rateLimitHandler.onError(connectorResponse);
@@ -470,6 +471,22 @@ class GitHubClient {
         } else if (detectStatusCodeError
                 && GitHubConnectorResponseErrorHandler.STATUS_HTTP_BAD_REQUEST_OR_GREATER.isError(connectorResponse)) {
             GitHubConnectorResponseErrorHandler.STATUS_HTTP_BAD_REQUEST_OR_GREATER.onError(connectorResponse);
+        }
+    }
+
+    private void detectExpiredToken(GitHubConnectorResponse connectorResponse, GitHubRequest request)
+            throws IOException {
+        if (connectorResponse.statusCode() != HTTP_UNAUTHORIZED) {
+            return;
+        }
+        String originalAuthorization = connectorResponse.request().header("Authorization");
+        if (Objects.isNull(originalAuthorization) || originalAuthorization.isEmpty()) {
+            return;
+        }
+        GitHubConnectorRequest updatedRequest = prepareConnectorRequest(request);
+        String updatedAuthorization = updatedRequest.header("Authorization");
+        if (!originalAuthorization.equals(updatedAuthorization)) {
+            throw new RetryRequestException(updatedRequest);
         }
     }
 
@@ -520,8 +537,23 @@ class GitHubClient {
 
     private void logRequest(@Nonnull final GitHubConnectorRequest request) {
         LOGGER.log(FINE,
-                () -> "GitHub API request [" + (getLogin() == null ? "anonymous" : getLogin()) + "]: "
-                        + request.method() + " " + request.url().toString());
+                () -> String.format("(%s) GitHub API request [%s]: %s",
+                        Integer.toHexString(request.hashCode()),
+                        (getLogin() == null ? "anonymous" : getLogin()),
+                        (request.method() + " " + request.url().toString())));
+    }
+
+    private void logResponse(@Nonnull final GitHubConnectorResponse response) {
+        LOGGER.log(FINE, () -> {
+            try {
+                return String.format("(%s) GitHub API response [%s]: %s",
+                        Integer.toHexString(response.request().hashCode()),
+                        (getLogin() == null ? "anonymous" : getLogin()),
+                        (response.statusCode() + " " + GitHubResponse.getBodyAsString(response)));
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        });
     }
 
     @Nonnull

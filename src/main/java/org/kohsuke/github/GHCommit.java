@@ -23,6 +23,7 @@ import static org.kohsuke.github.internal.Previews.GROOT;
  */
 @SuppressFBWarnings(value = { "NP_UNWRITTEN_FIELD", "UWF_UNWRITTEN_FIELD" }, justification = "JSON API")
 public class GHCommit {
+
     private GHRepository owner;
 
     private ShortInfo commit;
@@ -125,7 +126,7 @@ public class GHCommit {
     /**
      * A file that was modified.
      */
-    @SuppressFBWarnings(value = "UWF_UNWRITTEN_FIELD", justification = "It's being initilized by JSON deserialization")
+    @SuppressFBWarnings(value = "UWF_UNWRITTEN_FIELD", justification = "It's being initialized by JSON deserialization")
     public static class File {
 
         /** The status. */
@@ -270,7 +271,7 @@ public class GHCommit {
     }
 
     /** The sha. */
-    String url, html_url, sha;
+    String url, html_url, sha, message;
 
     /** The files. */
     List<File> files;
@@ -309,6 +310,7 @@ public class GHCommit {
         sha = commit.getSha();
         url = commit.getUrl();
         parents = commit.getParents();
+        message = commit.getMessage();
     }
 
     /**
@@ -415,10 +417,28 @@ public class GHCommit {
      * @return Can be empty but never null.
      * @throws IOException
      *             on error
+     * @deprecated Use {@link #listFiles()} instead.
      */
+    @Deprecated
     public List<File> getFiles() throws IOException {
+        return listFiles().toList();
+    }
+
+    /**
+     * List of files changed/added/removed in this commit. Uses a paginated list if the files returned by GitHub exceed
+     * 300 in quantity.
+     *
+     * @return the List of files
+     * @see <a href="https://docs.github.com/en/rest/commits/commits?apiVersion=2022-11-28#get-a-commit">Get a
+     *      commit</a>
+     * @throws IOException
+     *             on error
+     */
+    public PagedIterable<File> listFiles() throws IOException {
+
         populate();
-        return files != null ? Collections.unmodifiableList(files) : Collections.<File>emptyList();
+
+        return new GHCommitFileIterable(owner, sha, files);
     }
 
     /**
