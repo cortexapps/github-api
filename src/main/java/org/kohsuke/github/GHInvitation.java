@@ -5,6 +5,7 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.io.IOException;
 import java.net.URL;
 
+// TODO: Auto-generated Javadoc
 /**
  * The type GHInvitation.
  *
@@ -23,11 +24,6 @@ public class GHInvitation extends GHObject {
     private String permissions;
     private String html_url;
 
-    GHInvitation wrapUp(GitHub root) {
-        this.root = root;
-        return this;
-    }
-
     /**
      * Accept a repository invitation.
      *
@@ -35,7 +31,7 @@ public class GHInvitation extends GHObject {
      *             the io exception
      */
     public void accept() throws IOException {
-        root.createRequest().method("PATCH").withUrlPath("/user/repository_invitations/" + id).send();
+        root().createRequest().method("PATCH").withUrlPath("/user/repository_invitations/" + id).send();
     }
 
     /**
@@ -45,9 +41,14 @@ public class GHInvitation extends GHObject {
      *             the io exception
      */
     public void decline() throws IOException {
-        root.createRequest().method("DELETE").withUrlPath("/user/repository_invitations/" + id).send();
+        root().createRequest().method("DELETE").withUrlPath("/user/repository_invitations/" + id).send();
     }
 
+    /**
+     * Gets the html url.
+     *
+     * @return the html url
+     */
     @Override
     public URL getHtmlUrl() {
         return GitHubClient.parseURL(html_url);

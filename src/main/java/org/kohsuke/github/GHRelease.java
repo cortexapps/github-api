@@ -1,16 +1,21 @@
 package org.kohsuke.github;
 
+import edu.umd.cs.findbugs.annotations.Nullable;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
 import static java.lang.String.*;
 
+// TODO: Auto-generated Javadoc
 /**
  * Release in a github repository.
  *
@@ -19,6 +24,8 @@ import static java.lang.String.*;
  * @see GHRepository#createRelease(String) GHRepository#createRelease(String)
  */
 public class GHRelease extends GHObject {
+
+    /** The owner. */
     GHRepository owner;
 
     private String html_url;
@@ -87,6 +94,11 @@ public class GHRelease extends GHObject {
         return update().draft(draft).update();
     }
 
+    /**
+     * Gets the html url.
+     *
+     * @return the html url
+     */
     public URL getHtmlUrl() {
         return GitHubClient.parseURL(html_url);
     }
@@ -115,6 +127,7 @@ public class GHRelease extends GHObject {
      *
      * @return the owner
      */
+    @SuppressFBWarnings(value = { "EI_EXPOSE_REP" }, justification = "Expected behavior")
     public GHRepository getOwner() {
         return owner;
     }
@@ -124,9 +137,11 @@ public class GHRelease extends GHObject {
      *
      * @param owner
      *            the owner
+     * @deprecated Do not use this method. It was added due to incomplete understanding of Jackson binding.
      */
+    @Deprecated
     public void setOwner(GHRepository owner) {
-        this.owner = owner;
+        throw new RuntimeException("Do not use this method.");
     }
 
     /**
@@ -143,17 +158,13 @@ public class GHRelease extends GHObject {
      *
      * @return the published at
      */
+    @Nullable
     public Date getPublished_at() {
-        return new Date(published_at.getTime());
-    }
-
-    /**
-     * Gets root.
-     *
-     * @return the root
-     */
-    public GitHub getRoot() {
-        return root;
+        if (published_at != null) {
+            return new Date(published_at.getTime());
+        } else {
+            return null;
+        }
     }
 
     /**
@@ -201,12 +212,27 @@ public class GHRelease extends GHObject {
         return tarball_url;
     }
 
+    /**
+     * Wrap.
+     *
+     * @param owner
+     *            the owner
+     * @return the GH release
+     */
     GHRelease wrap(GHRepository owner) {
         this.owner = owner;
-        this.root = owner.root;
         return this;
     }
 
+    /**
+     * Wrap.
+     *
+     * @param releases
+     *            the releases
+     * @param owner
+     *            the owner
+     * @return the GH release[]
+     */
     static GHRelease[] wrap(GHRelease[] releases, GHRepository owner) {
         for (GHRelease release : releases) {
             release.wrap(owner);
@@ -251,7 +277,7 @@ public class GHRelease extends GHObject {
      *             the io exception
      */
     public GHAsset uploadAsset(String filename, InputStream stream, String contentType) throws IOException {
-        Requester builder = owner.root.createRequest().method("POST");
+        Requester builder = owner.root().createRequest().method("POST");
         String url = getUploadUrl();
         // strip the helpful garbage from the url
         url = url.substring(0, url.indexOf('{'));
@@ -270,7 +296,7 @@ public class GHRelease extends GHObject {
      */
     @Deprecated
     public List<GHAsset> assets() {
-        return assets;
+        return Collections.unmodifiableList(assets);
     }
 
     /**
@@ -296,7 +322,7 @@ public class GHRelease extends GHObject {
      *             the io exception
      */
     public PagedIterable<GHAsset> listAssets() throws IOException {
-        Requester builder = owner.root.createRequest();
+        Requester builder = owner.root().createRequest();
         return builder.withUrlPath(getApiTailUrl("assets")).toIterable(GHAsset[].class, item -> item.wrap(this));
     }
 
@@ -307,7 +333,7 @@ public class GHRelease extends GHObject {
      *             the io exception
      */
     public void delete() throws IOException {
-        root.createRequest().method("DELETE").withUrlPath(owner.getApiTailUrl("releases/" + getId())).send();
+        root().createRequest().method("DELETE").withUrlPath(owner.getApiTailUrl("releases/" + getId())).send();
     }
 
     /**

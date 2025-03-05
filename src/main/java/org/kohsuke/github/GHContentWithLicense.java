@@ -1,5 +1,6 @@
 package org.kohsuke.github;
 
+// TODO: Auto-generated Javadoc
 /**
  * {@link GHContent} with license information.
  *
@@ -8,13 +9,20 @@ package org.kohsuke.github;
  * @see GHRepository#getLicense()
  */
 class GHContentWithLicense extends GHContent {
+
+    /** The license. */
     GHLicense license;
 
+    /**
+     * Wrap.
+     *
+     * @param owner
+     *            the owner
+     * @return the GH content with license
+     */
     @Override
     GHContentWithLicense wrap(GHRepository owner) {
         super.wrap(owner);
-        if (license != null)
-            license.wrap(owner.root);
         return this;
     }
 }

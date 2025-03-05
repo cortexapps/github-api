@@ -21,19 +21,29 @@ import java.io.IOException;
 
 import static org.junit.Assert.fail;
 
+// TODO: Auto-generated Javadoc
 /**
- * Test showing the behavior of OkHttpConnector cache with GitHub 404 responses.
+ * Test showing the behavior of OkHttpGitHubConnector cache with GitHub 404 responses.
  *
  * @author Liam Newman
  */
 public class GitHubCachingTest extends AbstractGitHubWireMockTest {
 
+    /**
+     * Instantiates a new git hub caching test.
+     */
     public GitHubCachingTest() {
         useDefaultGitHub = false;
     }
 
+    /** The test ref name. */
     String testRefName = "heads/test/content_ref_cache";
 
+    /**
+     * Gets the wire mock options.
+     *
+     * @return the wire mock options
+     */
     @Override
     protected WireMockConfiguration getWireMockOptions() {
         return super.getWireMockOptions()
@@ -42,6 +52,12 @@ public class GitHubCachingTest extends AbstractGitHubWireMockTest {
                 .extensions(templating.newResponseTransformer());
     }
 
+    /**
+     * Setup repo.
+     *
+     * @throws Exception
+     *             the exception
+     */
     @Before
     public void setupRepo() throws Exception {
         if (mockGitHub.isUseProxy()) {
@@ -56,6 +72,12 @@ public class GitHubCachingTest extends AbstractGitHubWireMockTest {
         }
     }
 
+    /**
+     * Test cached 404.
+     *
+     * @throws Exception
+     *             the exception
+     */
     @Test
     public void testCached404() throws Exception {
         Assume.assumeFalse(SystemUtils.IS_OS_WINDOWS);
@@ -64,7 +86,7 @@ public class GitHubCachingTest extends AbstractGitHubWireMockTest {
         snapshotNotAllowed();
 
         OkHttpClient client = createClient(true);
-        OkHttpConnector connector = new OkHttpConnector(client);
+        OkHttpGitHubConnector connector = new OkHttpGitHubConnector(client);
 
         this.gitHub = getGitHubBuilder().withEndpoint(mockGitHub.apiServer().baseUrl())
                 .withConnector(connector)
@@ -73,7 +95,7 @@ public class GitHubCachingTest extends AbstractGitHubWireMockTest {
         // Alternate client also doing caching but staying in a good state
         // We use this to do sanity checks and other information gathering
         GitHub gitHub2 = getGitHubBuilder().withEndpoint(mockGitHub.apiServer().baseUrl())
-                .withConnector(new OkHttpConnector(createClient(true)))
+                .withConnector(new OkHttpGitHubConnector(createClient(true)))
                 .build();
 
         // Create a branch from a known conflicting branch

@@ -7,15 +7,20 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
+// TODO: Auto-generated Javadoc
 /**
  * Utility class for creating and retrieving webhooks; removes duplication between GHOrganization and GHRepository
- * functionality
+ * functionality.
  */
 class GHHooks {
+
+    /**
+     * The Class Context.
+     */
     static abstract class Context extends GitHubInteractiveObject {
 
         private Context(GitHub root) {
-            this.root = root;
+            super(root);
         }
 
         /**
@@ -27,8 +32,8 @@ class GHHooks {
          */
         public List<GHHook> getHooks() throws IOException {
 
-            GHHook[] hookArray = root.createRequest().withUrlPath(collection()).fetch(collectionClass()); // jdk/eclipse
-                                                                                                          // bug
+            // jdk/eclipse bug
+            GHHook[] hookArray = root().createRequest().withUrlPath(collection()).fetch(collectionClass());
             // requires this
             // to be on separate line
             List<GHHook> list = new ArrayList<GHHook>(Arrays.asList(hookArray));
@@ -47,7 +52,7 @@ class GHHooks {
          *             the io exception
          */
         public GHHook getHook(int id) throws IOException {
-            GHHook hook = root.createRequest().withUrlPath(collection() + "/" + id).fetch(clazz());
+            GHHook hook = root().createRequest().withUrlPath(collection() + "/" + id).fetch(clazz());
             return wrap(hook);
         }
 
@@ -75,7 +80,7 @@ class GHHooks {
                     ea.add(e.symbol());
             }
 
-            GHHook hook = root.createRequest()
+            GHHook hook = root().createRequest()
                     .method("POST")
                     .with("name", name)
                     .with("active", active)
@@ -87,12 +92,46 @@ class GHHooks {
             return wrap(hook);
         }
 
+        /**
+         * Deletes hook.
+         *
+         * @param id
+         *            the id
+         * @throws IOException
+         *             the io exception
+         */
+        public void deleteHook(int id) throws IOException {
+            root().createRequest().method("DELETE").withUrlPath(collection() + "/" + id).send();
+        }
+
+        /**
+         * Collection.
+         *
+         * @return the string
+         */
         abstract String collection();
 
+        /**
+         * Collection class.
+         *
+         * @return the class<? extends GH hook[]>
+         */
         abstract Class<? extends GHHook[]> collectionClass();
 
+        /**
+         * Clazz.
+         *
+         * @return the class<? extends GH hook>
+         */
         abstract Class<? extends GHHook> clazz();
 
+        /**
+         * Wrap.
+         *
+         * @param hook
+         *            the hook
+         * @return the GH hook
+         */
         abstract GHHook wrap(GHHook hook);
     }
 
@@ -101,7 +140,7 @@ class GHHooks {
         private final GHUser owner;
 
         private RepoContext(GHRepository repository, GHUser owner) {
-            super(repository.root);
+            super(repository.root());
             this.repository = repository;
             this.owner = owner;
         }
@@ -131,7 +170,7 @@ class GHHooks {
         private final GHOrganization organization;
 
         private OrgContext(GHOrganization organization) {
-            super(organization.root);
+            super(organization.root());
             this.organization = organization;
         }
 
@@ -156,10 +195,26 @@ class GHHooks {
         }
     }
 
+    /**
+     * Repo context.
+     *
+     * @param repository
+     *            the repository
+     * @param owner
+     *            the owner
+     * @return the context
+     */
     static Context repoContext(GHRepository repository, GHUser owner) {
         return new RepoContext(repository, owner);
     }
 
+    /**
+     * Org context.
+     *
+     * @param organization
+     *            the organization
+     * @return the context
+     */
     static Context orgContext(GHOrganization organization) {
         return new OrgContext(organization);
     }

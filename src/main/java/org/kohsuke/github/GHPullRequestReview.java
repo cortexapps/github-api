@@ -31,6 +31,7 @@ import java.util.Date;
 
 import javax.annotation.CheckForNull;
 
+// TODO: Auto-generated Javadoc
 /**
  * Review to a pull request.
  *
@@ -39,6 +40,8 @@ import javax.annotation.CheckForNull;
  */
 @SuppressFBWarnings(value = { "UWF_UNWRITTEN_FIELD" }, justification = "JSON API")
 public class GHPullRequestReview extends GHObject {
+
+    /** The owner. */
     GHPullRequest owner;
 
     private String body;
@@ -48,6 +51,13 @@ public class GHPullRequestReview extends GHObject {
     private String submitted_at;
     private String html_url;
 
+    /**
+     * Wrap up.
+     *
+     * @param owner
+     *            the owner
+     * @return the GH pull request review
+     */
     GHPullRequestReview wrapUp(GHPullRequest owner) {
         this.owner = owner;
         return this;
@@ -58,6 +68,7 @@ public class GHPullRequestReview extends GHObject {
      *
      * @return the parent
      */
+    @SuppressFBWarnings(value = { "EI_EXPOSE_REP" }, justification = "Expected behavior")
     public GHPullRequest getParent() {
         return owner;
     }
@@ -79,7 +90,10 @@ public class GHPullRequestReview extends GHObject {
      *             the io exception
      */
     public GHUser getUser() throws IOException {
-        return owner.root.getUser(user.getLogin());
+        if (user != null) {
+            return owner.root().getUser(user.getLogin());
+        }
+        return null;
     }
 
     /**
@@ -101,6 +115,11 @@ public class GHPullRequestReview extends GHObject {
         return state;
     }
 
+    /**
+     * Gets the html url.
+     *
+     * @return the html url
+     */
     @Override
     public URL getHtmlUrl() {
         return GitHubClient.parseURL(html_url);
@@ -116,7 +135,7 @@ public class GHPullRequestReview extends GHObject {
     }
 
     /**
-     * When was this resource created?
+     * When was this resource created?.
      *
      * @return the submitted at
      * @throws IOException
@@ -128,6 +147,10 @@ public class GHPullRequestReview extends GHObject {
 
     /**
      * Since this method does not exist, we forward this value.
+     *
+     * @return the created at
+     * @throws IOException
+     *             Signals that an I/O exception has occurred.
      */
     @Override
     public Date getCreatedAt() throws IOException {
@@ -162,7 +185,8 @@ public class GHPullRequestReview extends GHObject {
      *             the io exception
      */
     public void submit(String body, GHPullRequestReviewEvent event) throws IOException {
-        owner.root.createRequest()
+        owner.root()
+                .createRequest()
                 .method("POST")
                 .with("body", body)
                 .with("event", event.action())
@@ -179,7 +203,7 @@ public class GHPullRequestReview extends GHObject {
      *             the io exception
      */
     public void delete() throws IOException {
-        owner.root.createRequest().method("DELETE").withUrlPath(getApiRoute()).send();
+        owner.root().createRequest().method("DELETE").withUrlPath(getApiRoute()).send();
     }
 
     /**
@@ -191,7 +215,8 @@ public class GHPullRequestReview extends GHObject {
      *             the io exception
      */
     public void dismiss(String message) throws IOException {
-        owner.root.createRequest()
+        owner.root()
+                .createRequest()
                 .method("PUT")
                 .with("message", message)
                 .withUrlPath(getApiRoute() + "/dismissals")
@@ -207,7 +232,8 @@ public class GHPullRequestReview extends GHObject {
      *             the io exception
      */
     public PagedIterable<GHPullRequestReviewComment> listReviewComments() throws IOException {
-        return owner.root.createRequest()
+        return owner.root()
+                .createRequest()
                 .withUrlPath(getApiRoute() + "/comments")
                 .toIterable(GHPullRequestReviewComment[].class, item -> item.wrapUp(owner));
     }

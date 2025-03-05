@@ -13,14 +13,18 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.ReflectionToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
+import org.hamcrest.Matchers;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.kohsuke.github.extras.okhttp3.OkHttpConnector;
 
 import java.io.Closeable;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.Reader;
 import java.lang.reflect.Field;
 import java.nio.charset.Charset;
+import java.util.Arrays;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.tngtech.archunit.core.domain.JavaCall.Predicates.target;
@@ -36,11 +40,14 @@ import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.greaterThan;
 
+// TODO: Auto-generated Javadoc
+/**
+ * The Class ArchTests.
+ */
 public class ArchTests {
 
     private static final JavaClasses classFiles = new ClassFileImporter()
             .withImportOption(new ImportOption.DoNotIncludeTests())
-            .withImportOption(new ImportOption.DoNotIncludeJars())
             .importPackages("org.kohsuke.github");
 
     private static final JavaClasses apacheCommons = new ClassFileImporter().importPackages("org.apache.commons.lang3");
@@ -61,11 +68,17 @@ public class ArchTests {
         }
     };
 
+    /**
+     * Before class.
+     */
     @BeforeClass
     public static void beforeClass() {
         assertThat(classFiles.size(), greaterThan(0));
     }
 
+    /**
+     * Test require use of assert that.
+     */
     @Test
     public void testRequireUseOfAssertThat() {
 
@@ -81,6 +94,19 @@ public class ArchTests {
         onlyAssertThatRule.check(testClassFiles);
     }
 
+    /**
+     * Test api stability.
+     */
+    @Test
+    public void testApiStability() {
+        assertThat("OkHttpConnector must implement HttpConnector",
+                Arrays.asList(OkHttpConnector.class.getInterfaces()),
+                Matchers.containsInAnyOrder(HttpConnector.class));
+    }
+
+    /**
+     * Test require use of only specific apache commons.
+     */
     @Test
     public void testRequireUseOfOnlySpecificApacheCommons() {
 
@@ -114,15 +140,26 @@ public class ArchTests {
                         targetMethodIs(ReflectionToStringBuilder.class, "accept", Field.class),
                         targetMethodIs(IOUtils.class, "closeQuietly", InputStream.class),
                         targetMethodIs(IOUtils.class, "closeQuietly", Closeable.class),
+                        targetMethodIs(IOUtils.class, "copyLarge", InputStream.class, OutputStream.class),
                         targetMethodIs(IOUtils.class, "toString", InputStream.class, Charset.class),
                         targetMethodIs(IOUtils.class, "toString", Reader.class),
-                        targetMethodIs(IOUtils.class, "toByteArray", InputStream.class)))
+                        targetMethodIs(IOUtils.class, "toByteArray", InputStream.class),
+                        targetMethodIs(IOUtils.class, "write", byte[].class, OutputStream.class)))
                 .because(
                         "Commons methods must be manually verified to be compatible with commons-io:2.4 or earlier and commons-lang3:3.9 or earlier.");
 
         onlyApprovedApacheCommonsMethods.check(classFiles);
     }
 
+    /**
+     * Not call methods in package unless.
+     *
+     * @param packageIdentifier
+     *            the package identifier
+     * @param unlessPredicates
+     *            the unless predicates
+     * @return the arch condition
+     */
     public static ArchCondition<JavaClass> notCallMethodsInPackageUnless(final String packageIdentifier,
             final DescribedPredicate<JavaCall<?>>... unlessPredicates) {
         DescribedPredicate<JavaCall<?>> restrictedPackageCalls = target(
@@ -138,6 +175,17 @@ public class ArchTests {
         return not(callMethodWhere(restrictedPackageCalls));
     }
 
+    /**
+     * Target method is.
+     *
+     * @param owner
+     *            the owner
+     * @param methodName
+     *            the method name
+     * @param parameterTypes
+     *            the parameter types
+     * @return the described predicate
+     */
     public static DescribedPredicate<JavaCall<?>> targetMethodIs(Class<?> owner,
             String methodName,
             Class<?>... parameterTypes) {
@@ -148,6 +196,17 @@ public class ArchTests {
                         Formatters.formatMethodSimple(owner.getSimpleName(), methodName, namesOf(parameterTypes)));
     }
 
+    /**
+     * Unless.
+     *
+     * @param <T>
+     *            the generic type
+     * @param first
+     *            the first
+     * @param second
+     *            the second
+     * @return the described predicate
+     */
     public static <T> DescribedPredicate<T> unless(DescribedPredicate<? super T> first,
             DescribedPredicate<? super T> second) {
         return new UnlessPredicate(first, second);

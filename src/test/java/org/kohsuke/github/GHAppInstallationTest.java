@@ -7,11 +7,21 @@ import java.util.List;
 
 import static org.hamcrest.Matchers.*;
 
+// TODO: Auto-generated Javadoc
+/**
+ * The Class GHAppInstallationTest.
+ */
 public class GHAppInstallationTest extends AbstractGHAppInstallationTest {
 
+    /**
+     * Test list repositories two repos.
+     *
+     * @throws IOException
+     *             Signals that an I/O exception has occurred.
+     */
     @Test
     public void testListRepositoriesTwoRepos() throws IOException {
-        GHAppInstallation appInstallation = getAppInstallationWithTokenApp1();
+        GHAppInstallation appInstallation = getAppInstallationWithToken(jwtProvider1.getEncodedAuthorization());
 
         List<GHRepository> repositories = appInstallation.listRepositories().toList();
 
@@ -20,9 +30,15 @@ public class GHAppInstallationTest extends AbstractGHAppInstallationTest {
                 arrayContainingInAnyOrder("empty", "test-readme"));
     }
 
+    /**
+     * Test list repositories no permissions.
+     *
+     * @throws IOException
+     *             Signals that an I/O exception has occurred.
+     */
     @Test
     public void testListRepositoriesNoPermissions() throws IOException {
-        GHAppInstallation appInstallation = getAppInstallationWithTokenApp2();
+        GHAppInstallation appInstallation = getAppInstallationWithToken(jwtProvider2.getEncodedAuthorization());
 
         assertThat("App does not have permissions and should have 0 repositories",
                 appInstallation.listRepositories().toList().isEmpty());

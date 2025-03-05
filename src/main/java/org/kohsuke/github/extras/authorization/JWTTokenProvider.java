@@ -34,38 +34,98 @@ public class JWTTokenProvider implements AuthorizationProvider {
     @Nonnull
     private Instant validUntil = Instant.MIN;
 
-    private String token;
+    private String authorization;
 
     /**
      * The identifier for the application
      */
     private final String applicationId;
 
+    /**
+     * Create a JWTTokenProvider
+     *
+     * @param applicationId
+     *            the application id
+     * @param keyFile
+     *            the key file
+     * @throws GeneralSecurityException
+     *             when an error occurs
+     * @throws IOException
+     *             when an error occurs
+     */
     public JWTTokenProvider(String applicationId, File keyFile) throws GeneralSecurityException, IOException {
         this(applicationId, keyFile.toPath());
     }
 
+    /**
+     * Create a JWTTokenProvider
+     *
+     * @param applicationId
+     *            the application id
+     * @param keyPath
+     *            the key path
+     * @throws GeneralSecurityException
+     *             when an error occurs
+     * @throws IOException
+     *             when an error occurs
+     */
     public JWTTokenProvider(String applicationId, Path keyPath) throws GeneralSecurityException, IOException {
         this(applicationId, new String(Files.readAllBytes(keyPath), StandardCharsets.UTF_8));
     }
 
+    /**
+     * Create a JWTTokenProvider
+     *
+     * @param applicationId
+     *            the application id
+     * @param keyString
+     *            the key string
+     * @throws GeneralSecurityException
+     *             when an error occurs
+     */
     public JWTTokenProvider(String applicationId, String keyString) throws GeneralSecurityException {
         this(applicationId, getPrivateKeyFromString(keyString));
     }
 
+    /**
+     * Create a JWTTokenProvider
+     *
+     * @param applicationId
+     *            the application id
+     * @param privateKey
+     *            the private key
+     */
     public JWTTokenProvider(String applicationId, PrivateKey privateKey) {
         this.privateKey = privateKey;
         this.applicationId = applicationId;
     }
 
+    /** {@inheritDoc} */
     @Override
     public String getEncodedAuthorization() throws IOException {
         synchronized (this) {
-            if (Instant.now().isAfter(validUntil)) {
-                token = refreshJWT();
+            if (isNotValid()) {
+                String token = refreshJWT();
+                authorization = String.format("Bearer %s", token);;
             }
-            return String.format("Bearer %s", token);
+            return authorization;
         }
+    }
+
+    /**
+     * Indicates whether the token considered valid.
+     *
+     * <p>
+     * This is not the same as whether the token is expired. The token is considered not valid before it actually
+     * expires to prevent access denied errors.
+     *
+     * <p>
+     * Made internal for testing
+     *
+     * @return false if the the token has been refreshed within the required window, otherwise true
+     */
+    boolean isNotValid() {
+        return Instant.now().isAfter(validUntil);
     }
 
     /**

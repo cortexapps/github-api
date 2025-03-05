@@ -2,35 +2,38 @@ package org.kohsuke.github;
 
 import org.kohsuke.github.internal.Previews;
 
+// TODO: Auto-generated Javadoc
 /**
- * Represents the state of deployment
+ * Represents the state of deployment.
  */
 public enum GHDeploymentState {
+
+    /** The pending. */
     PENDING,
+
+    /** The success. */
     SUCCESS,
+
+    /** The error. */
     ERROR,
+
+    /** The failure. */
     FAILURE,
 
     /**
      * The state of the deployment currently reflects it's in progress.
-     *
-     * @deprecated until preview feature has graduated to stable
      */
     @Preview(Previews.FLASH)
     IN_PROGRESS,
 
     /**
      * The state of the deployment currently reflects it's queued up for processing.
-     *
-     * @deprecated until preview feature has graduated to stable
      */
     @Preview(Previews.FLASH)
     QUEUED,
 
     /**
      * The state of the deployment currently reflects it's no longer active.
-     *
-     * @deprecated until preview feature has graduated to stable
      */
     @Preview(Previews.ANT_MAN)
     INACTIVE

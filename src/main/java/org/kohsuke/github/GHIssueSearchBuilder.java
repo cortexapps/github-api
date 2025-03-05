@@ -1,5 +1,6 @@
 package org.kohsuke.github;
 
+// TODO: Auto-generated Javadoc
 /**
  * Search issues.
  *
@@ -7,12 +8,23 @@ package org.kohsuke.github;
  * @see GitHub#searchIssues() GitHub#searchIssues()
  */
 public class GHIssueSearchBuilder extends GHSearchBuilder<GHIssue> {
+
+    /**
+     * Instantiates a new GH issue search builder.
+     *
+     * @param root
+     *            the root
+     */
     GHIssueSearchBuilder(GitHub root) {
         super(root, IssueSearchResult.class);
     }
 
     /**
      * Search terms.
+     *
+     * @param term
+     *            the term
+     * @return the GH issue search builder
      */
     public GHIssueSearchBuilder q(String term) {
         super.q(term);
@@ -93,10 +105,28 @@ public class GHIssueSearchBuilder extends GHSearchBuilder<GHIssue> {
     }
 
     /**
+     * Page gh content search builder.
+     *
+     * @param page
+     *            the page
+     * @return the gh content search builder
+     */
+    public GHIssueSearchBuilder page(int page) {
+        req.with("page", page);
+        return this;
+    }
+
+    /**
      * The enum Sort.
      */
     public enum Sort {
-        COMMENTS, CREATED, UPDATED
+
+        /** The comments. */
+        COMMENTS,
+        /** The created. */
+        CREATED,
+        /** The updated. */
+        UPDATED
     }
 
     private static class IssueSearchResult extends SearchResult<GHIssue> {
@@ -104,12 +134,17 @@ public class GHIssueSearchBuilder extends GHSearchBuilder<GHIssue> {
 
         @Override
         GHIssue[] getItems(GitHub root) {
-            for (GHIssue i : items)
-                i.wrap(root);
+            for (GHIssue i : items) {
+            }
             return items;
         }
     }
 
+    /**
+     * Gets the api url.
+     *
+     * @return the api url
+     */
     @Override
     protected String getApiUrl() {
         return "/search/issues";

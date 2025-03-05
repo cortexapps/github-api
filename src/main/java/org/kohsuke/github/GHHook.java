@@ -10,6 +10,7 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 
+// TODO: Auto-generated Javadoc
 /**
  * The type GHHook.
  *
@@ -18,9 +19,17 @@ import java.util.Map;
 @SuppressFBWarnings(value = { "UWF_UNWRITTEN_PUBLIC_OR_PROTECTED_FIELD", "UWF_UNWRITTEN_FIELD", "NP_UNWRITTEN_FIELD" },
         justification = "JSON API")
 public abstract class GHHook extends GHObject {
+
+    /** The name. */
     String name;
+
+    /** The events. */
     List<String> events;
+
+    /** The active. */
     boolean active;
+
+    /** The config. */
     Map<String, String> config;
 
     /**
@@ -71,7 +80,7 @@ public abstract class GHHook extends GHObject {
      * @see <a href="https://developer.github.com/v3/repos/hooks/#ping-a-hook">Ping hook</a>
      */
     public void ping() throws IOException {
-        getRoot().createRequest().method("POST").withUrlPath(getApiRoute() + "/pings").send();
+        root().createRequest().method("POST").withUrlPath(getApiRoute() + "/pings").send();
     }
 
     /**
@@ -81,10 +90,13 @@ public abstract class GHHook extends GHObject {
      *             the io exception
      */
     public void delete() throws IOException {
-        getRoot().createRequest().method("DELETE").withUrlPath(getApiRoute()).send();
+        root().createRequest().method("DELETE").withUrlPath(getApiRoute()).send();
     }
 
     /**
+     * Gets the html url.
+     *
+     * @return the html url
      * @deprecated This object has no HTML URL.
      */
     @Override
@@ -92,7 +104,17 @@ public abstract class GHHook extends GHObject {
         return null;
     }
 
-    abstract GitHub getRoot();
+    /**
+     * Root.
+     *
+     * @return the git hub
+     */
+    abstract GitHub root();
 
+    /**
+     * Gets the api route.
+     *
+     * @return the api route
+     */
     abstract String getApiRoute();
 }

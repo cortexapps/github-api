@@ -10,6 +10,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
+// TODO: Auto-generated Javadoc
 /**
  * Represents a check suite.
  *
@@ -19,6 +20,7 @@ import java.util.List;
         justification = "JSON API")
 public class GHCheckSuite extends GHObject {
 
+    /** The owner. */
     @JsonProperty("repository")
     GHRepository owner;
 
@@ -30,33 +32,47 @@ public class GHCheckSuite extends GHObject {
     private String before;
     private String after;
     private int latestCheckRunsCount;
-    private URL checkRunsUrl;
+    private String checkRunsUrl;
     private HeadCommit headCommit;
     private GHApp app;
     private GHPullRequest[] pullRequests;
 
+    /**
+     * Wrap.
+     *
+     * @param owner
+     *            the owner
+     * @return the GH check suite
+     */
     GHCheckSuite wrap(GHRepository owner) {
         this.owner = owner;
-        this.wrap(owner.root);
+        this.wrap(owner.root());
         return this;
     }
 
+    /**
+     * Wrap.
+     *
+     * @param root
+     *            the root
+     * @return the GH check suite
+     */
     GHCheckSuite wrap(GitHub root) {
-        this.root = root;
         if (owner != null) {
-            owner.wrap(root);
             if (pullRequests != null && pullRequests.length != 0) {
                 for (GHPullRequest singlePull : pullRequests) {
                     singlePull.wrap(owner);
                 }
             }
         }
-        if (app != null) {
-            app.wrapUp(root);
-        }
         return this;
     }
 
+    /**
+     * Wrap.
+     *
+     * @return the GH pull request[]
+     */
     GHPullRequest[] wrap() {
         return pullRequests;
     }
@@ -64,8 +80,8 @@ public class GHCheckSuite extends GHObject {
     /**
      * Gets the global node id to access most objects in GitHub.
      *
-     * @see <a href="https://developer.github.com/v4/guides/using-global-node-ids/">documentation</a>
      * @return global node id
+     * @see <a href="https://developer.github.com/v4/guides/using-global-node-ids/">documentation</a>
      */
     public String getNodeId() {
         return nodeId;
@@ -142,7 +158,7 @@ public class GHCheckSuite extends GHObject {
      * @return url containing all check runs
      */
     public URL getCheckRunsUrl() {
-        return checkRunsUrl;
+        return GitHubClient.parseURL(checkRunsUrl);
     }
 
     /**
@@ -159,6 +175,7 @@ public class GHCheckSuite extends GHObject {
      *
      * @return GitHub App
      */
+    @SuppressFBWarnings(value = { "EI_EXPOSE_REP" }, justification = "Expected behavior")
     public GHApp getApp() {
         return app;
     }
@@ -194,6 +211,9 @@ public class GHCheckSuite extends GHObject {
         return null;
     }
 
+    /**
+     * The Class HeadCommit.
+     */
     public static class HeadCommit {
         private String id;
         private String treeId;
@@ -203,7 +223,7 @@ public class GHCheckSuite extends GHObject {
         private GitUser committer;
 
         /**
-         * Gets id of the commit, used by {@link GHCheckSuite} when a {@link GHEvent#CHECK_SUITE} comes
+         * Gets id of the commit, used by {@link GHCheckSuite} when a {@link GHEvent#CHECK_SUITE} comes.
          *
          * @return id of the commit
          */

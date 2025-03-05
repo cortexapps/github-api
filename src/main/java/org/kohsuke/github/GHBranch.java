@@ -12,6 +12,7 @@ import java.util.Objects;
 
 import javax.annotation.CheckForNull;
 
+// TODO: Auto-generated Javadoc
 /**
  * A branch in a repository.
  *
@@ -30,6 +31,14 @@ public class GHBranch extends GitHubInteractiveObject {
     private boolean protection;
     private String protection_url;
 
+    /**
+     * Instantiates a new GH branch.
+     *
+     * @param name
+     *            the name
+     * @throws Exception
+     *             the exception
+     */
     @JsonCreator
     GHBranch(@JsonProperty(value = "name", required = true) String name) throws Exception {
         Objects.requireNonNull(name);
@@ -40,19 +49,13 @@ public class GHBranch extends GitHubInteractiveObject {
      * The type Commit.
      */
     public static class Commit {
+
+        /** The sha. */
         String sha;
 
+        /** The url. */
         @SuppressFBWarnings(value = "UUF_UNUSED_FIELD", justification = "We don't provide it in API now")
         String url;
-    }
-
-    /**
-     * Gets root.
-     *
-     * @return the root
-     */
-    public GitHub getRoot() {
-        return root;
     }
 
     /**
@@ -60,6 +63,7 @@ public class GHBranch extends GitHubInteractiveObject {
      *
      * @return the repository that this branch is in.
      */
+    @SuppressFBWarnings(value = { "EI_EXPOSE_REP" }, justification = "Expected behavior")
     public GHRepository getOwner() {
         return owner;
     }
@@ -102,11 +106,10 @@ public class GHBranch extends GitHubInteractiveObject {
      */
     @Preview(Previews.LUKE_CAGE)
     public GHBranchProtection getProtection() throws IOException {
-        return root.createRequest()
+        return root().createRequest()
                 .withPreview(Previews.LUKE_CAGE)
                 .setRawUrlPath(protection_url)
-                .fetch(GHBranchProtection.class)
-                .wrap(this);
+                .fetch(GHBranchProtection.class);
     }
 
     /**
@@ -125,7 +128,7 @@ public class GHBranch extends GitHubInteractiveObject {
      *             if disabling protection fails
      */
     public void disableProtection() throws IOException {
-        root.createRequest().method("DELETE").setRawUrlPath(protection_url).send();
+        root().createRequest().method("DELETE").setRawUrlPath(protection_url).send();
     }
 
     /**
@@ -203,7 +206,7 @@ public class GHBranch extends GitHubInteractiveObject {
      */
     @CheckForNull
     public GHCommit merge(String head, String commitMessage) throws IOException {
-        GHCommit result = root.createRequest()
+        GHCommit result = root().createRequest()
                 .withUrlPath(owner.getApiTailUrl("merges"))
                 .method("POST")
                 .with("commit_message", commitMessage)
@@ -218,19 +221,35 @@ public class GHBranch extends GitHubInteractiveObject {
         return result;
     }
 
+    /**
+     * Gets the api route.
+     *
+     * @return the api route
+     */
     String getApiRoute() {
         return owner.getApiTailUrl("/branches/" + name);
     }
 
+    /**
+     * To string.
+     *
+     * @return the string
+     */
     @Override
     public String toString() {
         final String url = owner != null ? owner.getUrl().toString() : "unknown";
         return "Branch:" + name + " in " + url;
     }
 
+    /**
+     * Wrap.
+     *
+     * @param repo
+     *            the repo
+     * @return the GH branch
+     */
     GHBranch wrap(GHRepository repo) {
         this.owner = repo;
-        this.root = repo.root;
         return this;
     }
 }

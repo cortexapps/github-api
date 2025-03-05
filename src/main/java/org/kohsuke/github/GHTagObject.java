@@ -2,8 +2,9 @@ package org.kohsuke.github;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
+// TODO: Auto-generated Javadoc
 /**
- * Represents an annotated tag in a {@link GHRepository}
+ * Represents an annotated tag in a {@link GHRepository}.
  *
  * @see GHRepository#getTagObject(String) GHRepository#getTagObject(String)
  */
@@ -20,9 +21,15 @@ public class GHTagObject extends GitHubInteractiveObject {
     private GHRef.GHObject object;
     private GHVerification verification;
 
+    /**
+     * Wrap.
+     *
+     * @param owner
+     *            the owner
+     * @return the GH tag object
+     */
     GHTagObject wrap(GHRepository owner) {
         this.owner = owner;
-        this.root = owner.root;
         return this;
     }
 
@@ -31,17 +38,9 @@ public class GHTagObject extends GitHubInteractiveObject {
      *
      * @return the owner
      */
+    @SuppressFBWarnings(value = { "EI_EXPOSE_REP" }, justification = "Expected behavior")
     public GHRepository getOwner() {
         return owner;
-    }
-
-    /**
-     * Gets root.
-     *
-     * @return the root
-     */
-    public GitHub getRoot() {
-        return root;
     }
 
     /**

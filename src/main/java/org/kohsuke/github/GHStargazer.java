@@ -4,6 +4,7 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 import java.util.Date;
 
+// TODO: Auto-generated Javadoc
 /**
  * A stargazer at a repository on GitHub.
  *
@@ -17,10 +18,11 @@ public class GHStargazer {
     private GHUser user;
 
     /**
-     * Gets the repository that is stargazed
+     * Gets the repository that is stargazed.
      *
      * @return the starred repository
      */
+    @SuppressFBWarnings(value = { "EI_EXPOSE_REP" }, justification = "Expected behavior")
     public GHRepository getRepository() {
         return repository;
     }
@@ -36,16 +38,22 @@ public class GHStargazer {
     }
 
     /**
-     * Gets the user that starred the repository
+     * Gets the user that starred the repository.
      *
      * @return the stargazer user
      */
+    @SuppressFBWarnings(value = { "EI_EXPOSE_REP" }, justification = "Expected behavior")
     public GHUser getUser() {
         return user;
     }
 
+    /**
+     * Wrap up.
+     *
+     * @param repository
+     *            the repository
+     */
     void wrapUp(GHRepository repository) {
         this.repository = repository;
-        user.wrapUp(repository.root);
     }
 }

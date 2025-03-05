@@ -1,5 +1,6 @@
 package org.kohsuke.github;
 
+// TODO: Auto-generated Javadoc
 /**
  * Search code for {@link GHContent}.
  *
@@ -7,15 +8,32 @@ package org.kohsuke.github;
  * @see GitHub#searchContent() GitHub#searchContent()
  */
 public class GHContentSearchBuilder extends GHSearchBuilder<GHContent> {
+
+    /**
+     * Instantiates a new GH content search builder.
+     *
+     * @param root
+     *            the root
+     */
     GHContentSearchBuilder(GitHub root) {
         super(root, ContentSearchResult.class);
     }
 
     /**
-     * Search terms.
+     * {@inheritDoc}
      */
+    @Override
     public GHContentSearchBuilder q(String term) {
         super.q(term);
+        return this;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    GHContentSearchBuilder q(String qualifier, String value) {
+        super.q(qualifier, value);
         return this;
     }
 
@@ -47,9 +65,27 @@ public class GHContentSearchBuilder extends GHSearchBuilder<GHContent> {
      * @param v
      *            the v
      * @return the gh content search builder
+     * @deprecated use {@link #fork(GHFork)}.
      */
+    @Deprecated
     public GHContentSearchBuilder fork(String v) {
-        return q("fork:" + v);
+        return q("fork", v);
+    }
+
+    /**
+     * Fork gh content search builder.
+     *
+     * @param fork
+     *            search mode for forks
+     *
+     * @return the gh content search builder
+     *
+     * @see <a href=
+     *      "https://docs.github.com/en/github/searching-for-information-on-github/searching-on-github/searching-in-forks">Searching
+     *      in forks</a>
+     */
+    public GHContentSearchBuilder fork(GHFork fork) {
+        return q("fork", fork.toString());
     }
 
     /**
@@ -147,10 +183,26 @@ public class GHContentSearchBuilder extends GHSearchBuilder<GHContent> {
     }
 
     /**
+     * Page gh content search builder.
+     *
+     * @param page
+     *            the page
+     * @return the gh content search builder
+     */
+    public GHContentSearchBuilder page(int page) {
+        req.with("page", page);
+        return this;
+    }
+
+    /**
      * The enum Sort.
      */
     public enum Sort {
-        BEST_MATCH, INDEXED
+
+        /** The best match. */
+        BEST_MATCH,
+        /** The indexed. */
+        INDEXED
     }
 
     private static class ContentSearchResult extends SearchResult<GHContent> {
@@ -158,12 +210,15 @@ public class GHContentSearchBuilder extends GHSearchBuilder<GHContent> {
 
         @Override
         GHContent[] getItems(GitHub root) {
-            for (GHContent item : items)
-                item.wrap(root);
             return items;
         }
     }
 
+    /**
+     * Gets the api url.
+     *
+     * @return the api url
+     */
     @Override
     protected String getApiUrl() {
         return "/search/code";

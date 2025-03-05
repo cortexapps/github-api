@@ -1,37 +1,37 @@
 package org.kohsuke.github;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 import java.io.IOException;
 import java.net.URL;
 import java.util.Date;
 import java.util.Locale;
 
+// TODO: Auto-generated Javadoc
 /**
  * The type GHMilestone.
  *
  * @author Yusuke Kokubo
  */
 public class GHMilestone extends GHObject {
+
+    /** The owner. */
     GHRepository owner;
 
+    /** The creator. */
     GHUser creator;
     private String state, due_on, title, description, html_url;
     private int closed_issues, open_issues, number;
-    protected String closed_at;
 
-    /**
-     * Gets root.
-     *
-     * @return the root
-     */
-    public GitHub getRoot() {
-        return root;
-    }
+    /** The closed at. */
+    protected String closed_at;
 
     /**
      * Gets owner.
      *
      * @return the owner
      */
+    @SuppressFBWarnings(value = { "EI_EXPOSE_REP" }, justification = "Expected behavior")
     public GHRepository getOwner() {
         return owner;
     }
@@ -44,7 +44,7 @@ public class GHMilestone extends GHObject {
      *             the io exception
      */
     public GHUser getCreator() throws IOException {
-        return root.intern(creator);
+        return root().intern(creator);
     }
 
     /**
@@ -59,7 +59,7 @@ public class GHMilestone extends GHObject {
     }
 
     /**
-     * When was this milestone closed?
+     * When was this milestone closed?.
      *
      * @return the closed at
      * @throws IOException
@@ -114,6 +114,11 @@ public class GHMilestone extends GHObject {
         return number;
     }
 
+    /**
+     * Gets the html url.
+     *
+     * @return the html url
+     */
     public URL getHtmlUrl() {
         return GitHubClient.parseURL(html_url);
     }
@@ -154,11 +159,11 @@ public class GHMilestone extends GHObject {
      *             the io exception
      */
     public void delete() throws IOException {
-        root.createRequest().method("DELETE").withUrlPath(getApiRoute()).send();
+        root().createRequest().method("DELETE").withUrlPath(getApiRoute()).send();
     }
 
     private void edit(String key, Object value) throws IOException {
-        root.createRequest().with(key, value).method("PATCH").withUrlPath(getApiRoute()).send();
+        root().createRequest().with(key, value).method("PATCH").withUrlPath(getApiRoute()).send();
     }
 
     /**
@@ -213,9 +218,21 @@ public class GHMilestone extends GHObject {
      *            the repo
      * @return the gh milestone
      */
+    @Deprecated
     public GHMilestone wrap(GHRepository repo) {
+        throw new RuntimeException("Do not use this method.");
+    }
+
+    /**
+     * Wrap gh milestone.
+     *
+     * @param repo
+     *            the repo
+     * @return the gh milestone
+     */
+    GHMilestone lateBind(GHRepository repo) {
         this.owner = repo;
-        this.root = repo.root;
         return this;
     }
+
 }

@@ -7,6 +7,7 @@ import java.net.URL;
 
 import static org.kohsuke.github.internal.Previews.SQUIRREL_GIRL;
 
+// TODO: Auto-generated Javadoc
 /**
  * A comment attached to a commit (or a specific line in a specific file of a commit.)
  *
@@ -21,9 +22,16 @@ import static org.kohsuke.github.internal.Previews.SQUIRREL_GIRL;
 public class GHCommitComment extends GHObject implements Reactable {
     private GHRepository owner;
 
+    /** The commit id. */
     String body, html_url, commit_id;
+
+    /** The line. */
     Integer line;
+
+    /** The path. */
     String path;
+
+    /** The user. */
     GHUser user; // not fully populated. beware.
 
     /**
@@ -31,6 +39,7 @@ public class GHCommitComment extends GHObject implements Reactable {
      *
      * @return the owner
      */
+    @SuppressFBWarnings(value = { "EI_EXPOSE_REP" }, justification = "Expected behavior")
     public GHRepository getOwner() {
         return owner;
     }
@@ -39,6 +48,8 @@ public class GHCommitComment extends GHObject implements Reactable {
      * URL like
      * 'https://github.com/kohsuke/sandbox-ant/commit/8ae38db0ea5837313ab5f39d43a6f73de3bd9000#commitcomment-1252827' to
      * show this commit comment in a browser.
+     *
+     * @return the html url
      */
     public URL getHtmlUrl() {
         return GitHubClient.parseURL(html_url);
@@ -90,7 +101,7 @@ public class GHCommitComment extends GHObject implements Reactable {
      *             the io exception
      */
     public GHUser getUser() throws IOException {
-        return owner == null || owner.root.isOffline() ? user : owner.root.getUser(user.login);
+        return owner == null || owner.isOffline() ? user : owner.root().getUser(user.login);
     }
 
     /**
@@ -113,7 +124,8 @@ public class GHCommitComment extends GHObject implements Reactable {
      *             the io exception
      */
     public void update(String body) throws IOException {
-        owner.root.createRequest()
+        owner.root()
+                .createRequest()
                 .method("PATCH")
                 .with("body", body)
                 .withUrlPath(getApiTail())
@@ -121,23 +133,54 @@ public class GHCommitComment extends GHObject implements Reactable {
         this.body = body;
     }
 
+    /**
+     * Creates the reaction.
+     *
+     * @param content
+     *            the content
+     * @return the GH reaction
+     * @throws IOException
+     *             Signals that an I/O exception has occurred.
+     */
     @Preview(SQUIRREL_GIRL)
     public GHReaction createReaction(ReactionContent content) throws IOException {
-        return owner.root.createRequest()
+        return owner.root()
+                .createRequest()
                 .method("POST")
                 .withPreview(SQUIRREL_GIRL)
                 .with("content", content.getContent())
                 .withUrlPath(getApiTail() + "/reactions")
-                .fetch(GHReaction.class)
-                .wrap(owner.root);
+                .fetch(GHReaction.class);
     }
 
+    /**
+     * Delete reaction.
+     *
+     * @param reaction
+     *            the reaction
+     * @throws IOException
+     *             Signals that an I/O exception has occurred.
+     */
+    public void deleteReaction(GHReaction reaction) throws IOException {
+        owner.root()
+                .createRequest()
+                .method("DELETE")
+                .withUrlPath(getApiTail(), "reactions", String.valueOf(reaction.getId()))
+                .send();
+    }
+
+    /**
+     * List reactions.
+     *
+     * @return the paged iterable
+     */
     @Preview(SQUIRREL_GIRL)
     public PagedIterable<GHReaction> listReactions() {
-        return owner.root.createRequest()
+        return owner.root()
+                .createRequest()
                 .withPreview(SQUIRREL_GIRL)
                 .withUrlPath(getApiTail() + "/reactions")
-                .toIterable(GHReaction[].class, item -> item.wrap(owner.root));
+                .toIterable(GHReaction[].class, item -> owner.root());
     }
 
     /**
@@ -147,18 +190,22 @@ public class GHCommitComment extends GHObject implements Reactable {
      *             the io exception
      */
     public void delete() throws IOException {
-        owner.root.createRequest().method("DELETE").withUrlPath(getApiTail()).send();
+        owner.root().createRequest().method("DELETE").withUrlPath(getApiTail()).send();
     }
 
     private String getApiTail() {
         return String.format("/repos/%s/%s/comments/%s", owner.getOwnerName(), owner.getName(), getId());
     }
 
+    /**
+     * Wrap.
+     *
+     * @param owner
+     *            the owner
+     * @return the GH commit comment
+     */
     GHCommitComment wrap(GHRepository owner) {
         this.owner = owner;
-        if (owner.root.isOffline()) {
-            user.wrapUp(owner.root);
-        }
         return this;
     }
 }

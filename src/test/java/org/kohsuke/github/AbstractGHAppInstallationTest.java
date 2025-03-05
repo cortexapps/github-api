@@ -18,6 +18,10 @@ import java.time.temporal.ChronoUnit;
 import java.util.Base64;
 import java.util.Date;
 
+// TODO: Auto-generated Javadoc
+/**
+ * The Class AbstractGHAppInstallationTest.
+ */
 public class AbstractGHAppInstallationTest extends AbstractGitHubWireMockTest {
 
     private static String TEST_APP_ID_1 = "82994";
@@ -27,17 +31,25 @@ public class AbstractGHAppInstallationTest extends AbstractGitHubWireMockTest {
     private static String PRIVATE_KEY_FILE_APP_2 = "/ghapi-test-app-2.private-key.pem";
     private static String PRIVATE_KEY_FILE_APP_3 = "/ghapi-test-app-3.private-key.pem";
 
-    private static AuthorizationProvider JWT_PROVIDER_1;
-    private static AuthorizationProvider JWT_PROVIDER_2;
-    private static AuthorizationProvider JWT_PROVIDER_3;
+    /** The jwt provider 1. */
+    protected final AuthorizationProvider jwtProvider1;
 
-    AbstractGHAppInstallationTest() {
+    /** The jwt provider 2. */
+    protected final AuthorizationProvider jwtProvider2;
+
+    /** The jwt provider 3. */
+    protected final AuthorizationProvider jwtProvider3;
+
+    /**
+     * Instantiates a new abstract GH app installation test.
+     */
+    protected AbstractGHAppInstallationTest() {
         try {
-            JWT_PROVIDER_1 = new JWTTokenProvider(TEST_APP_ID_1,
+            jwtProvider1 = new JWTTokenProvider(TEST_APP_ID_1,
                     new File(this.getClass().getResource(PRIVATE_KEY_FILE_APP_1).getFile()));
-            JWT_PROVIDER_2 = new JWTTokenProvider(TEST_APP_ID_2,
+            jwtProvider2 = new JWTTokenProvider(TEST_APP_ID_2,
                     new File(this.getClass().getResource(PRIVATE_KEY_FILE_APP_2).getFile()).toPath());
-            JWT_PROVIDER_3 = new JWTTokenProvider(TEST_APP_ID_3,
+            jwtProvider3 = new JWTTokenProvider(TEST_APP_ID_3,
                     new String(
                             Files.readAllBytes(
                                     new File(this.getClass().getResource(PRIVATE_KEY_FILE_APP_3).getFile()).toPath()),
@@ -67,7 +79,16 @@ public class AbstractGHAppInstallationTest extends AbstractGitHubWireMockTest {
         }
     }
 
-    private GHAppInstallation getAppInstallationWithToken(String jwtToken) throws IOException {
+    /**
+     * Gets the app installation with token.
+     *
+     * @param jwtToken
+     *            the jwt token
+     * @return the app installation with token
+     * @throws IOException
+     *             Signals that an I/O exception has occurred.
+     */
+    protected GHAppInstallation getAppInstallationWithToken(String jwtToken) throws IOException {
         GitHub gitHub = getGitHubBuilder().withJwtToken(jwtToken)
                 .withEndpoint(mockGitHub.apiServer().baseUrl())
                 .build();
@@ -87,18 +108,6 @@ public class AbstractGHAppInstallationTest extends AbstractGitHubWireMockTest {
         // .build());
 
         return appInstallation;
-    }
-
-    protected GHAppInstallation getAppInstallationWithTokenApp1() throws IOException {
-        return getAppInstallationWithToken(JWT_PROVIDER_1.getEncodedAuthorization());
-    }
-
-    protected GHAppInstallation getAppInstallationWithTokenApp2() throws IOException {
-        return getAppInstallationWithToken(JWT_PROVIDER_2.getEncodedAuthorization());
-    }
-
-    protected GHAppInstallation getAppInstallationWithTokenApp3() throws IOException {
-        return getAppInstallationWithToken(JWT_PROVIDER_3.getEncodedAuthorization());
     }
 
 }

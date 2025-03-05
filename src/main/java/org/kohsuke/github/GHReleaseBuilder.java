@@ -1,9 +1,12 @@
 package org.kohsuke.github;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 import java.io.IOException;
 
+// TODO: Auto-generated Javadoc
 /**
- * Builder pattern for creating a {@link GHRelease}
+ * Builder pattern for creating a {@link GHRelease}.
  *
  * @see GHRepository#createRelease(String) GHRepository#createRelease(String)
  */
@@ -19,9 +22,10 @@ public class GHReleaseBuilder {
      * @param tag
      *            the tag
      */
+    @SuppressFBWarnings(value = { "EI_EXPOSE_REP2" }, justification = "Acceptable risk")
     public GHReleaseBuilder(GHRepository ghRepository, String tag) {
         this.repo = ghRepository;
-        this.builder = repo.root.createRequest().method("POST");
+        this.builder = repo.root().createRequest().method("POST");
         builder.with("tag_name", tag);
     }
 
@@ -75,7 +79,7 @@ public class GHReleaseBuilder {
     }
 
     /**
-     * Optional
+     * Optional.
      *
      * @param prerelease
      *            {@code true} to identify the release as a prerelease. {@code false} to identify the release as a full
@@ -88,7 +92,7 @@ public class GHReleaseBuilder {
     }
 
     /**
-     * Optional
+     * Optional.
      *
      * @param categoryName
      *            the category of the discussion to be created for the release. Category should already exist

@@ -6,10 +6,20 @@ import java.io.FileNotFoundException;
 
 import static org.hamcrest.Matchers.*;
 
+// TODO: Auto-generated Javadoc
 /**
+ * The Class GHGistTest.
+ *
  * @author Kohsuke Kawaguchi
  */
 public class GHGistTest extends AbstractGitHubWireMockTest {
+
+    /**
+     * Lifecycle test.
+     *
+     * @throws Exception
+     *             the exception
+     */
     @Test
     public void lifecycleTest() throws Exception {
         // CRUD operation
@@ -28,8 +38,10 @@ public class GHGistTest extends AbstractGitHubWireMockTest {
         assertThat(gist.getUpdatedAt(), notNullValue());
         assertThat(gist.getCommentsUrl(), notNullValue());
         assertThat(gist.getCommitsUrl(), notNullValue());
+        assertThat(gist.getForksUrl(), notNullValue());
         assertThat(gist.getGitPullUrl(), notNullValue());
         assertThat(gist.getGitPushUrl(), notNullValue());
+        assertThat(gist.getHtmlUrl(), notNullValue());
         assertThat(gist.getHtmlUrl(), notNullValue());
 
         String id = gist.getGistId();
@@ -94,10 +106,19 @@ public class GHGistTest extends AbstractGitHubWireMockTest {
         }
     }
 
+    /**
+     * Star test.
+     *
+     * @throws Exception
+     *             the exception
+     */
     @Test
     public void starTest() throws Exception {
         GHGist gist = gitHub.getGist("9903708");
         assertThat(gist.getOwner().getLogin(), equalTo("rtyler"));
+
+        // Random: test that comment count works
+        assertThat(gist.getCommentCount(), equalTo(1));
 
         gist.star();
         assertThat(gist.isStarred(), is(true));
@@ -121,6 +142,12 @@ public class GHGistTest extends AbstractGitHubWireMockTest {
         }
     }
 
+    /**
+     * Gist file.
+     *
+     * @throws Exception
+     *             the exception
+     */
     @Test
     public void gistFile() throws Exception {
         GHGist gist = gitHub.getGist("9903708");

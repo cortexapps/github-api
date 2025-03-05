@@ -5,6 +5,7 @@ import java.io.IOException;
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 
+// TODO: Auto-generated Javadoc
 /**
  * Base class for creating or updating a discussion.
  *
@@ -18,6 +19,7 @@ class GHDiscussionBuilder<S> extends AbstractBuilder<GHDiscussion, S> {
     private final GHTeam team;
 
     /**
+     * Instantiates a new GH discussion builder.
      *
      * @param intermediateReturnType
      *            Intermediate return type for this builder returned by calls to {@link #with(String, Object)}. If
@@ -31,7 +33,7 @@ class GHDiscussionBuilder<S> extends AbstractBuilder<GHDiscussion, S> {
     protected GHDiscussionBuilder(@Nonnull Class<S> intermediateReturnType,
             @Nonnull GHTeam team,
             @CheckForNull GHDiscussion baseInstance) {
-        super(GHDiscussion.class, intermediateReturnType, team.root, baseInstance);
+        super(GHDiscussion.class, intermediateReturnType, team.root(), baseInstance);
 
         this.team = team;
 

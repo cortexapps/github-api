@@ -4,13 +4,19 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 
 import java.io.IOException;
 
+// TODO: Auto-generated Javadoc
 /**
  * The type GHDeployKey.
  */
 public class GHDeployKey {
 
+    /** The title. */
     protected String url, key, title;
+
+    /** The verified. */
     protected boolean verified;
+
+    /** The id. */
     protected long id;
     private GHRepository owner;
 
@@ -66,11 +72,28 @@ public class GHDeployKey {
      *            the repo
      * @return the gh deploy key
      */
+    @Deprecated
     public GHDeployKey wrap(GHRepository repo) {
+        throw new RuntimeException("Do not use this method.");
+    }
+
+    /**
+     * Wrap gh deploy key.
+     *
+     * @param repo
+     *            the repo
+     * @return the gh deploy key
+     */
+    GHDeployKey lateBind(GHRepository repo) {
         this.owner = repo;
         return this;
     }
 
+    /**
+     * To string.
+     *
+     * @return the string
+     */
     public String toString() {
         return new ToStringBuilder(this).append("title", title).append("id", id).append("key", key).toString();
     }
@@ -82,7 +105,8 @@ public class GHDeployKey {
      *             the io exception
      */
     public void delete() throws IOException {
-        owner.root.createRequest()
+        owner.root()
+                .createRequest()
                 .method("DELETE")
                 .withUrlPath(String.format("/repos/%s/%s/keys/%d", owner.getOwnerName(), owner.getName(), id))
                 .send();

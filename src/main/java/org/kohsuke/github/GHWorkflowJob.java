@@ -1,6 +1,7 @@
 package org.kohsuke.github;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.apache.commons.lang3.StringUtils;
 import org.kohsuke.github.GHWorkflowRun.Conclusion;
 import org.kohsuke.github.GHWorkflowRun.Status;
@@ -9,12 +10,14 @@ import org.kohsuke.github.function.InputStreamFunction;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 
 import static java.util.Objects.requireNonNull;
 
+// TODO: Auto-generated Javadoc
 /**
  * A workflow run job.
  *
@@ -37,11 +40,19 @@ public class GHWorkflowJob extends GHObject {
     private String conclusion;
 
     private long runId;
+    private int runAttempt;
 
     private String htmlUrl;
     private String checkRunUrl;
 
+    private int runnerId;
+    private String runnerName;
+    private int runnerGroupId;
+    private String runnerGroupName;
+
     private List<Step> steps = new ArrayList<>();
+
+    private List<String> labels = new ArrayList<>();
 
     /**
      * The name of the job.
@@ -62,7 +73,7 @@ public class GHWorkflowJob extends GHObject {
     }
 
     /**
-     * When was this job started?
+     * When was this job started?.
      *
      * @return start date
      */
@@ -71,7 +82,7 @@ public class GHWorkflowJob extends GHObject {
     }
 
     /**
-     * When was this job completed?
+     * When was this job completed?.
      *
      * @return completion date
      */
@@ -110,6 +121,20 @@ public class GHWorkflowJob extends GHObject {
         return runId;
     }
 
+    /**
+     * Attempt number of the associated workflow run, 1 for first attempt and higher if the workflow was re-run.
+     *
+     * @return attempt number
+     */
+    public int getRunAttempt() {
+        return runAttempt;
+    }
+
+    /**
+     * Gets the html url.
+     *
+     * @return the html url
+     */
     @Override
     public URL getHtmlUrl() {
         return GitHubClient.parseURL(htmlUrl);
@@ -130,7 +155,52 @@ public class GHWorkflowJob extends GHObject {
      * @return the execution steps
      */
     public List<Step> getSteps() {
-        return steps;
+        return Collections.unmodifiableList(steps);
+    }
+
+    /**
+     * Gets the labels of the job.
+     *
+     * @return the labels
+     */
+    public List<String> getLabels() {
+        return Collections.unmodifiableList(labels);
+    }
+
+    /**
+     * the runner id.
+     *
+     * @return runnerId
+     */
+    public int getRunnerId() {
+        return runnerId;
+    }
+
+    /**
+     * the runner name.
+     *
+     * @return runnerName
+     */
+    public String getRunnerName() {
+        return runnerName;
+    }
+
+    /**
+     * the runner group id.
+     *
+     * @return runnerGroupId
+     */
+    public int getRunnerGroupId() {
+        return runnerGroupId;
+    }
+
+    /**
+     * the runner group name.
+     *
+     * @return runnerGroupName
+     */
+    public String getRunnerGroupName() {
+        return runnerGroupName;
     }
 
     /**
@@ -138,6 +208,7 @@ public class GHWorkflowJob extends GHObject {
      *
      * @return the repository
      */
+    @SuppressFBWarnings(value = { "EI_EXPOSE_REP" }, justification = "Expected behavior")
     public GHRepository getRepository() {
         return owner;
     }
@@ -151,39 +222,41 @@ public class GHWorkflowJob extends GHObject {
      *            the type of result
      * @param streamFunction
      *            The {@link InputStreamFunction} that will process the stream
+     * @return the result of reading the stream.
      * @throws IOException
      *             The IO exception.
-     * @return the result of reading the stream.
      */
     public <T> T downloadLogs(InputStreamFunction<T> streamFunction) throws IOException {
         requireNonNull(streamFunction, "Stream function must not be null");
 
-        return root.createRequest().method("GET").withUrlPath(getApiRoute(), "logs").fetchStream(streamFunction);
+        return root().createRequest().method("GET").withUrlPath(getApiRoute(), "logs").fetchStream(streamFunction);
     }
 
     private String getApiRoute() {
         if (owner == null) {
             // Workflow runs returned from search to do not have an owner. Attempt to use url.
             final URL url = Objects.requireNonNull(getUrl(), "Missing instance URL!");
-            return StringUtils.prependIfMissing(url.toString().replace(root.getApiUrl(), ""), "/");
+            return StringUtils.prependIfMissing(url.toString().replace(root().getApiUrl(), ""), "/");
 
         }
         return "/repos/" + owner.getOwnerName() + "/" + owner.getName() + "/actions/jobs/" + getId();
     }
 
+    /**
+     * Wrap up.
+     *
+     * @param owner
+     *            the owner
+     * @return the GH workflow job
+     */
     GHWorkflowJob wrapUp(GHRepository owner) {
         this.owner = owner;
-        return wrapUp(owner.root);
-    }
-
-    GHWorkflowJob wrapUp(GitHub root) {
-        this.root = root;
-        if (owner != null) {
-            owner.wrap(root);
-        }
         return this;
     }
 
+    /**
+     * The Class Step.
+     */
     public static class Step {
 
         private String name;
@@ -214,7 +287,7 @@ public class GHWorkflowJob extends GHObject {
         }
 
         /**
-         * When was this step started?
+         * When was this step started?.
          *
          * @return start date
          */
@@ -223,7 +296,7 @@ public class GHWorkflowJob extends GHObject {
         }
 
         /**
-         * When was this step completed?
+         * When was this step completed?.
          *
          * @return completion date
          */

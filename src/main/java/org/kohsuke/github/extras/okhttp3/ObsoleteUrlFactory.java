@@ -53,7 +53,6 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLStreamHandler;
 import java.net.URLStreamHandlerFactory;
-import java.security.AccessControlException;
 import java.security.Permission;
 import java.security.Principal;
 import java.security.cert.Certificate;
@@ -79,6 +78,8 @@ import static java.net.HttpURLConnection.HTTP_NO_CONTENT;
  * Rather than pasting this 1100 line gist into your source code, please upgrade to OkHttp's request/response API. Your
  * code will be shorter, easier to read, and you'll be able to use interceptors.
  */
+@SuppressFBWarnings(value = { "EI_EXPOSE_REP", "EI_EXPOSE_REP2" }, justification = "Deprecated external code")
+@Deprecated
 public final class ObsoleteUrlFactory implements URLStreamHandlerFactory, Cloneable {
     static final String SELECTED_PROTOCOL = "ObsoleteUrlFactory-Selected-Protocol";
 
@@ -319,7 +320,7 @@ public final class ObsoleteUrlFactory implements URLStreamHandlerFactory, Clonea
         String value;
         try {
             value = System.getProperty(key);
-        } catch (AccessControlException ex) {
+        } catch (SecurityException | IllegalArgumentException ex) {
             return defaultValue;
         }
         return value != null ? value : defaultValue;

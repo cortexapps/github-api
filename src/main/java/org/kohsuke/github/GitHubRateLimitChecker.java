@@ -7,6 +7,7 @@ import java.util.logging.Logger;
 
 import javax.annotation.Nonnull;
 
+// TODO: Auto-generated Javadoc
 /**
  * A GitHub API Rate Limit Checker called before each request.
  *
@@ -26,6 +27,8 @@ import javax.annotation.Nonnull;
  * allows for a wide range of {@link RateLimitChecker} implementations, including complex throttling strategies and
  * polling.
  * </p>
+ *
+ * @author Liam Newman
  */
 class GitHubRateLimitChecker {
 
@@ -43,10 +46,25 @@ class GitHubRateLimitChecker {
 
     private static final Logger LOGGER = Logger.getLogger(GitHubRateLimitChecker.class.getName());
 
+    /**
+     * Instantiates a new git hub rate limit checker.
+     */
     GitHubRateLimitChecker() {
         this(RateLimitChecker.NONE, RateLimitChecker.NONE, RateLimitChecker.NONE, RateLimitChecker.NONE);
     }
 
+    /**
+     * Instantiates a new git hub rate limit checker.
+     *
+     * @param core
+     *            the core
+     * @param search
+     *            the search
+     * @param graphql
+     *            the graphql
+     * @param integrationManifest
+     *            the integration manifest
+     */
     GitHubRateLimitChecker(@Nonnull RateLimitChecker core,
             @Nonnull RateLimitChecker search,
             @Nonnull RateLimitChecker graphql,
@@ -107,20 +125,20 @@ class GitHubRateLimitChecker {
      *
      * @param client
      *            the {@link GitHubClient} to check
-     * @param request
-     *            the {@link GitHubRequest} to check against
+     * @param rateLimitTarget
+     *            the {@link RateLimitTarget} to check against
      * @throws IOException
      *             if there is an I/O error
      */
-    void checkRateLimit(GitHubClient client, GitHubRequest request) throws IOException {
-        RateLimitChecker guard = selectChecker(request.rateLimitTarget());
+    void checkRateLimit(GitHubClient client, @Nonnull RateLimitTarget rateLimitTarget) throws IOException {
+        RateLimitChecker guard = selectChecker(rateLimitTarget);
         if (guard == RateLimitChecker.NONE) {
             return;
         }
 
         // For the first rate limit, accept the current limit if a valid one is already present.
-        GHRateLimit rateLimit = client.rateLimit(request.rateLimitTarget());
-        GHRateLimit.Record rateLimitRecord = rateLimit.getRecord(request.rateLimitTarget());
+        GHRateLimit rateLimit = client.rateLimit(rateLimitTarget);
+        GHRateLimit.Record rateLimitRecord = rateLimit.getRecord(rateLimitTarget);
         long waitCount = 0;
         try {
             while (guard.checkRateLimit(rateLimitRecord, waitCount)) {
@@ -133,8 +151,8 @@ class GitHubRateLimitChecker {
                 Thread.sleep(1000);
 
                 // After the first wait, always request a new rate limit from the server.
-                rateLimit = client.getRateLimit(request.rateLimitTarget());
-                rateLimitRecord = rateLimit.getRecord(request.rateLimitTarget());
+                rateLimit = client.getRateLimit(rateLimitTarget);
+                rateLimitRecord = rateLimit.getRecord(rateLimitTarget);
             }
         } catch (InterruptedException e) {
             throw (IOException) new InterruptedIOException(e.getMessage()).initCause(e);

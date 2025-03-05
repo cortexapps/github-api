@@ -13,6 +13,7 @@ import java.util.Objects;
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 
+// TODO: Auto-generated Javadoc
 /**
  * The type GHLabel.
  *
@@ -36,16 +37,20 @@ public class GHLabel extends GitHubInteractiveObject {
 
     @JsonCreator
     private GHLabel(@JacksonInject @Nonnull GitHub root) {
-        this.root = root;
         url = "";
         name = "";
         color = "";
         description = null;
     }
 
+    /**
+     * Gets the api root.
+     *
+     * @return the api root
+     */
     @Nonnull
     GitHub getApiRoot() {
-        return Objects.requireNonNull(root);
+        return Objects.requireNonNull(root());
     }
 
     /**
@@ -87,7 +92,7 @@ public class GHLabel extends GitHubInteractiveObject {
     }
 
     /**
-     * Color code without leading '#', such as 'f29513'
+     * Color code without leading '#', such as 'f29513'.
      *
      * @return the color
      */
@@ -97,7 +102,7 @@ public class GHLabel extends GitHubInteractiveObject {
     }
 
     /**
-     * Purpose of Label
+     * Purpose of Label.
      *
      * @return the description
      */
@@ -143,6 +148,13 @@ public class GHLabel extends GitHubInteractiveObject {
         set().description(newDescription);
     }
 
+    /**
+     * To names.
+     *
+     * @param labels
+     *            the labels
+     * @return the collection
+     */
     static Collection<String> toNames(Collection<GHLabel> labels) {
         List<String> r = new ArrayList<>();
         for (GHLabel l : labels) {
@@ -179,7 +191,8 @@ public class GHLabel extends GitHubInteractiveObject {
      *             the io exception
      */
     static GHLabel read(@Nonnull GHRepository repository, @Nonnull String name) throws IOException {
-        return repository.root.createRequest()
+        return repository.root()
+                .createRequest()
                 .withUrlPath(repository.getApiTailUrl("labels"), name)
                 .fetch(GHLabel.class);
 
@@ -195,7 +208,8 @@ public class GHLabel extends GitHubInteractiveObject {
      *             the io exception
      */
     static PagedIterable<GHLabel> readAll(@Nonnull final GHRepository repository) throws IOException {
-        return repository.root.createRequest()
+        return repository.root()
+                .createRequest()
                 .withUrlPath(repository.getApiTailUrl("labels"))
                 .toIterable(GHLabel[].class, null);
 
@@ -230,9 +244,16 @@ public class GHLabel extends GitHubInteractiveObject {
      *             the io exception
      */
     public void delete() throws IOException {
-        root.createRequest().method("DELETE").setRawUrlPath(getUrl()).send();
+        root().createRequest().method("DELETE").setRawUrlPath(getUrl()).send();
     }
 
+    /**
+     * Equals.
+     *
+     * @param o
+     *            the o
+     * @return true, if successful
+     */
     @Override
     public boolean equals(final Object o) {
         if (this == o)
@@ -244,6 +265,11 @@ public class GHLabel extends GitHubInteractiveObject {
                 && Objects.equals(color, ghLabel.color) && Objects.equals(description, ghLabel.description);
     }
 
+    /**
+     * Hash code.
+     *
+     * @return the int
+     */
     @Override
     public int hashCode() {
         return Objects.hash(url, name, color, description);
@@ -283,7 +309,7 @@ public class GHLabel extends GitHubInteractiveObject {
     @BetaApi
     public static class Creator extends GHLabelBuilder<Creator> {
         private Creator(@Nonnull GHRepository repository) {
-            super(Creator.class, repository.root, null);
+            super(Creator.class, repository.root(), null);
             requester.method("POST").withUrlPath(repository.getApiTailUrl("labels"));
         }
     }

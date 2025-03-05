@@ -1,6 +1,5 @@
 package org.kohsuke.github;
 
-import com.infradna.tool.bridge_method_injector.WithBridgeMethods;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 import java.io.IOException;
@@ -14,6 +13,7 @@ import java.util.List;
 import static org.kohsuke.github.internal.Previews.ANTIOPE;
 import static org.kohsuke.github.internal.Previews.GROOT;
 
+// TODO: Auto-generated Javadoc
 /**
  * A commit in a repository.
  *
@@ -34,86 +34,57 @@ public class GHCommit {
             value = { "UWF_UNWRITTEN_PUBLIC_OR_PROTECTED_FIELD", "UWF_UNWRITTEN_FIELD", "NP_UNWRITTEN_FIELD",
                     "UWF_UNWRITTEN_FIELD" },
             justification = "JSON API")
-    public static class ShortInfo {
-        private GHAuthor author;
-        private GHAuthor committer;
+    public static class ShortInfo extends GitCommit {
 
-        private String message;
-
-        private int comment_count;
-
-        private GHVerification verification;
-
-        static class Tree {
-            String sha;
-        }
-
-        private Tree tree;
-
-        /**
-         * Gets author.
-         *
-         * @return the author
-         */
-        @WithBridgeMethods(value = GHAuthor.class, castRequired = true)
-        public GitUser getAuthor() {
-            return author;
-        }
-
-        /**
-         * Gets authored date.
-         *
-         * @return the authored date
-         */
-        public Date getAuthoredDate() {
-            return author.getDate();
-        }
-
-        /**
-         * Gets committer.
-         *
-         * @return the committer
-         */
-        @WithBridgeMethods(value = GHAuthor.class, castRequired = true)
-        public GitUser getCommitter() {
-            return committer;
-        }
-
-        /**
-         * Gets commit date.
-         *
-         * @return the commit date
-         */
-        public Date getCommitDate() {
-            return committer.getDate();
-        }
-
-        /**
-         * Gets message.
-         *
-         * @return Commit message.
-         */
-        public String getMessage() {
-            return message;
-        }
+        private int comment_count = -1;
 
         /**
          * Gets comment count.
          *
          * @return the comment count
+         * @throws GHException
+         *             the GH exception
          */
-        public int getCommentCount() {
+        public int getCommentCount() throws GHException {
+            if (comment_count < 0) {
+                throw new GHException("Not available on this endpoint.");
+            }
             return comment_count;
         }
 
         /**
-         * Gets Verification Status.
-         *
-         * @return the Verification status
+         * Creates instance of {@link GHCommit.ShortInfo}.
          */
-        public GHVerification getVerification() {
-            return verification;
+        public ShortInfo() {
+            // Empty constructor required for Jackson binding
+        };
+
+        /**
+         * Instantiates a new short info.
+         *
+         * @param commit
+         *            the commit
+         */
+        ShortInfo(GitCommit commit) {
+            // Inherited copy constructor, used for bridge method from {@link GitCommit},
+            // which is used in {@link GHContentUpdateResponse}) to {@link GHCommit}.
+            super(commit);
         }
+
+        /**
+         * Gets the parent SHA 1 s.
+         *
+         * @return the parent SHA 1 s
+         */
+        @Override
+        public List<String> getParentSHA1s() {
+            List<String> shortInfoParents = super.getParentSHA1s();
+            if (shortInfoParents == null) {
+                throw new GHException("Not available on this endpoint. Try calling getParentSHA1s from outer class.");
+            }
+            return shortInfoParents;
+        }
+
     }
 
     /**
@@ -121,13 +92,33 @@ public class GHCommit {
      *
      * @deprecated Use {@link GitUser} instead.
      */
+    @Deprecated
     public static class GHAuthor extends GitUser {
+
+        /**
+         * Instantiates a new GH author.
+         */
+        public GHAuthor() {
+            super();
+        }
+
+        /**
+         * Instantiates a new GH author.
+         *
+         * @param user
+         *            the user
+         */
+        public GHAuthor(GitUser user) {
+            super(user);
+        }
     }
 
     /**
      * The type Stats.
      */
     public static class Stats {
+
+        /** The deletions. */
         int total, additions, deletions;
     }
 
@@ -136,9 +127,17 @@ public class GHCommit {
      */
     @SuppressFBWarnings(value = "UWF_UNWRITTEN_FIELD", justification = "It's being initilized by JSON deserialization")
     public static class File {
+
+        /** The status. */
         String status;
+
+        /** The deletions. */
         int changes, additions, deletions;
+
+        /** The patch. */
         String raw_url, blob_url, sha, patch;
+
+        /** The previous filename. */
         String filename, previous_filename;
 
         /**
@@ -242,26 +241,75 @@ public class GHCommit {
      * The type Parent.
      */
     public static class Parent {
-        @SuppressFBWarnings(value = "UUF_UNUSED_FIELD", justification = "We don't provide it in API now")
-        String url;
-        String sha;
+
+        /** The url. */
+        @SuppressFBWarnings(value = "UUF_UNUSED_PUBLIC_OR_PROTECTED_FIELD", justification = "used in backend code")
+        public String url;
+
+        /** The sha. */
+        public String sha;
     }
 
-    static class User {
+    /**
+     * The Class User.
+     */
+    public static class User {
+
+        /** The gravatar id. */
         // TODO: what if someone who doesn't have an account on GitHub makes a commit?
-        @SuppressFBWarnings(value = "UUF_UNUSED_FIELD", justification = "We don't provide it in API now")
-        String url, avatar_url, gravatar_id;
+        @SuppressFBWarnings(value = "UUF_UNUSED_PUBLIC_OR_PROTECTED_FIELD", justification = "used in backend code")
+        public String url, avatar_url, gravatar_id;
+
+        /** The id. */
         @SuppressFBWarnings(value = "UUF_UNUSED_FIELD", justification = "We don't provide it in API now")
         int id;
 
-        String login;
+        /** The login. */
+        @SuppressFBWarnings(value = "UWF_UNWRITTEN_PUBLIC_OR_PROTECTED_FIELD", justification = "used in backend code")
+        public String login;
     }
 
+    /** The sha. */
     String url, html_url, sha;
+
+    /** The files. */
     List<File> files;
+
+    /** The stats. */
     Stats stats;
+
+    /** The parents. */
     List<Parent> parents;
+
+    /** The committer. */
     User author, committer;
+
+    /**
+     * Creates an instance of {@link GHCommit}.
+     */
+    public GHCommit() {
+        // empty constructor needed for Jackson binding
+    }
+
+    /**
+     * Instantiates a new GH commit.
+     *
+     * @param shortInfo
+     *            the short info
+     */
+    @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "acceptable")
+    GHCommit(ShortInfo shortInfo) {
+        // Constructs a (relatively sparse) GHCommit from a GitCommit. Used for
+        // bridge method from {@link GitCommit}, which is used in
+        // {@link GHContentUpdateResponse}) to {@link GHCommit}.
+        commit = shortInfo;
+
+        owner = commit.getOwner();
+        html_url = commit.getHtmlUrl();
+        sha = commit.getSha();
+        url = commit.getUrl();
+        parents = commit.getParents();
+    }
 
     /**
      * Gets commit short info.
@@ -281,6 +329,7 @@ public class GHCommit {
      *
      * @return the repository that contains the commit.
      */
+    @SuppressFBWarnings(value = { "EI_EXPOSE_REP" }, justification = "Expected behavior")
     public GHRepository getOwner() {
         return owner;
     }
@@ -329,7 +378,7 @@ public class GHCommit {
      *             on error
      */
     public GHTree getTree() throws IOException {
-        return owner.getTree(getCommitShortInfo().tree.sha);
+        return owner.getTree(getCommitShortInfo().getTreeSHA1());
     }
 
     /**
@@ -378,7 +427,7 @@ public class GHCommit {
      * @return SHA1 of parent commit objects.
      */
     public List<String> getParentSHA1s() {
-        if (parents == null)
+        if (parents == null || parents.size() == 0)
             return Collections.emptyList();
         return new AbstractList<String>() {
             @Override
@@ -416,8 +465,22 @@ public class GHCommit {
      *             the io exception
      */
     public GHUser getAuthor() throws IOException {
+        if (author != null) {
+            return resolveUser(author);
+        }
         populate();
         return resolveUser(author);
+    }
+
+    /**
+     * Gets author.
+     *
+     * @return the author
+     * @throws IOException
+     *             the io exception
+     */
+    public User getAuthorRaw() throws IOException {
+        return author;
     }
 
     /**
@@ -457,7 +520,7 @@ public class GHCommit {
     private GHUser resolveUser(User author) throws IOException {
         if (author == null || author.login == null)
             return null;
-        return owner.root.getUser(author.login);
+        return owner.root().getUser(author.login);
     }
 
     /**
@@ -467,7 +530,8 @@ public class GHCommit {
      */
     @Preview(GROOT)
     public PagedIterable<GHPullRequest> listPullRequests() {
-        return owner.root.createRequest()
+        return owner.root()
+                .createRequest()
                 .withPreview(GROOT)
                 .withUrlPath(String.format("/repos/%s/%s/commits/%s/pulls", owner.getOwnerName(), owner.getName(), sha))
                 .toIterable(GHPullRequest[].class, item -> item.wrapUp(owner));
@@ -482,7 +546,8 @@ public class GHCommit {
      */
     @Preview(GROOT)
     public PagedIterable<GHBranch> listBranchesWhereHead() throws IOException {
-        return owner.root.createRequest()
+        return owner.root()
+                .createRequest()
                 .withPreview(GROOT)
                 .withUrlPath(String.format("/repos/%s/%s/commits/%s/branches-where-head",
                         owner.getOwnerName(),
@@ -518,7 +583,8 @@ public class GHCommit {
      *             if comment is not created
      */
     public GHCommitComment createComment(String body, String path, Integer line, Integer position) throws IOException {
-        GHCommitComment r = owner.root.createRequest()
+        GHCommitComment r = owner.root()
+                .createRequest()
                 .method("POST")
                 .with("body", body)
                 .with("path", path)
@@ -585,11 +651,19 @@ public class GHCommit {
      */
     void populate() throws IOException {
         if (files == null && stats == null)
-            owner.root.createRequest().withUrlPath(owner.getApiTailUrl("commits/" + sha)).fetchInto(this);
+            owner.root().createRequest().withUrlPath(owner.getApiTailUrl("commits/" + sha)).fetchInto(this);
     }
 
+    /**
+     * Wrap up.
+     *
+     * @param owner
+     *            the owner
+     * @return the GH commit
+     */
     GHCommit wrapUp(GHRepository owner) {
         this.owner = owner;
         return this;
     }
+
 }

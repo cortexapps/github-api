@@ -1,5 +1,6 @@
 package org.kohsuke.github;
 
+// TODO: Auto-generated Javadoc
 /**
  * Search repositories.
  *
@@ -7,15 +8,32 @@ package org.kohsuke.github;
  * @see GitHub#searchRepositories() GitHub#searchRepositories()
  */
 public class GHRepositorySearchBuilder extends GHSearchBuilder<GHRepository> {
+
+    /**
+     * Instantiates a new GH repository search builder.
+     *
+     * @param root
+     *            the root
+     */
     GHRepositorySearchBuilder(GitHub root) {
         super(root, RepositorySearchResult.class);
     }
 
     /**
-     * Search terms.
+     * {@inheritDoc}
      */
+    @Override
     public GHRepositorySearchBuilder q(String term) {
         super.q(term);
+        return this;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    GHRepositorySearchBuilder q(String qualifier, String value) {
+        super.q(qualifier, value);
         return this;
     }
 
@@ -47,9 +65,90 @@ public class GHRepositorySearchBuilder extends GHSearchBuilder<GHRepository> {
      * @param v
      *            the v
      * @return the gh repository search builder
+     * @deprecated use {@link #fork(GHFork)} instead.
      */
+    @Deprecated
     public GHRepositorySearchBuilder forks(String v) {
-        return q("forks:" + v);
+        return q("fork", v);
+    }
+
+    /**
+     * Searching in forks
+     *
+     * The default search mode is {@link Fork#PARENT_ONLY}. In that mode, forks are not included in search results.
+     *
+     * <p>
+     * Passing {@link Fork#PARENT_AND_FORKS} or {@link Fork#FORKS_ONLY} will show results from forks, but only if they
+     * have more stars than the parent repository.
+     *
+     * <p>
+     * IMPORTANT: Regardless of this setting, no search results will ever be returned for forks with equal or fewer
+     * stars than the parent repository. Forks with less stars than the parent repository are not included in the index
+     * for code searching.
+     *
+     * @param fork
+     *            search mode for forks
+     *
+     * @return the gh repository search builder
+     *
+     * @see <a href=
+     *      "https://docs.github.com/en/github/searching-for-information-on-github/searching-on-github/searching-in-forks">Searching
+     *      in forks</a>
+     * @deprecated use {@link #fork(GHFork)} instead.
+     */
+    @Deprecated
+    public GHRepositorySearchBuilder fork(Fork fork) {
+        return q("fork", fork.toString());
+    }
+
+    /**
+     * Searching in forks
+     *
+     * The default search mode is {@link Fork#PARENT_ONLY}. In that mode, forks are not included in search results.
+     *
+     * <p>
+     * Passing {@link Fork#PARENT_AND_FORKS} or {@link Fork#FORKS_ONLY} will show results from forks, but only if they
+     * have more stars than the parent repository.
+     *
+     * <p>
+     * IMPORTANT: Regardless of this setting, no search results will ever be returned for forks with equal or fewer
+     * stars than the parent repository. Forks with less stars than the parent repository are not included in the index
+     * for code searching.
+     *
+     * @param fork
+     *            search mode for forks
+     *
+     * @return the gh repository search builder
+     *
+     * @see <a href=
+     *      "https://docs.github.com/en/github/searching-for-information-on-github/searching-on-github/searching-in-forks">Searching
+     *      in forks</a>
+     *
+     */
+    public GHRepositorySearchBuilder fork(GHFork fork) {
+        return q("fork", fork.toString());
+    }
+
+    /**
+     * Search by repository visibility.
+     *
+     * @param visibility
+     *            repository visibility
+     * @return the gh repository search builder
+     * @throws GHException
+     *             if {@link GHRepository.Visibility#UNKNOWN} is passed. UNKNOWN is a placeholder for unexpected values
+     *             encountered when reading data.
+     * @see <a href=
+     *      "https://docs.github.com/en/github/searching-for-information-on-github/searching-on-github/searching-for-repositories#search-by-repository-visibility">Search
+     *      by repository visibility</a>
+     */
+    public GHRepositorySearchBuilder visibility(GHRepository.Visibility visibility) {
+        if (visibility == GHRepository.Visibility.UNKNOWN) {
+            throw new GHException(
+                    "UNKNOWN is a placeholder for unexpected values encountered when reading data. It cannot be passed as a search parameter.");
+        }
+
+        return q("is:" + visibility);
     }
 
     /**
@@ -130,6 +229,17 @@ public class GHRepositorySearchBuilder extends GHSearchBuilder<GHRepository> {
     }
 
     /**
+     * Org gh repository search builder.
+     *
+     * @param v
+     *            the v
+     * @return the gh repository search builder
+     */
+    public GHRepositorySearchBuilder org(String v) {
+        return q("org:" + v);
+    }
+
+    /**
      * Order gh repository search builder.
      *
      * @param v
@@ -157,7 +267,65 @@ public class GHRepositorySearchBuilder extends GHSearchBuilder<GHRepository> {
      * The enum Sort.
      */
     public enum Sort {
-        STARS, FORKS, UPDATED
+
+        /** The stars. */
+        STARS,
+        /** The forks. */
+        FORKS,
+        /** The updated. */
+        UPDATED
+    }
+
+    /**
+     * The enum for Fork search mode.
+     *
+     * @deprecated Kept for backward compatibility. Use {@link GHFork} instead.
+     */
+    @Deprecated
+    public enum Fork {
+
+        /**
+         * Search in the parent repository and in forks with more stars than the parent repository.
+         *
+         * Forks with the same or fewer stars than the parent repository are still ignored.
+         */
+        PARENT_AND_FORKS("true"),
+
+        /**
+         * Search only in forks with more stars than the parent repository.
+         *
+         * The parent repository is ignored. If no forks have more stars than the parent, no results will be returned.
+         */
+        FORKS_ONLY("only"),
+
+        /**
+         * (Default) Search only the parent repository.
+         *
+         * Forks are ignored.
+         */
+        PARENT_ONLY("");
+
+        private String filterMode;
+
+        /**
+         * Instantiates a new fork.
+         *
+         * @param mode
+         *            the mode
+         */
+        Fork(final String mode) {
+            this.filterMode = mode;
+        }
+
+        /**
+         * To string.
+         *
+         * @return the string
+         */
+        @Override
+        public String toString() {
+            return filterMode;
+        }
     }
 
     private static class RepositorySearchResult extends SearchResult<GHRepository> {
@@ -165,12 +333,17 @@ public class GHRepositorySearchBuilder extends GHSearchBuilder<GHRepository> {
 
         @Override
         GHRepository[] getItems(GitHub root) {
-            for (GHRepository item : items)
-                item.wrap(root);
+            for (GHRepository item : items) {
+            }
             return items;
         }
     }
 
+    /**
+     * Gets the api url.
+     *
+     * @return the api url
+     */
     @Override
     protected String getApiUrl() {
         return "/search/repositories";

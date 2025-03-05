@@ -1,13 +1,15 @@
 package org.kohsuke.github;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 import java.util.Date;
 
+// TODO: Auto-generated Javadoc
 /**
  * The type GHIssueEvent.
  *
- * @see <a href="https://developer.github.com/v3/issues/events/">Github documentation for issue events</a>
- *
  * @author Martin van Zijl
+ * @see <a href="https://developer.github.com/v3/issues/events/">Github documentation for issue events</a>
  */
 public class GHIssueEvent extends GitHubInteractiveObject {
     private long id;
@@ -22,6 +24,8 @@ public class GHIssueEvent extends GitHubInteractiveObject {
     private GHLabel label;
     private GHUser assignee;
     private GHIssueRename rename;
+    private GHUser reviewRequester;
+    private GHUser requestedReviewer;
 
     private GHIssue issue;
 
@@ -57,6 +61,7 @@ public class GHIssueEvent extends GitHubInteractiveObject {
      *
      * @return the actor
      */
+    @SuppressFBWarnings(value = { "EI_EXPOSE_REP" }, justification = "Expected behavior")
     public GHUser getActor() {
         return actor;
     }
@@ -98,19 +103,11 @@ public class GHIssueEvent extends GitHubInteractiveObject {
     }
 
     /**
-     * Gets root.
-     *
-     * @return the root
-     */
-    public GitHub getRoot() {
-        return root;
-    }
-
-    /**
      * Gets issue.
      *
      * @return the issue
      */
+    @SuppressFBWarnings(value = { "EI_EXPOSE_REP" }, justification = "Expected behavior")
     public GHIssue getIssue() {
         return issue;
     }
@@ -121,6 +118,7 @@ public class GHIssueEvent extends GitHubInteractiveObject {
      *
      * @return the milestone
      */
+    @SuppressFBWarnings(value = { "EI_EXPOSE_REP" }, justification = "Expected behavior")
     public GHMilestone getMilestone() {
         return milestone;
     }
@@ -131,6 +129,7 @@ public class GHIssueEvent extends GitHubInteractiveObject {
      *
      * @return the label
      */
+    @SuppressFBWarnings(value = { "EI_EXPOSE_REP" }, justification = "Expected behavior")
     public GHLabel getLabel() {
         return label;
     }
@@ -141,6 +140,7 @@ public class GHIssueEvent extends GitHubInteractiveObject {
      *
      * @return the user
      */
+    @SuppressFBWarnings(value = { "EI_EXPOSE_REP" }, justification = "Expected behavior")
     public GHUser getAssignee() {
         return assignee;
     }
@@ -155,17 +155,57 @@ public class GHIssueEvent extends GitHubInteractiveObject {
         return this.rename;
     }
 
-    GHIssueEvent wrapUp(GitHub root) {
-        this.root = root;
-        return this;
+    /**
+     *
+     * Get the {@link GHUser} person who requested a review. Only present for events "review_requested",
+     * "review_request_removed", <code>null</code> otherwise.
+     *
+     * @return the GHUser
+     *
+     * @see <a href=
+     *      "https://docs.github.com/en/developers/webhooks-and-events/events/issue-event-types#review_requested">review_requested</a>
+     *      and <a href=
+     *      "https://docs.github.com/en/developers/webhooks-and-events/events/issue-event-types#review_request_removed">review_request_removed</a>
+     */
+    @SuppressFBWarnings(value = { "EI_EXPOSE_REP" }, justification = "Expected behavior")
+    public GHUser getReviewRequester() {
+        return this.reviewRequester;
     }
 
+    /**
+     *
+     * Get the {@link GHUser} person requested to review the pull request. Only present for events "review_requested",
+     * "review_request_removed", <code>null</code> otherwise.
+     *
+     * @return the GHUser
+     *
+     * @see <a href=
+     *      "https://docs.github.com/en/developers/webhooks-and-events/events/issue-event-types#review_requested">review_requested</a>
+     *      and <a href=
+     *      "https://docs.github.com/en/developers/webhooks-and-events/events/issue-event-types#review_request_removed">review_request_removed</a>
+     */
+    @SuppressFBWarnings(value = { "EI_EXPOSE_REP" }, justification = "Expected behavior")
+    public GHUser getRequestedReviewer() {
+        return this.requestedReviewer;
+    }
+
+    /**
+     * Wrap up.
+     *
+     * @param parent
+     *            the parent
+     * @return the GH issue event
+     */
     GHIssueEvent wrapUp(GHIssue parent) {
         this.issue = parent;
-        this.root = parent.root;
         return this;
     }
 
+    /**
+     * To string.
+     *
+     * @return the string
+     */
     @Override
     public String toString() {
         return String.format("Issue %d was %s by %s on %s",

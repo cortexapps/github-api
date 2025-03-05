@@ -3,15 +3,25 @@ package org.kohsuke.github;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.hamcrest.Matchers.*;
 
+// TODO: Auto-generated Javadoc
 /**
+ * The Class GHIssueEventTest.
+ *
  * @author Martin van Zijl
  */
 public class GHIssueEventTest extends AbstractGitHubWireMockTest {
 
+    /**
+     * Test events for single issue.
+     *
+     * @throws Exception
+     *             the exception
+     */
     @Test
     public void testEventsForSingleIssue() throws Exception {
         // Create the issue.
@@ -39,6 +49,43 @@ public class GHIssueEventTest extends AbstractGitHubWireMockTest {
         issue.close();
     }
 
+    /**
+     * Test issue review requested event.
+     *
+     * @throws Exception
+     *             the exception
+     */
+    @Test
+    public void testIssueReviewRequestedEvent() throws Exception {
+        // Create the PR.
+        final GHPullRequest pullRequest = getRepository()
+                .createPullRequest("ReviewRequestedEventTest", "test/stable", "main", "## test");
+
+        final ArrayList<GHUser> reviewers = new ArrayList<>();
+        reviewers.add(gitHub.getUser("bitwiseman"));
+        // Generate review_requested event.
+        pullRequest.requestReviewers(reviewers);
+
+        // Test that the event is present.
+        final List<GHIssueEvent> list = pullRequest.listEvents().toList();
+        assertThat(list.size(), equalTo(1));
+        final GHIssueEvent event = list.get(0);
+        assertThat(event.getEvent(), equalTo("review_requested"));
+        assertThat(event.getReviewRequester(), notNullValue());
+        assertThat(event.getReviewRequester().getLogin(), equalTo("t0m4uk1991"));
+        assertThat(event.getRequestedReviewer(), notNullValue());
+        assertThat(event.getRequestedReviewer().getLogin(), equalTo("bitwiseman"));
+
+        // Close the PR.
+        pullRequest.close();
+    }
+
+    /**
+     * Test events for issue rename.
+     *
+     * @throws Exception
+     *             the exception
+     */
     @Test
     public void testEventsForIssueRename() throws Exception {
         // Create the issue.
@@ -73,6 +120,12 @@ public class GHIssueEventTest extends AbstractGitHubWireMockTest {
         issue.close();
     }
 
+    /**
+     * Test repository events.
+     *
+     * @throws Exception
+     *             the exception
+     */
     @Test
     public void testRepositoryEvents() throws Exception {
         GHRepository repo = getRepository();
@@ -87,6 +140,13 @@ public class GHIssueEventTest extends AbstractGitHubWireMockTest {
         }
     }
 
+    /**
+     * Gets the repository.
+     *
+     * @return the repository
+     * @throws IOException
+     *             Signals that an I/O exception has occurred.
+     */
     protected GHRepository getRepository() throws IOException {
         return getRepository(gitHub);
     }

@@ -5,6 +5,7 @@ import org.kohsuke.github.internal.Previews;
 
 import java.io.IOException;
 
+// TODO: Auto-generated Javadoc
 /**
  * Search commits.
  *
@@ -13,6 +14,13 @@ import java.io.IOException;
  */
 @Preview(Previews.CLOAK)
 public class GHCommitSearchBuilder extends GHSearchBuilder<GHCommit> {
+
+    /**
+     * Instantiates a new GH commit search builder.
+     *
+     * @param root
+     *            the root
+     */
     GHCommitSearchBuilder(GitHub root) {
         super(root, CommitSearchResult.class);
         req.withPreview(Previews.CLOAK);
@@ -20,6 +28,10 @@ public class GHCommitSearchBuilder extends GHSearchBuilder<GHCommit> {
 
     /**
      * Search terms.
+     *
+     * @param term
+     *            the term
+     * @return the GH commit search builder
      */
     public GHCommitSearchBuilder q(String term) {
         super.q(term);
@@ -227,10 +239,26 @@ public class GHCommitSearchBuilder extends GHSearchBuilder<GHCommit> {
     }
 
     /**
+     * Page gh commit search builder.
+     *
+     * @param page
+     *            the page
+     * @return the gh commit search builder
+     */
+    public GHCommitSearchBuilder page(int page) {
+        req.with("page", page);
+        return this;
+    }
+
+    /**
      * The enum Sort.
      */
     public enum Sort {
-        AUTHOR_DATE, COMMITTER_DATE
+
+        /** The author date. */
+        AUTHOR_DATE,
+        /** The committer date. */
+        COMMITTER_DATE
     }
 
     private static class CommitSearchResult extends SearchResult<GHCommit> {
@@ -264,6 +292,11 @@ public class GHCommitSearchBuilder extends GHSearchBuilder<GHCommit> {
         return tokens[0] + '/' + tokens[1];
     }
 
+    /**
+     * Gets the api url.
+     *
+     * @return the api url
+     */
     @Override
     protected String getApiUrl() {
         return "/search/commits";

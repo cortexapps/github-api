@@ -7,12 +7,18 @@ import java.util.Base64;
 import javax.annotation.CheckForNull;
 
 /**
- * A {@link AuthorizationProvider} that always returns the same credentials
+ * An {@link AuthorizationProvider} that always returns the same credentials.
  */
 public class ImmutableAuthorizationProvider implements AuthorizationProvider {
 
     private final String authorization;
 
+    /**
+     * ImmutableAuthorizationProvider constructor
+     *
+     * @param authorization
+     *            the authorization string
+     */
     public ImmutableAuthorizationProvider(String authorization) {
         this.authorization = authorization;
     }
@@ -99,6 +105,8 @@ public class ImmutableAuthorizationProvider implements AuthorizationProvider {
     /**
      * An internal class representing all user-related credentials, which are credentials that have a login or should
      * query the user endpoint for the login matching this credential.
+     *
+     * @see org.kohsuke.github.authorization.UserAuthorizationProvider UserAuthorizationProvider
      */
     private static class UserProvider extends ImmutableAuthorizationProvider implements UserAuthorizationProvider {
 

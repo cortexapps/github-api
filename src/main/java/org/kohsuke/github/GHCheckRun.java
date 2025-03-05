@@ -4,8 +4,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.infradna.tool.bridge_method_injector.WithBridgeMethods;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import org.kohsuke.github.GHWorkflowRun.Conclusion;
-import org.kohsuke.github.GHWorkflowRun.Status;
 import org.kohsuke.github.internal.EnumUtils;
 import org.kohsuke.github.internal.Previews;
 
@@ -17,6 +15,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
+// TODO: Auto-generated Javadoc
 /**
  * Represents a check run.
  *
@@ -26,6 +25,7 @@ import java.util.Locale;
         justification = "JSON API")
 public class GHCheckRun extends GHObject {
 
+    /** The owner. */
     @JsonProperty("repository")
     GHRepository owner;
 
@@ -37,29 +37,38 @@ public class GHCheckRun extends GHObject {
     private String externalId;
     private String startedAt;
     private String completedAt;
-    private URL htmlUrl;
-    private URL detailsUrl;
+    private String htmlUrl;
+    private String detailsUrl;
     private Output output;
     private GHApp app;
-    private GHPullRequest[] pullRequests;
+    private GHPullRequest[] pullRequests = new GHPullRequest[0];
     private GHCheckSuite checkSuite;
 
+    /**
+     * Wrap.
+     *
+     * @param owner
+     *            the owner
+     * @return the GH check run
+     */
     GHCheckRun wrap(GHRepository owner) {
         this.owner = owner;
-        wrap(owner.root);
+        wrap(owner.root());
         return this;
     }
 
+    /**
+     * Wrap.
+     *
+     * @param root
+     *            the root
+     * @return the GH check run
+     */
     GHCheckRun wrap(GitHub root) {
-        this.root = root;
         if (owner != null) {
-            owner.wrap(root);
-            if (pullRequests != null && pullRequests.length != 0) {
-                for (GHPullRequest singlePull : pullRequests) {
-                    singlePull.wrap(owner);
-                }
+            for (GHPullRequest singlePull : pullRequests) {
+                singlePull.wrap(owner);
             }
-
         }
         if (checkSuite != null) {
             if (owner != null) {
@@ -68,15 +77,8 @@ public class GHCheckRun extends GHObject {
                 checkSuite.wrap(root);
             }
         }
-        if (app != null) {
-            app.wrapUp(root);
-        }
 
         return this;
-    }
-
-    GHPullRequest[] wrap() {
-        return pullRequests;
     }
 
     /**
@@ -95,13 +97,36 @@ public class GHCheckRun extends GHObject {
         return status;
     }
 
+    /**
+     * The Enum Status.
+     */
     public static enum Status {
-        QUEUED, IN_PROGRESS, COMPLETED, UNKNOWN;
 
+        /** The queued. */
+        QUEUED,
+        /** The in progress. */
+        IN_PROGRESS,
+        /** The completed. */
+        COMPLETED,
+        /** The unknown. */
+        UNKNOWN;
+
+        /**
+         * From.
+         *
+         * @param value
+         *            the value
+         * @return the status
+         */
         public static Status from(String value) {
             return EnumUtils.getNullableEnumOrDefault(Status.class, value, Status.UNKNOWN);
         }
 
+        /**
+         * To string.
+         *
+         * @return the string
+         */
         @Override
         public String toString() {
             return name().toLowerCase(Locale.ROOT);
@@ -131,12 +156,42 @@ public class GHCheckRun extends GHObject {
      * Parameters - <code>conclusion</code></a>.
      */
     public static enum Conclusion {
-        ACTION_REQUIRED, CANCELLED, FAILURE, NEUTRAL, SUCCESS, SKIPPED, STALE, TIMED_OUT, UNKNOWN;
 
+        /** The action required. */
+        ACTION_REQUIRED,
+        /** The cancelled. */
+        CANCELLED,
+        /** The failure. */
+        FAILURE,
+        /** The neutral. */
+        NEUTRAL,
+        /** The success. */
+        SUCCESS,
+        /** The skipped. */
+        SKIPPED,
+        /** The stale. */
+        STALE,
+        /** The timed out. */
+        TIMED_OUT,
+        /** The unknown. */
+        UNKNOWN;
+
+        /**
+         * From.
+         *
+         * @param value
+         *            the value
+         * @return the conclusion
+         */
         public static Conclusion from(String value) {
             return EnumUtils.getNullableEnumOrDefault(Conclusion.class, value, Conclusion.UNKNOWN);
         }
 
+        /**
+         * To string.
+         *
+         * @return the string
+         */
         @Override
         public String toString() {
             return name().toLowerCase(Locale.ROOT);
@@ -172,14 +227,11 @@ public class GHCheckRun extends GHObject {
      *             the io exception
      */
     public List<GHPullRequest> getPullRequests() throws IOException {
-        if (pullRequests != null && pullRequests.length != 0) {
-            for (GHPullRequest singlePull : pullRequests) {
-                // Only refresh if we haven't do so before
-                singlePull.refresh(singlePull.getTitle());
-            }
-            return Collections.unmodifiableList(Arrays.asList(pullRequests));
+        for (GHPullRequest singlePull : pullRequests) {
+            // Only refresh if we haven't do so before
+            singlePull.refresh(singlePull.getTitle());
         }
-        return Collections.emptyList();
+        return Collections.unmodifiableList(Arrays.asList(pullRequests));
     }
 
     /**
@@ -190,14 +242,14 @@ public class GHCheckRun extends GHObject {
      */
     @Override
     public URL getHtmlUrl() {
-        return htmlUrl;
+        return GitHubClient.parseURL(htmlUrl);
     }
 
     /**
      * Gets the global node id to access most objects in GitHub.
      *
-     * @see <a href="https://developer.github.com/v4/guides/using-global-node-ids/">documentation</a>
      * @return Global node id
+     * @see <a href="https://developer.github.com/v4/guides/using-global-node-ids/">documentation</a>
      */
     public String getNodeId() {
         return nodeId;
@@ -218,7 +270,7 @@ public class GHCheckRun extends GHObject {
      * @return Details URL
      */
     public URL getDetailsUrl() {
-        return detailsUrl;
+        return GitHubClient.parseURL(detailsUrl);
     }
 
     /**
@@ -244,15 +296,17 @@ public class GHCheckRun extends GHObject {
      *
      * @return GitHub App
      */
+    @SuppressFBWarnings(value = { "EI_EXPOSE_REP" }, justification = "Expected")
     public GHApp getApp() {
         return app;
     }
 
     /**
-     * Gets the check suite this check run belongs to
+     * Gets the check suite this check run belongs to.
      *
      * @return Check suite
      */
+    @SuppressFBWarnings(value = { "EI_EXPOSE_REP" }, justification = "Expected")
     public GHCheckSuite getCheckSuite() {
         return checkSuite;
     }
@@ -262,6 +316,7 @@ public class GHCheckRun extends GHObject {
      *
      * @return Output of a check run
      */
+    @SuppressFBWarnings(value = { "EI_EXPOSE_REP" }, justification = "Expected")
     public Output getOutput() {
         return output;
     }
@@ -276,7 +331,7 @@ public class GHCheckRun extends GHObject {
         private String summary;
         private String text;
         private int annotationsCount;
-        private URL annotationsUrl;
+        private String annotationsUrl;
 
         /**
          * Gets the title of check run.
@@ -320,12 +375,21 @@ public class GHCheckRun extends GHObject {
          * @return URL of annotations
          */
         public URL getAnnotationsUrl() {
-            return annotationsUrl;
+            return GitHubClient.parseURL(annotationsUrl);
         }
     }
 
+    /**
+     * The Enum AnnotationLevel.
+     */
     public static enum AnnotationLevel {
-        NOTICE, WARNING, FAILURE
+
+        /** The notice. */
+        NOTICE,
+        /** The warning. */
+        WARNING,
+        /** The failure. */
+        FAILURE
     }
 
     /**

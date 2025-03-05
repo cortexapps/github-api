@@ -4,8 +4,9 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 import java.util.Date;
 
+// TODO: Auto-generated Javadoc
 /**
- * Github Marketplace User Purchase
+ * Github Marketplace User Purchase.
  *
  * @author Paulo Miguel Almeida
  * @see GitHub#getMyMarketplacePurchases()
@@ -21,22 +22,6 @@ public class GHMarketplaceUserPurchase extends GitHubInteractiveObject {
     private GHMarketplaceAccount account;
     @SuppressFBWarnings(value = "UWF_UNWRITTEN_FIELD", justification = "Field comes from JSON deserialization")
     private GHMarketplacePlan plan;
-
-    /**
-     * Wrap up GHMarketplaceUserPurchase.
-     *
-     * @param root
-     *            the root
-     * @return an instance of the GHMarketplaceUserPurchase class
-     */
-    GHMarketplaceUserPurchase wrapUp(GitHub root) {
-        this.root = root;
-        if (this.account != null)
-            this.account.wrapUp(this.root);
-        if (this.plan != null)
-            this.plan.wrapUp(this.root);
-        return this;
-    }
 
     /**
      * Gets billing cycle.

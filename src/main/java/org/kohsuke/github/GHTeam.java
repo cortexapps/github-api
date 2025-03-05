@@ -1,14 +1,21 @@
 package org.kohsuke.github;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import org.apache.commons.lang3.StringUtils;
+
 import java.io.IOException;
 import java.net.URL;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
 
 import javax.annotation.Nonnull;
 
+import static org.kohsuke.github.GitHubRequest.transformEnum;
+
+// TODO: Auto-generated Javadoc
 /**
  * A team in GitHub organization.
  *
@@ -24,18 +31,24 @@ public class GHTeam extends GHObject implements Refreshable {
 
     private GHOrganization organization; // populated by GET /user/teams where Teams+Orgs are returned together
 
+    /**
+     * The Enum Privacy.
+     */
     public enum Privacy {
-        SECRET, // only visible to organization owners and members of this team.
+
+        /** The secret. */
+        SECRET,
+        /** The closed. */
+        // only visible to organization owners and members of this team.
         CLOSED // visible to all members of this organization.
     }
 
     /**
-     * Member's role in a team
+     * Member's role in a team.
      */
     public enum Role {
-        /**
-         * A normal member of the team
-         */
+
+        /** A normal member of the team. */
         MEMBER,
         /**
          * Able to add/remove other team members, promote other team members to team maintainer, and edit the team's
@@ -44,22 +57,27 @@ public class GHTeam extends GHObject implements Refreshable {
         MAINTAINER
     }
 
+    /**
+     * Wrap up.
+     *
+     * @param owner
+     *            the owner
+     * @return the GH team
+     */
     GHTeam wrapUp(GHOrganization owner) {
         this.organization = owner;
-        this.root = owner.root;
         return this;
     }
 
+    /**
+     * Wrap up.
+     *
+     * @param root
+     *            the root
+     * @return the GH team
+     */
     GHTeam wrapUp(GitHub root) { // auto-wrapUp when organization is known from GET /user/teams
-        this.organization.wrapUp(root);
         return wrapUp(organization);
-    }
-
-    static GHTeam[] wrapUp(GHTeam[] teams, GHPullRequest owner) {
-        for (GHTeam t : teams) {
-            t.root = owner.root;
-        }
-        return teams;
     }
 
     /**
@@ -116,7 +134,7 @@ public class GHTeam extends GHObject implements Refreshable {
      *             the io exception
      */
     public void setDescription(String description) throws IOException {
-        root.createRequest().method("PATCH").with("description", description).withUrlPath(api("")).send();
+        root().createRequest().method("PATCH").with("description", description).withUrlPath(api("")).send();
     }
 
     /**
@@ -128,7 +146,7 @@ public class GHTeam extends GHObject implements Refreshable {
      *             the io exception
      */
     public void setPrivacy(Privacy privacy) throws IOException {
-        root.createRequest().method("PATCH").with("privacy", privacy).withUrlPath(api("")).send();
+        root().createRequest().method("PATCH").with("privacy", privacy).withUrlPath(api("")).send();
     }
 
     /**
@@ -153,10 +171,20 @@ public class GHTeam extends GHObject implements Refreshable {
      *             the io exception
      */
     public PagedIterable<GHUser> listMembers(String role) throws IOException {
-        return root.createRequest()
-                .withUrlPath(api("/members"))
-                .with("role", role)
-                .toIterable(GHUser[].class, item -> item.wrapUp(root));
+        return root().createRequest().withUrlPath(api("/members")).with("role", role).toIterable(GHUser[].class, null);
+    }
+
+    /**
+     * List members with specified role paged iterable.
+     *
+     * @param role
+     *            the role
+     * @return the paged iterable
+     * @throws IOException
+     *             the io exception
+     */
+    public PagedIterable<GHUser> listMembers(Role role) throws IOException {
+        return listMembers(transformEnum(role));
     }
 
     /**
@@ -165,11 +193,8 @@ public class GHTeam extends GHObject implements Refreshable {
      * @param discussionNumber
      *            id of the discussion that we want to query for
      * @return the discussion
-     * @throws java.io.FileNotFoundException
-     *             if the discussion does not exist
      * @throws IOException
      *             the io exception
-     *
      * @see <a href= "https://developer.github.com/v3/teams/discussions/#get-a-discussion">documentation</a>
      */
     @Nonnull
@@ -196,7 +221,7 @@ public class GHTeam extends GHObject implements Refreshable {
      *             the io exception
      */
     public PagedIterable<GHTeam> listChildTeams() throws IOException {
-        return root.createRequest()
+        return root().createRequest()
                 .withUrlPath(api("/teams"))
                 .toIterable(GHTeam[].class, item -> item.wrapUp(this.organization));
     }
@@ -221,9 +246,9 @@ public class GHTeam extends GHObject implements Refreshable {
      */
     public boolean hasMember(GHUser user) {
         try {
-            root.createRequest().withUrlPath("/teams/" + getId() + "/members/" + user.getLogin()).send();
+            root().createRequest().withUrlPath(api("/memberships/" + user.getLogin())).send();
             return true;
-        } catch (IOException ignore) {
+        } catch (@SuppressWarnings("unused") IOException ignore) {
             return false;
         }
     }
@@ -236,7 +261,7 @@ public class GHTeam extends GHObject implements Refreshable {
      *             the io exception
      */
     public Map<String, GHRepository> getRepositories() throws IOException {
-        Map<String, GHRepository> m = new TreeMap<String, GHRepository>();
+        Map<String, GHRepository> m = new TreeMap<>();
         for (GHRepository r : listRepositories()) {
             m.put(r.getName(), r);
         }
@@ -249,9 +274,7 @@ public class GHTeam extends GHObject implements Refreshable {
      * @return the paged iterable
      */
     public PagedIterable<GHRepository> listRepositories() {
-        return root.createRequest()
-                .withUrlPath(api("/repos"))
-                .toIterable(GHRepository[].class, item -> item.wrap(root));
+        return root().createRequest().withUrlPath(api("/repos")).toIterable(GHRepository[].class, null);
     }
 
     /**
@@ -266,7 +289,7 @@ public class GHTeam extends GHObject implements Refreshable {
      * @since 1.59
      */
     public void add(GHUser u) throws IOException {
-        root.createRequest().method("PUT").withUrlPath(api("/memberships/" + u.getLogin())).send();
+        root().createRequest().method("PUT").withUrlPath(api("/memberships/" + u.getLogin())).send();
     }
 
     /**
@@ -282,7 +305,7 @@ public class GHTeam extends GHObject implements Refreshable {
      *             the io exception
      */
     public void add(GHUser user, Role role) throws IOException {
-        root.createRequest()
+        root().createRequest()
                 .method("PUT")
                 .with("role", role)
                 .withUrlPath(api("/memberships/" + user.getLogin()))
@@ -298,7 +321,7 @@ public class GHTeam extends GHObject implements Refreshable {
      *             the io exception
      */
     public void remove(GHUser u) throws IOException {
-        root.createRequest().method("DELETE").withUrlPath(api("/members/" + u.getLogin())).send();
+        root().createRequest().method("DELETE").withUrlPath(api("/memberships/" + u.getLogin())).send();
     }
 
     /**
@@ -310,7 +333,23 @@ public class GHTeam extends GHObject implements Refreshable {
      *             the io exception
      */
     public void add(GHRepository r) throws IOException {
-        add(r, null);
+        add(r, (GHOrganization.RepositoryRole) null);
+    }
+
+    /**
+     * * Add.
+     *
+     * @param r
+     *            the r
+     * @param permission
+     *            the permission
+     * @throws IOException
+     *             the io exception
+     * @deprecated use {@link GHTeam#add(GHRepository, org.kohsuke.github.GHOrganization.RepositoryRole)}
+     */
+    @Deprecated
+    public void add(GHRepository r, GHOrganization.Permission permission) throws IOException {
+        add(r, GHOrganization.RepositoryRole.from(permission));
     }
 
     /**
@@ -323,10 +362,11 @@ public class GHTeam extends GHObject implements Refreshable {
      * @throws IOException
      *             the io exception
      */
-    public void add(GHRepository r, GHOrganization.Permission permission) throws IOException {
-        root.createRequest()
+    public void add(GHRepository r, GHOrganization.RepositoryRole permission) throws IOException {
+        root().createRequest()
                 .method("PUT")
-                .with("permission", permission)
+                .with("permission",
+                        Optional.ofNullable(permission).map(GHOrganization.RepositoryRole::toString).orElse(null))
                 .withUrlPath(api("/repos/" + r.getOwnerName() + '/' + r.getName()))
                 .send();
     }
@@ -340,7 +380,10 @@ public class GHTeam extends GHObject implements Refreshable {
      *             the io exception
      */
     public void remove(GHRepository r) throws IOException {
-        root.createRequest().method("DELETE").withUrlPath(api("/repos/" + r.getOwnerName() + '/' + r.getName())).send();
+        root().createRequest()
+                .method("DELETE")
+                .withUrlPath(api("/repos/" + r.getOwnerName() + '/' + r.getName()))
+                .send();
     }
 
     /**
@@ -350,11 +393,17 @@ public class GHTeam extends GHObject implements Refreshable {
      *             the io exception
      */
     public void delete() throws IOException {
-        root.createRequest().method("DELETE").withUrlPath(api("")).send();
+        root().createRequest().method("DELETE").withUrlPath(api("")).send();
     }
 
     private String api(String tail) {
-        return "/teams/" + getId() + tail;
+        if (organization == null) {
+            // Teams returned from pull requests to do not have an organization. Attempt to use url.
+            final URL url = Objects.requireNonNull(getUrl(), "Missing instance URL!");
+            return StringUtils.prependIfMissing(url.toString().replace(root().getApiUrl(), ""), "/") + tail;
+        }
+
+        return "/organizations/" + organization.getId() + "/team/" + getId() + tail;
     }
 
     /**
@@ -379,21 +428,40 @@ public class GHTeam extends GHObject implements Refreshable {
      * @throws IOException
      *             the io exception
      */
+    @SuppressFBWarnings(value = { "EI_EXPOSE_REP" }, justification = "Expected behavior")
     public GHOrganization getOrganization() throws IOException {
         refresh(organization);
         return organization;
     }
 
+    /**
+     * Refresh.
+     *
+     * @throws IOException
+     *             Signals that an I/O exception has occurred.
+     */
     @Override
     public void refresh() throws IOException {
-        root.createRequest().withUrlPath(api("")).fetchInto(this).wrapUp(root);
+        root().createRequest().withUrlPath(api("")).fetchInto(this).wrapUp(root());
     }
 
+    /**
+     * Gets the html url.
+     *
+     * @return the html url
+     */
     @Override
     public URL getHtmlUrl() {
         return GitHubClient.parseURL(html_url);
     }
 
+    /**
+     * Equals.
+     *
+     * @param o
+     *            the o
+     * @return true, if successful
+     */
     @Override
     public boolean equals(Object o) {
         if (this == o) {
@@ -408,6 +476,11 @@ public class GHTeam extends GHObject implements Refreshable {
                 && Objects.equals(description, ghTeam.description) && privacy == ghTeam.privacy;
     }
 
+    /**
+     * Hash code.
+     *
+     * @return the int
+     */
     @Override
     public int hashCode() {
         return Objects.hash(name, getUrl(), permission, slug, description, privacy);

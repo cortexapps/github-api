@@ -6,6 +6,7 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.io.IOException;
 import java.net.URL;
 
+// TODO: Auto-generated Javadoc
 /**
  * Provides information on a Git ref from GitHub.
  *
@@ -16,7 +17,7 @@ public class GHRef extends GitHubInteractiveObject {
     private GHObject object;
 
     /**
-     * Name of the ref, such as "refs/tags/abc"
+     * Name of the ref, such as "refs/tags/abc".
      *
      * @return the ref
      */
@@ -65,13 +66,12 @@ public class GHRef extends GitHubInteractiveObject {
      *             the io exception
      */
     public void updateTo(String sha, Boolean force) throws IOException {
-        root.createRequest()
+        root().createRequest()
                 .method("PATCH")
                 .with("sha", sha)
                 .with("force", force)
                 .withUrlPath(url)
-                .fetch(GHRef.class)
-                .wrap(root);
+                .fetch(GHRef.class);
     }
 
     /**
@@ -81,12 +81,7 @@ public class GHRef extends GitHubInteractiveObject {
      *             the io exception
      */
     public void delete() throws IOException {
-        root.createRequest().method("DELETE").withUrlPath(url).send();
-    }
-
-    GHRef wrap(GitHub root) {
-        this.root = root;
-        return this;
+        root().createRequest().method("DELETE").withUrlPath(url).send();
     }
 
     /**
@@ -110,10 +105,10 @@ public class GHRef extends GitHubInteractiveObject {
         // Instead use `git/refs/%s` and check the result actually matches the ref
         GHRef result = null;
         try {
-            result = repository.root.createRequest()
+            result = repository.root()
+                    .createRequest()
                     .withUrlPath(repository.getApiTailUrl(String.format("git/refs/%s", refName)))
-                    .fetch(GHRef.class)
-                    .wrap(repository.root);
+                    .fetch(GHRef.class);
         } catch (IOException e) {
             // If the parse exception is due to the above returning an array instead of a single ref
             // that means the individual ref did not exist. Handled by result check below.
@@ -156,9 +151,7 @@ public class GHRef extends GitHubInteractiveObject {
         if (refType.equals("")) {
             url = url.substring(0, url.length() - 1);
         }
-        return repository.root.createRequest()
-                .withUrlPath(url)
-                .toIterable(GHRef[].class, item -> item.wrap(repository.root));
+        return repository.root().createRequest().withUrlPath(url).toIterable(GHRef[].class, item -> repository.root());
     }
 
     /**
@@ -171,7 +164,7 @@ public class GHRef extends GitHubInteractiveObject {
         private String type, sha, url;
 
         /**
-         * Type of the object, such as "commit"
+         * Type of the object, such as "commit".
          *
          * @return the type
          */

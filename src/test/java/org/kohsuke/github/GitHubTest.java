@@ -1,6 +1,7 @@
 package org.kohsuke.github;
 
 import com.google.common.collect.Iterables;
+import org.junit.Assert;
 import org.junit.Test;
 import org.kohsuke.github.example.dataobject.ReadOnlyObjects;
 
@@ -10,11 +11,18 @@ import java.util.*;
 import static org.hamcrest.Matchers.*;
 import static org.kohsuke.github.GHMarketplaceAccountType.ORGANIZATION;
 
+// TODO: Auto-generated Javadoc
 /**
  * Unit test for {@link GitHub}.
  */
 public class GitHubTest extends AbstractGitHubWireMockTest {
 
+    /**
+     * List users.
+     *
+     * @throws IOException
+     *             Signals that an I/O exception has occurred.
+     */
     @Test
     public void listUsers() throws IOException {
         for (GHUser u : Iterables.limit(gitHub.listUsers(), 10)) {
@@ -23,6 +31,12 @@ public class GitHubTest extends AbstractGitHubWireMockTest {
         }
     }
 
+    /**
+     * Gets the repository.
+     *
+     * @throws IOException
+     *             Signals that an I/O exception has occurred.
+     */
     @Test
     public void getRepository() throws IOException {
         GHRepository repo = gitHub.getRepository("hub4j/github-api");
@@ -34,11 +48,25 @@ public class GitHubTest extends AbstractGitHubWireMockTest {
 
         try {
             gitHub.getRepository("hub4j_github-api");
+            fail();
+        } catch (IllegalArgumentException e) {
+            assertThat(e.getMessage(), equalTo("Repository name must be in format owner/repo"));
+        }
+
+        try {
+            gitHub.getRepository("hub4j/github/api");
+            fail();
         } catch (IllegalArgumentException e) {
             assertThat(e.getMessage(), equalTo("Repository name must be in format owner/repo"));
         }
     }
 
+    /**
+     * Gets the orgs.
+     *
+     * @throws IOException
+     *             Signals that an I/O exception has occurred.
+     */
     @Test
     public void getOrgs() throws IOException {
         int iterations = 10;
@@ -62,6 +90,12 @@ public class GitHubTest extends AbstractGitHubWireMockTest {
         assertThat(org, not(sameInstance(org2)));
     }
 
+    /**
+     * Search users.
+     *
+     * @throws Exception
+     *             the exception
+     */
     @Test
     public void searchUsers() throws Exception {
         PagedSearchIterable<GHUser> r = gitHub.searchUsers().q("tom").repos(">42").followers(">1000").list();
@@ -71,6 +105,12 @@ public class GitHubTest extends AbstractGitHubWireMockTest {
         assertThat(r.getTotalCount(), greaterThan(0));
     }
 
+    /**
+     * Test list all repositories.
+     *
+     * @throws Exception
+     *             the exception
+     */
     @Test
     public void testListAllRepositories() throws Exception {
         Iterator<GHRepository> itr = gitHub.listAllPublicRepositories().iterator();
@@ -91,6 +131,12 @@ public class GitHubTest extends AbstractGitHubWireMockTest {
         }
     }
 
+    /**
+     * Search content.
+     *
+     * @throws Exception
+     *             the exception
+     */
     @Test
     public void searchContent() throws Exception {
         PagedSearchIterable<GHContent> r = gitHub.searchContent()
@@ -138,22 +184,80 @@ public class GitHubTest extends AbstractGitHubWireMockTest {
         assertThat(c3.getPath(), not(equalTo(c2.getPath())));
         assertThat(r3.getTotalCount(), equalTo(r2.getTotalCount()));
 
-        PagedSearchIterable<GHContent> r4 = gitHub.searchContent()
+        GHContentSearchBuilder searchBuilder = gitHub.searchContent()
                 .q("addClass")
                 .in("file")
                 .language("js")
                 .repo("jquery/jquery")
                 .sort(GHContentSearchBuilder.Sort.INDEXED)
-                .order(GHDirection.DESC)
-                .list();
+                .order(GHDirection.DESC);
+
+        PagedSearchIterable<GHContent> r4 = searchBuilder.list();
 
         GHContent c4 = r4.iterator().next();
         assertThat(c4.getPath(), not(equalTo(c2.getPath())));
         assertThat(c4.getPath(), not(equalTo(c3.getPath())));
         assertThat(r4.getTotalCount(), equalTo(r2.getTotalCount()));
 
+        // Verify qualifier not allowed to be empty
+        IllegalArgumentException e = Assert.assertThrows(IllegalArgumentException.class,
+                () -> searchBuilder.q("", "not valid"));
+        assertThat(e.getMessage(), equalTo("qualifier cannot be null or empty"));
     }
 
+    /**
+     * Search content with forks.
+     */
+    @Test
+    public void searchContentWithForks() {
+        final PagedSearchIterable<GHContent> results = gitHub.searchContent()
+                .q("addClass")
+                .language("js")
+                .sort(GHContentSearchBuilder.Sort.INDEXED)
+                .order(GHDirection.DESC)
+                .fork(GHFork.PARENT_ONLY)
+                .list();
+
+        final PagedSearchIterable<GHContent> resultsWithForks = gitHub.searchContent()
+                .q("addClass")
+                .language("js")
+                .sort(GHContentSearchBuilder.Sort.INDEXED)
+                .order(GHDirection.DESC)
+                .fork(GHFork.PARENT_AND_FORKS)
+                .list();
+
+        assertThat(results.getTotalCount(), lessThan(resultsWithForks.getTotalCount()));
+
+        // Do not record these.
+        // This will verify that the queries for the deprecated path are identical to the ones above.
+        if (!mockGitHub.isTakeSnapshot()) {
+            final PagedSearchIterable<GHContent> resultsDeprecated = gitHub.searchContent()
+                    .q("addClass")
+                    .language("js")
+                    .sort(GHContentSearchBuilder.Sort.INDEXED)
+                    .order(GHDirection.DESC)
+                    .fork(GHFork.PARENT_ONLY.toString())
+                    .list();
+
+            final PagedSearchIterable<GHContent> resultsWithForksDeprecated = gitHub.searchContent()
+                    .q("addClass")
+                    .language("js")
+                    .sort(GHContentSearchBuilder.Sort.INDEXED)
+                    .order(GHDirection.DESC)
+                    .fork(GHFork.PARENT_AND_FORKS.toString())
+                    .list();
+
+            assertThat(resultsDeprecated.getTotalCount(), equalTo(results.getTotalCount()));
+            assertThat(resultsWithForksDeprecated.getTotalCount(), equalTo(resultsWithForks.getTotalCount()));
+        }
+    }
+
+    /**
+     * Test list my authorizations.
+     *
+     * @throws IOException
+     *             Signals that an I/O exception has occurred.
+     */
     @Test
     public void testListMyAuthorizations() throws IOException {
         PagedIterable<GHAuthorization> list = gitHub.listMyAuthorizations();
@@ -163,6 +267,12 @@ public class GitHubTest extends AbstractGitHubWireMockTest {
         }
     }
 
+    /**
+     * Gets the meta.
+     *
+     * @throws IOException
+     *             Signals that an I/O exception has occurred.
+     */
     @Test
     public void getMeta() throws IOException {
         GHMeta meta = gitHub.getMeta();
@@ -196,6 +306,12 @@ public class GitHubTest extends AbstractGitHubWireMockTest {
         }
     }
 
+    /**
+     * Gets the my marketplace purchases.
+     *
+     * @throws IOException
+     *             Signals that an I/O exception has occurred.
+     */
     @Test
     public void getMyMarketplacePurchases() throws IOException {
         List<GHMarketplaceUserPurchase> userPurchases = gitHub.getMyMarketplacePurchases().toList();
@@ -241,6 +357,12 @@ public class GitHubTest extends AbstractGitHubWireMockTest {
         }
     }
 
+    /**
+     * Gzip.
+     *
+     * @throws Exception
+     *             the exception
+     */
     @Test
     public void gzip() throws Exception {
 
@@ -254,6 +376,12 @@ public class GitHubTest extends AbstractGitHubWireMockTest {
         assertThat(org.getResponseHeaderFields().get("Content-eNcoding").get(0), is("gzip"));
     }
 
+    /**
+     * Test header field name.
+     *
+     * @throws Exception
+     *             the exception
+     */
     @Test
     public void testHeaderFieldName() throws Exception {
 
@@ -268,17 +396,5 @@ public class GitHubTest extends AbstractGitHubWireMockTest {
         assertThat("KeySet from header fields should also be case-insensitive",
                 org.getResponseHeaderFields().keySet().contains("CacHe-ControL"));
         assertThat(org.getResponseHeaderFields().get("cachE-cOntrol").get(0), is("private, max-age=60, s-maxage=60"));
-
-        // GitHub has started changing their headers to all lowercase.
-        // For this test we want the field names to be with mixed-case (harder to do comparison).
-        // Ensure that it remains that way, if test resources are ever refreshed.
-        boolean found = false;
-        for (String key : org.getResponseHeaderFields().keySet()) {
-            if (Objects.equals("Cache-Control", key)) {
-                found = true;
-                break;
-            }
-        }
-        assertThat("Must have the literal expected string 'Cache-Control' for header field name", found);
     }
 }

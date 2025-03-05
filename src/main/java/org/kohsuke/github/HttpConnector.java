@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
+// TODO: Auto-generated Javadoc
 /**
  * Pluggability for customizing HTTP request behaviors or using altogether different library.
  *
@@ -13,8 +14,10 @@ import java.net.URL;
  * For example, you can implement this to st custom timeouts.
  *
  * @author Kohsuke Kawaguchi
+ * @deprecated Use {@link org.kohsuke.github.connector.GitHubConnector} instead.
  */
 @FunctionalInterface
+@Deprecated
 public interface HttpConnector {
     /**
      * Opens a connection to the given URL.

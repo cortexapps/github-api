@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 
+// TODO: Auto-generated Javadoc
 /**
  * Represents the account that's logging into GitHub.
  *
@@ -20,25 +21,20 @@ public class GHMyself extends GHUser {
      * Type of repositories returned during listing.
      */
     public enum RepositoryListFilter {
-        /**
-         * All public and private repositories that current user has access or collaborates to
-         */
+
+        /** All public and private repositories that current user has access or collaborates to. */
         ALL,
-        /**
-         * Public and private repositories owned by current user
-         */
+
+        /** Public and private repositories owned by current user. */
         OWNER,
-        /**
-         * Public repositories that current user has access or collaborates to
-         */
+
+        /** Public repositories that current user has access or collaborates to. */
         PUBLIC,
-        /**
-         * Private repositories that current user has access or collaborates to
-         */
+
+        /** Private repositories that current user has access or collaborates to. */
         PRIVATE,
-        /**
-         * Public and private repositories that current user is a member
-         */
+
+        /** Public and private repositories that current user is a member. */
         MEMBER;
     }
 
@@ -70,7 +66,7 @@ public class GHMyself extends GHUser {
      *             the io exception
      */
     public List<GHEmail> getEmails2() throws IOException {
-        return root.createRequest().withUrlPath("/user/emails").toIterable(GHEmail[].class, null).toList();
+        return root().createRequest().withUrlPath("/user/emails").toIterable(GHEmail[].class, null).toList();
     }
 
     /**
@@ -84,7 +80,7 @@ public class GHMyself extends GHUser {
      *             the io exception
      */
     public List<GHKey> getPublicKeys() throws IOException {
-        return root.createRequest().withUrlPath("/user/keys").toIterable(GHKey[].class, null).toList();
+        return root().createRequest().withUrlPath("/user/keys").toIterable(GHKey[].class, null).toList();
     }
 
     /**
@@ -98,7 +94,7 @@ public class GHMyself extends GHUser {
      *             the io exception
      */
     public List<GHVerifiedKey> getPublicVerifiedKeys() throws IOException {
-        return root.createRequest()
+        return root().createRequest()
                 .withUrlPath("/users/" + getLogin() + "/keys")
                 .toIterable(GHVerifiedKey[].class, null)
                 .toList();
@@ -114,12 +110,12 @@ public class GHMyself extends GHUser {
     public GHPersonSet<GHOrganization> getAllOrganizations() throws IOException {
         GHPersonSet<GHOrganization> orgs = new GHPersonSet<GHOrganization>();
         Set<String> names = new HashSet<String>();
-        for (GHOrganization o : root.createRequest()
+        for (GHOrganization o : root().createRequest()
                 .withUrlPath("/user/orgs")
                 .toIterable(GHOrganization[].class, null)
                 .toArray()) {
             if (names.add(o.getLogin())) // in case of rumoured duplicates in the data
-                orgs.add(root.getOrganization(o.getLogin()));
+                orgs.add(root().getOrganization(o.getLogin()));
         }
         return orgs;
     }
@@ -144,6 +140,8 @@ public class GHMyself extends GHUser {
      *
      * Unlike {@link #getAllRepositories()}, this does not wait until all the repositories are returned. Repositories
      * are returned by GitHub API with a 30 items per page.
+     *
+     * @return the paged iterable
      */
     @Override
     public PagedIterable<GHRepository> listRepositories() {
@@ -162,6 +160,7 @@ public class GHMyself extends GHUser {
      *            size for each page of items returned by GitHub. Maximum page size is 100.
      *
      *            Unlike {@link #getRepositories()}, this does not wait until all the repositories are returned.
+     * @return the paged iterable
      */
     public PagedIterable<GHRepository> listRepositories(final int pageSize) {
         return listRepositories(pageSize, RepositoryListFilter.ALL);
@@ -178,10 +177,10 @@ public class GHMyself extends GHUser {
      * @return the paged iterable
      */
     public PagedIterable<GHRepository> listRepositories(final int pageSize, final RepositoryListFilter repoType) {
-        return root.createRequest()
+        return root().createRequest()
                 .with("type", repoType)
                 .withUrlPath("/user/repos")
-                .toIterable(GHRepository[].class, item -> item.wrap(root))
+                .toIterable(GHRepository[].class, null)
                 .withPageSize(pageSize);
     }
 
@@ -197,7 +196,7 @@ public class GHMyself extends GHUser {
     }
 
     /**
-     * List your organization memberships
+     * List your organization memberships.
      *
      * @return the paged iterable
      */
@@ -206,17 +205,17 @@ public class GHMyself extends GHUser {
     }
 
     /**
-     * List your organization memberships
+     * List your organization memberships.
      *
      * @param state
      *            Filter by a specific state
      * @return the paged iterable
      */
     public PagedIterable<GHMembership> listOrgMemberships(final GHMembership.State state) {
-        return root.createRequest()
+        return root().createRequest()
                 .with("state", state)
                 .withUrlPath("/user/memberships/orgs")
-                .toIterable(GHMembership[].class, item -> item.wrap(root));
+                .toIterable(GHMembership[].class, item -> item.wrap(root()));
     }
 
     /**
@@ -229,10 +228,10 @@ public class GHMyself extends GHUser {
      *             the io exception
      */
     public GHMembership getMembership(GHOrganization o) throws IOException {
-        return root.createRequest()
+        return root().createRequest()
                 .withUrlPath("/user/memberships/orgs/" + o.getLogin())
                 .fetch(GHMembership.class)
-                .wrap(root);
+                .wrap(root());
     }
 
     // public void addEmails(Collection<String> emails) throws IOException {
@@ -251,6 +250,6 @@ public class GHMyself extends GHUser {
      *      app installations accessible to the user access token</a>
      */
     public PagedIterable<GHAppInstallation> getAppInstallations() {
-        return new GHAppInstallationsIterable(root);
+        return new GHAppInstallationsIterable(root());
     }
 }

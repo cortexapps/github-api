@@ -9,6 +9,7 @@ import java.net.HttpURLConnection;
 import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.core.IsInstanceOf.instanceOf;
 
+// TODO: Auto-generated Javadoc
 /**
  * Test showing the behavior of OkHttpConnector with and without cache.
  * <p>
@@ -31,15 +32,29 @@ import static org.hamcrest.core.IsInstanceOf.instanceOf;
  */
 public class RateLimitHandlerTest extends AbstractGitHubWireMockTest {
 
+    /**
+     * Instantiates a new rate limit handler test.
+     */
     public RateLimitHandlerTest() {
         useDefaultGitHub = false;
     }
 
+    /**
+     * Gets the wire mock options.
+     *
+     * @return the wire mock options
+     */
     @Override
     protected WireMockConfiguration getWireMockOptions() {
         return super.getWireMockOptions().extensions(templating.newResponseTransformer());
     }
 
+    /**
+     * Test handler fail.
+     *
+     * @throws Exception
+     *             the exception
+     */
     @Test
     public void testHandler_Fail() throws Exception {
         // Customized response that templates the date to keep things working
@@ -56,14 +71,20 @@ public class RateLimitHandlerTest extends AbstractGitHubWireMockTest {
             getTempRepository();
             fail();
         } catch (Exception e) {
-            assertThat(e, instanceOf(IOException.class));
-            assertThat(e.getCause(), instanceOf(HttpException.class));
+            assertThat(e, instanceOf(HttpException.class));
+            assertThat(e.getMessage(), equalTo("API rate limit reached"));
         }
 
         assertThat(mockGitHub.getRequestCount(), equalTo(2));
 
     }
 
+    /**
+     * Test handler http status fail.
+     *
+     * @throws Exception
+     *             the exception
+     */
     @Test
     public void testHandler_HttpStatus_Fail() throws Exception {
         // Customized response that templates the date to keep things working
@@ -83,14 +104,20 @@ public class RateLimitHandlerTest extends AbstractGitHubWireMockTest {
 
             fail();
         } catch (Exception e) {
-            assertThat(e, instanceOf(IOException.class));
-            assertThat(e.getCause(), instanceOf(HttpException.class));
+            assertThat(e, instanceOf(HttpException.class));
+            assertThat(e.getMessage(), equalTo("API rate limit reached"));
         }
 
         assertThat(mockGitHub.getRequestCount(), equalTo(2));
 
     }
 
+    /**
+     * Test handler wait.
+     *
+     * @throws Exception
+     *             the exception
+     */
     @Test
     public void testHandler_Wait() throws Exception {
         // Customized response that templates the date to keep things working
@@ -107,6 +134,12 @@ public class RateLimitHandlerTest extends AbstractGitHubWireMockTest {
         assertThat(mockGitHub.getRequestCount(), equalTo(3));
     }
 
+    /**
+     * Test handler wait stuck.
+     *
+     * @throws Exception
+     *             the exception
+     */
     @Test
     public void testHandler_WaitStuck() throws Exception {
         // Customized response that templates the date to keep things working

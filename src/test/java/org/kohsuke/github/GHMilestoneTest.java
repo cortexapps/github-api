@@ -7,14 +7,23 @@ import org.junit.Test;
 import java.io.IOException;
 import java.util.Date;
 
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.nullValue;
+import static org.hamcrest.Matchers.*;
+import static org.hamcrest.Matchers.containsString;
 
+// TODO: Auto-generated Javadoc
 /**
+ * The Class GHMilestoneTest.
+ *
  * @author Martin van Zijl
  */
 public class GHMilestoneTest extends AbstractGitHubWireMockTest {
 
+    /**
+     * Clean up.
+     *
+     * @throws Exception
+     *             the exception
+     */
     @Before
     @After
     public void cleanUp() throws Exception {
@@ -31,6 +40,12 @@ public class GHMilestoneTest extends AbstractGitHubWireMockTest {
         }
     }
 
+    /**
+     * Test update milestone.
+     *
+     * @throws Exception
+     *             the exception
+     */
     @Test
     public void testUpdateMilestone() throws Exception {
         GHRepository repo = getRepository();
@@ -54,8 +69,18 @@ public class GHMilestoneTest extends AbstractGitHubWireMockTest {
         // The time is truncated when sent to the server, but still part of the returned value
         // 07:00 midnight PDT
         assertThat(milestone.getDueOn(), equalTo(OUTPUT_DUE_DATE));
+        assertThat(milestone.getHtmlUrl().toString(), containsString("/hub4j-test-org/github-api/milestone/"));
+        assertThat(milestone.getUrl().toString(), containsString("/repos/hub4j-test-org/github-api/milestones/"));
+        assertThat(milestone.getClosedIssues(), equalTo(0));
+        assertThat(milestone.getOpenIssues(), equalTo(0));
     }
 
+    /**
+     * Test unset milestone.
+     *
+     * @throws IOException
+     *             Signals that an I/O exception has occurred.
+     */
     @Test
     public void testUnsetMilestone() throws IOException {
         GHRepository repo = getRepository();
@@ -73,6 +98,12 @@ public class GHMilestoneTest extends AbstractGitHubWireMockTest {
         assertThat(issue.getMilestone(), nullValue());
     }
 
+    /**
+     * Test unset milestone from pull request.
+     *
+     * @throws IOException
+     *             Signals that an I/O exception has occurred.
+     */
     @Test
     public void testUnsetMilestoneFromPullRequest() throws IOException {
         GHRepository repo = getRepository();
@@ -91,6 +122,13 @@ public class GHMilestoneTest extends AbstractGitHubWireMockTest {
         assertThat(p.getMilestone(), nullValue());
     }
 
+    /**
+     * Gets the repository.
+     *
+     * @return the repository
+     * @throws IOException
+     *             Signals that an I/O exception has occurred.
+     */
     protected GHRepository getRepository() throws IOException {
         return getRepository(gitHub);
     }

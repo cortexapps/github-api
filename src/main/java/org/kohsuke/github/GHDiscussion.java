@@ -1,6 +1,7 @@
 package org.kohsuke.github;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.kohsuke.github.internal.Previews;
 
 import java.io.IOException;
@@ -10,6 +11,7 @@ import java.util.Objects;
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 
+// TODO: Auto-generated Javadoc
 /**
  * A discussion in GitHub Team.
  *
@@ -25,11 +27,25 @@ public class GHDiscussion extends GHObject {
     @JsonProperty(value = "private")
     private boolean isPrivate;
 
+    /**
+     * Gets the html url.
+     *
+     * @return the html url
+     * @throws IOException
+     *             Signals that an I/O exception has occurred.
+     */
     @Override
     public URL getHtmlUrl() throws IOException {
         return GitHubClient.parseURL(htmlUrl);
     }
 
+    /**
+     * Wrap up.
+     *
+     * @param team
+     *            the team
+     * @return the GH discussion
+     */
     GHDiscussion wrapUp(GHTeam team) {
         this.team = team;
         return this;
@@ -41,6 +57,7 @@ public class GHDiscussion extends GHObject {
      * @return the team for this discussion
      */
     @Nonnull
+    @SuppressFBWarnings(value = { "EI_EXPOSE_REP" }, justification = "Expected behavior")
     public GHTeam getTeam() {
         return team;
     }
@@ -108,15 +125,37 @@ public class GHDiscussion extends GHObject {
         return new GHDiscussion.Creator(team);
     }
 
+    /**
+     * Read.
+     *
+     * @param team
+     *            the team
+     * @param discussionNumber
+     *            the discussion number
+     * @return the GH discussion
+     * @throws IOException
+     *             Signals that an I/O exception has occurred.
+     */
     static GHDiscussion read(GHTeam team, long discussionNumber) throws IOException {
-        return team.root.createRequest()
+        return team.root()
+                .createRequest()
                 .setRawUrlPath(getRawUrlPath(team, discussionNumber))
                 .fetch(GHDiscussion.class)
                 .wrapUp(team);
     }
 
+    /**
+     * Read all.
+     *
+     * @param team
+     *            the team
+     * @return the paged iterable
+     * @throws IOException
+     *             Signals that an I/O exception has occurred.
+     */
     static PagedIterable<GHDiscussion> readAll(GHTeam team) throws IOException {
-        return team.root.createRequest()
+        return team.root()
+                .createRequest()
                 .setRawUrlPath(getRawUrlPath(team, null))
                 .toIterable(GHDiscussion[].class, item -> item.wrapUp(team));
     }
@@ -144,13 +183,13 @@ public class GHDiscussion extends GHObject {
     }
 
     /**
-     * Delete the discussion
+     * Delete the discussion.
      *
      * @throws IOException
      *             the io exception
      */
     public void delete() throws IOException {
-        team.root.createRequest().method("DELETE").setRawUrlPath(getRawUrlPath(team, number)).send();
+        team.root().createRequest().method("DELETE").setRawUrlPath(getRawUrlPath(team, number)).send();
     }
 
     private static String getRawUrlPath(@Nonnull GHTeam team, @CheckForNull Long discussionNumber) {
@@ -208,6 +247,13 @@ public class GHDiscussion extends GHObject {
         }
     }
 
+    /**
+     * Equals.
+     *
+     * @param o
+     *            the o
+     * @return true, if successful
+     */
     @Override
     public boolean equals(Object o) {
         if (this == o) {
@@ -221,6 +267,11 @@ public class GHDiscussion extends GHObject {
                 && Objects.equals(body, that.body) && Objects.equals(title, that.title);
     }
 
+    /**
+     * Hash code.
+     *
+     * @return the int
+     */
     @Override
     public int hashCode() {
         return Objects.hash(team, number, body, title);

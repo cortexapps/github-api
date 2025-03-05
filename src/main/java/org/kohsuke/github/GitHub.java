@@ -26,7 +26,12 @@ package org.kohsuke.github;
 import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.infradna.tool.bridge_method_injector.WithBridgeMethods;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.kohsuke.github.authorization.AuthorizationProvider;
+import org.kohsuke.github.authorization.ImmutableAuthorizationProvider;
+import org.kohsuke.github.authorization.UserAuthorizationProvider;
+import org.kohsuke.github.connector.GitHubConnector;
+import org.kohsuke.github.internal.GitHubConnectorHttpConnectorAdapter;
 import org.kohsuke.github.internal.Previews;
 
 import java.io.*;
@@ -42,6 +47,7 @@ import javax.annotation.Nonnull;
 import static org.kohsuke.github.internal.Previews.INERTIA;
 import static org.kohsuke.github.internal.Previews.MACHINE_MAN;
 
+// TODO: Auto-generated Javadoc
 /**
  * Root of the GitHub API.
  *
@@ -105,34 +111,86 @@ public class GitHub {
      *            rateLimitChecker
      * @param authorizationProvider
      *            a authorization provider
+     * @throws IOException
+     *             Signals that an I/O exception has occurred.
      */
     GitHub(String apiUrl,
-            HttpConnector connector,
-            RateLimitHandler rateLimitHandler,
-            AbuseLimitHandler abuseLimitHandler,
+            GitHubConnector connector,
+            GitHubRateLimitHandler rateLimitHandler,
+            GitHubAbuseLimitHandler abuseLimitHandler,
             GitHubRateLimitChecker rateLimitChecker,
             AuthorizationProvider authorizationProvider) throws IOException {
         if (authorizationProvider instanceof DependentAuthorizationProvider) {
             ((DependentAuthorizationProvider) authorizationProvider).bind(this);
+        } else if (authorizationProvider instanceof ImmutableAuthorizationProvider
+                && authorizationProvider instanceof UserAuthorizationProvider) {
+            UserAuthorizationProvider provider = (UserAuthorizationProvider) authorizationProvider;
+            if (provider.getLogin() == null && provider.getEncodedAuthorization() != null
+                    && provider.getEncodedAuthorization().startsWith("token")) {
+                authorizationProvider = new LoginLoadingUserAuthorizationProvider(provider, this);
+            }
         }
 
-        this.client = new GitHubHttpUrlConnectionClient(apiUrl,
+        users = new ConcurrentHashMap<>();
+        orgs = new ConcurrentHashMap<>();
+
+        this.client = new GitHubClient(apiUrl,
                 connector,
                 rateLimitHandler,
                 abuseLimitHandler,
                 rateLimitChecker,
-                (myself) -> setMyself(myself),
                 authorizationProvider);
-        users = new ConcurrentHashMap<>();
-        orgs = new ConcurrentHashMap<>();
+
+        // Ensure we have the login if it is available
+        // This preserves previously existing behavior. Consider removing in future.
+        if (authorizationProvider instanceof LoginLoadingUserAuthorizationProvider) {
+            ((LoginLoadingUserAuthorizationProvider) authorizationProvider).getLogin();
+        }
     }
 
     private GitHub(GitHubClient client) {
-        this.client = client;
         users = new ConcurrentHashMap<>();
         orgs = new ConcurrentHashMap<>();
+        this.client = client;
     }
 
+    private static class LoginLoadingUserAuthorizationProvider implements UserAuthorizationProvider {
+        private final GitHub gitHub;
+        private final AuthorizationProvider authorizationProvider;
+        private boolean loginLoaded = false;
+        private String login;
+
+        LoginLoadingUserAuthorizationProvider(AuthorizationProvider authorizationProvider, GitHub gitHub) {
+            this.gitHub = gitHub;
+            this.authorizationProvider = authorizationProvider;
+        }
+
+        @Override
+        public String getEncodedAuthorization() throws IOException {
+            return authorizationProvider.getEncodedAuthorization();
+        }
+
+        @Override
+        public String getLogin() {
+            synchronized (this) {
+                if (!loginLoaded) {
+                    loginLoaded = true;
+                    try {
+                        GHMyself u = gitHub.setMyself();
+                        if (u != null) {
+                            login = u.getLogin();
+                        }
+                    } catch (IOException e) {
+                    }
+                }
+                return login;
+            }
+        }
+    }
+
+    /**
+     * The Class DependentAuthorizationProvider.
+     */
     public static abstract class DependentAuthorizationProvider implements AuthorizationProvider {
 
         private GitHub baseGitHub;
@@ -165,6 +223,11 @@ public class GitHub {
             this.baseGitHub = github;
         }
 
+        /**
+         * Git hub.
+         *
+         * @return the git hub
+         */
         protected synchronized final GitHub gitHub() {
             if (gitHub == null) {
                 gitHub = new GitHub.AuthorizationRefreshGitHubWrapper(this.baseGitHub, authorizationProvider);
@@ -315,10 +378,10 @@ public class GitHub {
      * @return the git hub
      * @throws IOException
      *             the io exception
-     * @deprecated Use {@link #connectUsingOAuth(String)} instead.
      * @see <a href=
      *      "https://developer.github.com/changes/2020-02-14-deprecating-password-auth/#changes-to-make">Deprecating
      *      password authentication and OAuth authorizations API</a>
+     * @deprecated Use {@link #connectUsingOAuth(String)} instead.
      */
     @Deprecated
     public static GitHub connectUsingPassword(String login, String password) throws IOException {
@@ -391,7 +454,7 @@ public class GitHub {
     public static GitHub offline() {
         try {
             return new GitHubBuilder().withEndpoint("https://api.github.invalid")
-                    .withConnector(HttpConnector.OFFLINE)
+                    .withConnector(GitHubConnector.OFFLINE)
                     .build();
         } catch (IOException e) {
             throw new IllegalStateException("The offline implementation constructor should not connect", e);
@@ -399,7 +462,7 @@ public class GitHub {
     }
 
     /**
-     * Is this an anonymous connection
+     * Is this an anonymous connection.
      *
      * @return {@code true} if operations that require authentication will fail.
      */
@@ -420,7 +483,10 @@ public class GitHub {
      * Gets connector.
      *
      * @return the connector
+     * @deprecated HttpConnector has been replaced by GitHubConnector which is generally not useful outside of this
+     *             library. If you are using this method, file an issue describing your use case.
      */
+    @Deprecated
     public HttpConnector getConnector() {
         return client.getConnector();
     }
@@ -433,8 +499,8 @@ public class GitHub {
      * @deprecated HttpConnector should not be changed. If you find yourself needing to do this, file an issue.
      */
     @Deprecated
-    public void setConnector(HttpConnector connector) {
-        client.setConnector(connector);
+    public void setConnector(@Nonnull HttpConnector connector) {
+        client.setConnector(GitHubConnectorHttpConnectorAdapter.adapt(connector));
     }
 
     /**
@@ -501,22 +567,19 @@ public class GitHub {
      * @throws IOException
      *             the io exception
      */
+    @SuppressFBWarnings(value = { "EI_EXPOSE_REP" }, justification = "Expected")
     @WithBridgeMethods(value = GHUser.class)
     public GHMyself getMyself() throws IOException {
         client.requireCredential();
-        synchronized (this) {
-            if (this.myself == null) {
-                GHMyself u = createRequest().withUrlPath("/user").fetch(GHMyself.class);
-                setMyself(u);
-            }
-            return myself;
-        }
+        return setMyself();
     }
 
-    private void setMyself(GHMyself myself) {
+    private GHMyself setMyself() throws IOException {
         synchronized (this) {
-            myself.wrapUp(this);
-            this.myself = myself;
+            if (this.myself == null) {
+                this.myself = createRequest().withUrlPath("/user").fetch(GHMyself.class);
+            }
+            return myself;
         }
     }
 
@@ -533,14 +596,13 @@ public class GitHub {
         GHUser u = users.get(login);
         if (u == null) {
             u = createRequest().withUrlPath("/users/" + login).fetch(GHUser.class);
-            u.root = this;
             users.put(u.getLogin(), u);
         }
         return u;
     }
 
     /**
-     * clears all cached data in order for external changes (modifications and del) to be reflected
+     * clears all cached data in order for external changes (modifications and del) to be reflected.
      */
     public void refreshCache() {
         users.clear();
@@ -557,7 +619,6 @@ public class GitHub {
     protected GHUser getUser(GHUser orig) {
         GHUser u = users.get(orig.getLogin());
         if (u == null) {
-            orig.root = this;
             users.put(orig.getLogin(), orig);
             return orig;
         }
@@ -576,7 +637,7 @@ public class GitHub {
     public GHOrganization getOrganization(String name) throws IOException {
         GHOrganization o = orgs.get(name);
         if (o == null) {
-            o = createRequest().withUrlPath("/orgs/" + name).fetch(GHOrganization.class).wrapUp(this);
+            o = createRequest().withUrlPath("/orgs/" + name).fetch(GHOrganization.class);
             orgs.put(name, o);
         }
         return o;
@@ -602,11 +663,11 @@ public class GitHub {
     public PagedIterable<GHOrganization> listOrganizations(final String since) {
         return createRequest().with("since", since)
                 .withUrlPath("/organizations")
-                .toIterable(GHOrganization[].class, item -> item.wrapUp(this));
+                .toIterable(GHOrganization[].class, null);
     }
 
     /**
-     * Gets the repository object from 'owner/repo' string that GitHub calls as "repository name"
+     * Gets the repository object from 'owner/repo' string that GitHub calls as "repository name".
      *
      * @param name
      *            the name
@@ -617,31 +678,30 @@ public class GitHub {
      */
     public GHRepository getRepository(String name) throws IOException {
         String[] tokens = name.split("/");
-        if (tokens.length < 2) {
+        if (tokens.length != 2) {
             throw new IllegalArgumentException("Repository name must be in format owner/repo");
         }
         return GHRepository.read(this, tokens[0], tokens[1]);
     }
 
     /**
-     * Gets the repository object from its ID
+     * Gets the repository object from its ID.
      *
      * @param id
      *            the id
      * @return the repository by id
      * @throws IOException
      *             the io exception
-     *
      * @deprecated Do not use this method. It was added due to misunderstanding of the type of parameter. Use
      *             {@link #getRepositoryById(long)} instead
      */
     @Deprecated
     public GHRepository getRepositoryById(String id) throws IOException {
-        return createRequest().withUrlPath("/repositories/" + id).fetch(GHRepository.class).wrap(this);
+        return createRequest().withUrlPath("/repositories/" + id).fetch(GHRepository.class);
     }
 
     /**
-     * Gets the repository object from its ID
+     * Gets the repository object from its ID.
      *
      * @param id
      *            the id
@@ -650,11 +710,11 @@ public class GitHub {
      *             the io exception
      */
     public GHRepository getRepositoryById(long id) throws IOException {
-        return createRequest().withUrlPath("/repositories/" + id).fetch(GHRepository.class).wrap(this);
+        return createRequest().withUrlPath("/repositories/" + id).fetch(GHRepository.class);
     }
 
     /**
-     * Returns a list of popular open source licenses
+     * Returns a list of popular open source licenses.
      *
      * @return a list of popular open source licenses
      * @throws IOException
@@ -662,7 +722,7 @@ public class GitHub {
      * @see <a href="https://developer.github.com/v3/licenses/">GitHub API - Licenses</a>
      */
     public PagedIterable<GHLicense> listLicenses() throws IOException {
-        return createRequest().withUrlPath("/licenses").toIterable(GHLicense[].class, item -> item.wrap(this));
+        return createRequest().withUrlPath("/licenses").toIterable(GHLicense[].class, null);
     }
 
     /**
@@ -673,11 +733,11 @@ public class GitHub {
      *             the io exception
      */
     public PagedIterable<GHUser> listUsers() throws IOException {
-        return createRequest().withUrlPath("/users").toIterable(GHUser[].class, item -> item.wrapUp(this));
+        return createRequest().withUrlPath("/users").toIterable(GHUser[].class, null);
     }
 
     /**
-     * Returns the full details for a license
+     * Returns the full details for a license.
      *
      * @param key
      *            The license key provided from the API
@@ -704,8 +764,7 @@ public class GitHub {
      *      Plans</a>
      */
     public PagedIterable<GHMarketplacePlan> listMarketplacePlans() throws IOException {
-        return createRequest().withUrlPath("/marketplace_listing/plans")
-                .toIterable(GHMarketplacePlan[].class, item -> item.wrapUp(this));
+        return createRequest().withUrlPath("/marketplace_listing/plans").toIterable(GHMarketplacePlan[].class, null);
     }
 
     /**
@@ -717,7 +776,7 @@ public class GitHub {
      */
     public List<GHInvitation> getMyInvitations() throws IOException {
         return createRequest().withUrlPath("/user/repository_invitations")
-                .toIterable(GHInvitation[].class, item -> item.wrapUp(this))
+                .toIterable(GHInvitation[].class, null)
                 .toList();
     }
 
@@ -733,7 +792,7 @@ public class GitHub {
      */
     public Map<String, GHOrganization> getMyOrganizations() throws IOException {
         GHOrganization[] orgs = createRequest().withUrlPath("/user/orgs")
-                .toIterable(GHOrganization[].class, item -> item.wrapUp(this))
+                .toIterable(GHOrganization[].class, null)
                 .toArray();
         Map<String, GHOrganization> r = new HashMap<>();
         for (GHOrganization o : orgs) {
@@ -759,7 +818,7 @@ public class GitHub {
      */
     public PagedIterable<GHMarketplaceUserPurchase> getMyMarketplacePurchases() throws IOException {
         return createRequest().withUrlPath("/user/marketplace_purchases")
-                .toIterable(GHMarketplaceUserPurchase[].class, item -> item.wrapUp(this));
+                .toIterable(GHMarketplaceUserPurchase[].class, null);
     }
 
     /**
@@ -788,7 +847,7 @@ public class GitHub {
      */
     public Map<String, GHOrganization> getUserPublicOrganizations(String login) throws IOException {
         GHOrganization[] orgs = createRequest().withUrlPath("/users/" + login + "/orgs")
-                .toIterable(GHOrganization[].class, item -> item.wrapUp(this))
+                .toIterable(GHOrganization[].class, null)
                 .toArray();
         Map<String, GHOrganization> r = new HashMap<>();
         for (GHOrganization o : orgs) {
@@ -825,20 +884,24 @@ public class GitHub {
     }
 
     /**
-     * Gets a sigle team by ID.
+     * Gets a single team by ID.
+     * <p>
+     * This method is no longer supported and throws an UnsupportedOperationException.
      *
      * @param id
      *            the id
      * @return the team
      * @throws IOException
      *             the io exception
-     *
+     * @see <a href="https://developer.github.com/v3/teams/#get-team-legacy">deprecation notice</a>
+     * @see <a href="https://github.blog/changelog/2022-02-22-sunset-notice-deprecated-teams-api-endpoints/">sunset
+     *      notice</a>
      * @deprecated Use {@link GHOrganization#getTeam(long)}
-     * @see <a href= "https://developer.github.com/v3/teams/#get-team-legacy">deprecation notice</a>
      */
     @Deprecated
     public GHTeam getTeam(int id) throws IOException {
-        return createRequest().withUrlPath("/teams/" + id).fetch(GHTeam.class).wrapUp(this);
+        throw new UnsupportedOperationException(
+                "This method is not supported anymore. Please use GHOrganization#getTeam(long).");
     }
 
     /**
@@ -849,9 +912,7 @@ public class GitHub {
      *             the io exception
      */
     public List<GHEventInfo> getEvents() throws IOException {
-        return createRequest().withUrlPath("/events")
-                .toIterable(GHEventInfo[].class, item -> item.wrapUp(this))
-                .toList();
+        return createRequest().withUrlPath("/events").toIterable(GHEventInfo[].class, null).toList();
     }
 
     /**
@@ -894,7 +955,7 @@ public class GitHub {
      */
     public <T extends GHEventPayload> T parseEventPayload(Reader r, Class<T> type) throws IOException {
         T t = GitHubClient.getMappingObjectReader(this).forType(type).readValue(r);
-        t.wrapUp(this);
+        t.lateBind();
         return t;
     }
 
@@ -958,7 +1019,7 @@ public class GitHub {
     public GHAuthorization createToken(Collection<String> scope, String note, String noteUrl) throws IOException {
         Requester requester = createRequest().with("scopes", scope).with("note", note).with("note_url", noteUrl);
 
-        return requester.method("POST").withUrlPath("/authorizations").fetch(GHAuthorization.class).wrap(this);
+        return requester.method("POST").withUrlPath("/authorizations").fetch(GHAuthorization.class);
     }
 
     /**
@@ -992,7 +1053,7 @@ public class GitHub {
             Requester requester = createRequest().with("scopes", scope).with("note", note).with("note_url", noteUrl);
             // Add the OTP from the user
             requester.setHeader("x-github-otp", OTPstring);
-            return requester.method("POST").withUrlPath("/authorizations").fetch(GHAuthorization.class).wrap(this);
+            return requester.method("POST").withUrlPath("/authorizations").fetch(GHAuthorization.class);
         }
     }
 
@@ -1089,8 +1150,7 @@ public class GitHub {
      *      authorizations</a>
      */
     public PagedIterable<GHAuthorization> listMyAuthorizations() throws IOException {
-        return createRequest().withUrlPath("/authorizations")
-                .toIterable(GHAuthorization[].class, item -> item.wrap(this));
+        return createRequest().withUrlPath("/authorizations").toIterable(GHAuthorization[].class, null);
     }
 
     /**
@@ -1106,7 +1166,23 @@ public class GitHub {
      */
     @Preview(MACHINE_MAN)
     public GHApp getApp() throws IOException {
-        return createRequest().withPreview(MACHINE_MAN).withUrlPath("/app").fetch(GHApp.class).wrapUp(this);
+        return createRequest().withPreview(MACHINE_MAN).withUrlPath("/app").fetch(GHApp.class);
+    }
+
+    /**
+     * Returns the GitHub App Installation associated with the authentication credentials used.
+     * <p>
+     * You must use an installation token to access this endpoint; otherwise consider {@link #getApp()} and its various
+     * ways of retrieving installations.
+     *
+     * @return the app
+     * @throws IOException
+     *             the io exception
+     * @see <a href="https://docs.github.com/en/rest/apps/installations">GitHub App installations</a>
+     */
+    @Preview(MACHINE_MAN)
+    public GHAuthenticatedAppInstallation getInstallation() throws IOException {
+        return new GHAuthenticatedAppInstallation(this);
     }
 
     /**
@@ -1141,7 +1217,7 @@ public class GitHub {
      *             the io exception
      */
     public GHProject getProject(long id) throws IOException {
-        return createRequest().withPreview(INERTIA).withUrlPath("/projects/" + id).fetch(GHProject.class).wrap(this);
+        return createRequest().withPreview(INERTIA).withUrlPath("/projects/" + id).fetch(GHProject.class);
     }
 
     /**
@@ -1157,7 +1233,7 @@ public class GitHub {
         return createRequest().withPreview(INERTIA)
                 .withUrlPath("/projects/columns/" + id)
                 .fetch(GHProjectColumn.class)
-                .wrap(this);
+                .lateBind(this);
     }
 
     /**
@@ -1173,7 +1249,7 @@ public class GitHub {
         return createRequest().withPreview(INERTIA)
                 .withUrlPath("/projects/columns/cards/" + id)
                 .fetch(GHProjectCard.class)
-                .wrap(this);
+                .lateBind(this);
     }
 
     /**
@@ -1267,9 +1343,7 @@ public class GitHub {
      * @see <a href="https://developer.github.com/v3/repos/#list-all-public-repositories">documentation</a>
      */
     public PagedIterable<GHRepository> listAllPublicRepositories(final String since) {
-        return createRequest().with("since", since)
-                .withUrlPath("/repositories")
-                .toIterable(GHRepository[].class, item -> item.wrap(this));
+        return createRequest().with("since", since).withUrlPath("/repositories").toIterable(GHRepository[].class, null);
     }
 
     /**
@@ -1330,27 +1404,50 @@ public class GitHub {
         return GitHubClient.getMappingObjectReader(GitHub.offline());
     }
 
+    /**
+     * Gets the client.
+     *
+     * @return the client
+     */
     @Nonnull
     GitHubClient getClient() {
         return client;
     }
 
+    /**
+     * Creates the request.
+     *
+     * @return the requester
+     */
     @Nonnull
     Requester createRequest() {
-        return new Requester(client).injectMappingValue(this);
+        Requester requester = new Requester(client);
+        requester.injectMappingValue(this);
+        if (!this.getClass().equals(GitHub.class)) {
+            // For classes that extend GitHub, treat them still as a GitHub instance
+            requester.injectMappingValue(GitHub.class.getName(), this);
+        }
+        return requester;
     }
 
+    /**
+     * Intern.
+     *
+     * @param user
+     *            the user
+     * @return the GH user
+     * @throws IOException
+     *             Signals that an I/O exception has occurred.
+     */
     GHUser intern(GHUser user) throws IOException {
-        if (user == null)
-            return user;
-
-        // if we already have this user in our map, use it
-        GHUser u = users.get(user.getLogin());
-        if (u != null)
-            return u;
-
-        // if not, remember this new user
-        users.putIfAbsent(user.getLogin(), user);
+        if (user != null) {
+            // if we already have this user in our map, get it
+            // if not, remember this new user
+            GHUser existingUser = users.putIfAbsent(user.getLogin(), user);
+            if (existingUser != null) {
+                user = existingUser;
+            }
+        }
         return user;
     }
 

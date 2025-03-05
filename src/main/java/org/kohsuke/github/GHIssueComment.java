@@ -23,24 +23,36 @@
  */
 package org.kohsuke.github;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 import java.io.IOException;
 import java.net.URL;
 
 import static org.kohsuke.github.internal.Previews.SQUIRREL_GIRL;
 
+// TODO: Auto-generated Javadoc
 /**
- * Comment to the issue
+ * Comment to the issue.
  *
  * @author Kohsuke Kawaguchi
  * @see GHIssue#comment(String) GHIssue#comment(String)
  * @see GHIssue#listComments() GHIssue#listComments()
  */
 public class GHIssueComment extends GHObject implements Reactable {
+
+    /** The owner. */
     GHIssue owner;
 
     private String body, gravatar_id, html_url, author_association;
     private GHUser user; // not fully populated. beware.
 
+    /**
+     * Wrap up.
+     *
+     * @param owner
+     *            the owner
+     * @return the GH issue comment
+     */
     GHIssueComment wrapUp(GHIssue owner) {
         this.owner = owner;
         return this;
@@ -51,6 +63,7 @@ public class GHIssueComment extends GHObject implements Reactable {
      *
      * @return the parent
      */
+    @SuppressFBWarnings(value = { "EI_EXPOSE_REP" }, justification = "Expected behavior")
     public GHIssue getParent() {
         return owner;
     }
@@ -82,9 +95,14 @@ public class GHIssueComment extends GHObject implements Reactable {
      *             the io exception
      */
     public GHUser getUser() throws IOException {
-        return owner == null || owner.root.isOffline() ? user : owner.root.getUser(user.getLogin());
+        return owner == null || owner.isOffline() ? user : owner.root().getUser(user.getLogin());
     }
 
+    /**
+     * Gets the html url.
+     *
+     * @return the html url
+     */
     @Override
     public URL getHtmlUrl() {
         return GitHubClient.parseURL(html_url);
@@ -108,7 +126,8 @@ public class GHIssueComment extends GHObject implements Reactable {
      *             the io exception
      */
     public void update(String body) throws IOException {
-        owner.root.createRequest()
+        owner.root()
+                .createRequest()
                 .method("PATCH")
                 .with("body", body)
                 .withUrlPath(getApiRoute())
@@ -123,26 +142,57 @@ public class GHIssueComment extends GHObject implements Reactable {
      *             the io exception
      */
     public void delete() throws IOException {
-        owner.root.createRequest().method("DELETE").withUrlPath(getApiRoute()).send();
+        owner.root().createRequest().method("DELETE").withUrlPath(getApiRoute()).send();
     }
 
+    /**
+     * Creates the reaction.
+     *
+     * @param content
+     *            the content
+     * @return the GH reaction
+     * @throws IOException
+     *             Signals that an I/O exception has occurred.
+     */
     @Preview(SQUIRREL_GIRL)
     public GHReaction createReaction(ReactionContent content) throws IOException {
-        return owner.root.createRequest()
+        return owner.root()
+                .createRequest()
                 .method("POST")
                 .withPreview(SQUIRREL_GIRL)
                 .with("content", content.getContent())
                 .withUrlPath(getApiRoute() + "/reactions")
-                .fetch(GHReaction.class)
-                .wrap(owner.root);
+                .fetch(GHReaction.class);
     }
 
+    /**
+     * Delete reaction.
+     *
+     * @param reaction
+     *            the reaction
+     * @throws IOException
+     *             Signals that an I/O exception has occurred.
+     */
+    public void deleteReaction(GHReaction reaction) throws IOException {
+        owner.root()
+                .createRequest()
+                .method("DELETE")
+                .withUrlPath(getApiRoute(), "reactions", String.valueOf(reaction.getId()))
+                .send();
+    }
+
+    /**
+     * List reactions.
+     *
+     * @return the paged iterable
+     */
     @Preview(SQUIRREL_GIRL)
     public PagedIterable<GHReaction> listReactions() {
-        return owner.root.createRequest()
+        return owner.root()
+                .createRequest()
                 .withPreview(SQUIRREL_GIRL)
                 .withUrlPath(getApiRoute() + "/reactions")
-                .toIterable(GHReaction[].class, item -> item.wrap(owner.root));
+                .toIterable(GHReaction[].class, item -> owner.root());
     }
 
     private String getApiRoute() {

@@ -3,6 +3,7 @@ package org.kohsuke.github;
 import java.io.IOException;
 import java.net.URL;
 
+// TODO: Auto-generated Javadoc
 /**
  * Represents a status of a commit.
  *
@@ -13,17 +14,18 @@ import java.net.URL;
  *      GHCommitState, String, String)
  */
 public class GHCommitStatus extends GHObject {
-    String state;
-    String target_url, description;
-    String context;
-    GHUser creator;
 
-    GHCommitStatus wrapUp(GitHub root) {
-        if (creator != null)
-            creator.wrapUp(root);
-        this.root = root;
-        return this;
-    }
+    /** The state. */
+    String state;
+
+    /** The description. */
+    String target_url, description;
+
+    /** The context. */
+    String context;
+
+    /** The creator. */
+    GHUser creator;
 
     /**
      * Gets state.
@@ -66,7 +68,7 @@ public class GHCommitStatus extends GHObject {
      *             the io exception
      */
     public GHUser getCreator() throws IOException {
-        return root.intern(creator);
+        return root().intern(creator);
     }
 
     /**
@@ -79,6 +81,9 @@ public class GHCommitStatus extends GHObject {
     }
 
     /**
+     * Gets the html url.
+     *
+     * @return the html url
      * @deprecated This object has no HTML URL.
      */
     @Override

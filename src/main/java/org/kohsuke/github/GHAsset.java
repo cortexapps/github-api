@@ -1,14 +1,19 @@
 package org.kohsuke.github;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 import java.io.IOException;
 import java.net.URL;
 
+// TODO: Auto-generated Javadoc
 /**
  * Asset in a release.
  *
  * @see GHRelease#getAssets() GHRelease#getAssets()
  */
 public class GHAsset extends GHObject {
+
+    /** The owner. */
     GHRepository owner;
     private String name;
     private String label;
@@ -85,17 +90,9 @@ public class GHAsset extends GHObject {
      *
      * @return the owner
      */
+    @SuppressFBWarnings(value = { "EI_EXPOSE_REP" }, justification = "Expected behavior")
     public GHRepository getOwner() {
         return owner;
-    }
-
-    /**
-     * Gets root.
-     *
-     * @return the root
-     */
-    public GitHub getRoot() {
-        return root;
     }
 
     /**
@@ -117,6 +114,9 @@ public class GHAsset extends GHObject {
     }
 
     /**
+     * Gets the html url.
+     *
+     * @return the html url
      * @deprecated This object has no HTML URL.
      */
     @Override
@@ -134,7 +134,7 @@ public class GHAsset extends GHObject {
     }
 
     private void edit(String key, Object value) throws IOException {
-        root.createRequest().with(key, value).method("PATCH").withUrlPath(getApiRoute()).send();
+        root().createRequest().with(key, value).method("PATCH").withUrlPath(getApiRoute()).send();
     }
 
     /**
@@ -144,16 +144,22 @@ public class GHAsset extends GHObject {
      *             the io exception
      */
     public void delete() throws IOException {
-        root.createRequest().method("DELETE").withUrlPath(getApiRoute()).send();
+        root().createRequest().method("DELETE").withUrlPath(getApiRoute()).send();
     }
 
     private String getApiRoute() {
         return "/repos/" + owner.getOwnerName() + "/" + owner.getName() + "/releases/assets/" + getId();
     }
 
+    /**
+     * Wrap.
+     *
+     * @param release
+     *            the release
+     * @return the GH asset
+     */
     GHAsset wrap(GHRelease release) {
         this.owner = release.getOwner();
-        this.root = owner.root;
         return this;
     }
 

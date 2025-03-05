@@ -25,32 +25,41 @@ package org.kohsuke.github;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 import org.apache.commons.io.IOUtils;
+import org.kohsuke.github.connector.GitHubConnectorResponse;
 import org.kohsuke.github.function.InputStreamFunction;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.MalformedURLException;
 import java.util.Iterator;
 import java.util.function.Consumer;
 
 import javax.annotation.Nonnull;
 
+// TODO: Auto-generated Javadoc
 /**
  * A thin helper for {@link GitHubRequest.Builder} that includes {@link GitHubClient}.
  *
  * @author Kohsuke Kawaguchi
  */
 class Requester extends GitHubRequest.Builder<Requester> {
+
+    /** The client. */
     /* private */ final transient GitHubClient client;
 
+    /**
+     * Instantiates a new requester.
+     *
+     * @param client
+     *            the client
+     */
     Requester(GitHubClient client) {
         this.client = client;
         this.withApiUrl(client.getApiUrl());
     }
 
     /**
-     * Sends a request to the specified URL and checks that it is sucessful.
+     * Sends a request to the specified URL and checks that it is successful.
      *
      * @throws IOException
      *             the io exception
@@ -58,7 +67,7 @@ class Requester extends GitHubRequest.Builder<Requester> {
     public void send() throws IOException {
         // Send expects there to be some body response, but doesn't care what it is.
         // If there isn't a body, this will throw.
-        client.sendRequest(this, (responseInfo) -> responseInfo.getBodyAsString());
+        client.sendRequest(this, (connectorResponse) -> GitHubResponse.getBodyAsString(connectorResponse));
     }
 
     /**
@@ -73,7 +82,8 @@ class Requester extends GitHubRequest.Builder<Requester> {
      *             if the server returns 4xx/5xx responses.
      */
     public <T> T fetch(@Nonnull Class<T> type) throws IOException {
-        return client.sendRequest(this, (responseInfo) -> GitHubResponse.parseBody(responseInfo, type)).body();
+        return client.sendRequest(this, (connectorResponse) -> GitHubResponse.parseBody(connectorResponse, type))
+                .body();
     }
 
     /**
@@ -88,7 +98,8 @@ class Requester extends GitHubRequest.Builder<Requester> {
      *             the io exception
      */
     public <T> T fetchInto(@Nonnull T existingInstance) throws IOException {
-        return client.sendRequest(this, (responseInfo) -> GitHubResponse.parseBody(responseInfo, existingInstance))
+        return client
+                .sendRequest(this, (connectorResponse) -> GitHubResponse.parseBody(connectorResponse, existingInstance))
                 .body();
     }
 
@@ -108,19 +119,24 @@ class Requester extends GitHubRequest.Builder<Requester> {
      * Response input stream. There are scenarios where direct stream reading is needed, however it is better to use
      * {@link #fetch(Class)} where possible.
      *
+     * @param <T>
+     *            the generic type
+     * @param handler
+     *            the handler
+     * @return the t
      * @throws IOException
      *             the io exception
      */
     public <T> T fetchStream(@Nonnull InputStreamFunction<T> handler) throws IOException {
-        return client.sendRequest(this, (responseInfo) -> handler.apply(responseInfo.bodyStream())).body();
+        return client.sendRequest(this, (connectorResponse) -> handler.apply(connectorResponse.bodyStream())).body();
     }
 
     /**
      * Helper function to make it easy to pull streams.
      *
      * Copies an input stream to an in-memory input stream. The performance on this is not great but
-     * {@link GitHubResponse.ResponseInfo#bodyStream()} is closed at the end of every call to
-     * {@link GitHubClient#sendRequest(GitHubRequest, GitHubResponse.BodyHandler)}, so any reads to the original input
+     * {@link GitHubConnectorResponse#bodyStream()} is closed at the end of every call to
+     * {@link GitHubClient#sendRequest(GitHubRequest, GitHubClient.BodyHandler)}, so any reads to the original input
      * stream must be completed before then. There are a number of deprecated methods that return {@link InputStream}.
      * This method keeps all of them using the same code path.
      *
@@ -142,20 +158,16 @@ class Requester extends GitHubRequest.Builder<Requester> {
      * or {@link Iterator#hasNext()} are called.
      * </p>
      *
+     * @param <R>
+     *            the element type for the pages returned from
      * @param type
      *            the type of the pages to retrieve.
      * @param itemInitializer
      *            the consumer to execute on each paged item retrieved.
-     * @param <R>
-     *            the element type for the pages returned from
      * @return the {@link PagedIterable} for this builder.
      */
     public <R> PagedIterable<R> toIterable(Class<R[]> type, Consumer<R> itemInitializer) {
-        try {
-            return new GitHubPageContentsIterable<>(client, build(), type, itemInitializer);
-        } catch (MalformedURLException e) {
-            throw new GHException(e.getMessage(), e);
-        }
+        return new GitHubPageContentsIterable<>(client, build(), type, itemInitializer);
 
     }
 }

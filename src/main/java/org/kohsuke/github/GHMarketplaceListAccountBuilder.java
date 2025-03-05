@@ -2,8 +2,9 @@ package org.kohsuke.github;
 
 import java.io.IOException;
 
+// TODO: Auto-generated Javadoc
 /**
- * Returns any accounts associated with a plan, including free plans
+ * Returns any accounts associated with a plan, including free plans.
  *
  * @author Paulo Miguel Almeida
  * @see GHMarketplacePlan#listAccounts()
@@ -12,8 +13,16 @@ public class GHMarketplaceListAccountBuilder extends GitHubInteractiveObject {
     private final Requester builder;
     private final long planId;
 
+    /**
+     * Instantiates a new GH marketplace list account builder.
+     *
+     * @param root
+     *            the root
+     * @param planId
+     *            the plan id
+     */
     GHMarketplaceListAccountBuilder(GitHub root, long planId) {
-        this.root = root;
+        super(root);
         this.builder = root.createRequest();
         this.planId = planId;
     }
@@ -48,7 +57,11 @@ public class GHMarketplaceListAccountBuilder extends GitHubInteractiveObject {
      * The enum Sort.
      */
     public enum Sort {
-        CREATED, UPDATED
+
+        /** The created. */
+        CREATED,
+        /** The updated. */
+        UPDATED
     }
 
     /**
@@ -64,7 +77,7 @@ public class GHMarketplaceListAccountBuilder extends GitHubInteractiveObject {
      */
     public PagedIterable<GHMarketplaceAccountPlan> createRequest() throws IOException {
         return builder.withUrlPath(String.format("/marketplace_listing/plans/%d/accounts", this.planId))
-                .toIterable(GHMarketplaceAccountPlan[].class, item -> item.wrapUp(root));
+                .toIterable(GHMarketplaceAccountPlan[].class, null);
     }
 
 }

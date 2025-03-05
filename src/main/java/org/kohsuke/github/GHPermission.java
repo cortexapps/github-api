@@ -26,6 +26,7 @@ package org.kohsuke.github;
 
 import java.util.Locale;
 
+// TODO: Auto-generated Javadoc
 /**
  * Permission for a user in a repository.
  *
@@ -62,11 +63,4 @@ class GHPermission {
     public GHUser getUser() {
         return user;
     }
-
-    void wrapUp(GitHub root) {
-        if (user != null) {
-            user.root = root;
-        }
-    }
-
 }
