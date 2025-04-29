@@ -132,6 +132,8 @@ public class GHCodeScanningAlert extends GHObject {
 
     /**
      * Get the code scanning security severity level
+     *
+     * @return the scanningSecurityLevel
      */
     public String getScanningSecurityLevel() {
         return rule.security_severity_level;
