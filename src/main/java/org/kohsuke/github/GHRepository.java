@@ -3496,6 +3496,47 @@ public class GHRepository extends GHObject {
                 .send();
     }
 
+    /**
+     * Lists the secret scanning alerts for this repository
+     *
+     * @return the paged iterable
+     */
+    public PagedIterable<GHSecretScanningAlert> listSecretScanningAlerts() {
+        return listSecretScanningAlerts(Collections.emptyMap());
+    }
+
+    /**
+     * Lists the secret scanning alerts for this repository filtered on the alert state
+     *
+     * @param state
+     *            state of the alert
+     * @return the paged iterable
+     */
+    public PagedIterable<GHSecretScanningAlert> listSecretScanningAlerts(GHSecretScanningAlertState state) {
+        return listSecretScanningAlerts(Collections.singletonMap("state", state.name().toLowerCase()));
+    }
+
+    private PagedIterable<GHSecretScanningAlert> listSecretScanningAlerts(Map<String, Object> filters) {
+        return new GHSecretScanningAlertsIterable(this,
+                root().createRequest().withUrlPath(getApiTailUrl("secret-scanning/alerts")).with(filters).build());
+    }
+
+    /**
+     * Get secret scanning alert by number
+     *
+     * @param number
+     *            number of the secret scanning alert
+     * @return the secret scanning alert
+     * @throws IOException
+     *             the io exception
+     */
+    public GHSecretScanningAlert getSecretScanningAlert(long number) throws IOException {
+        return root().createRequest()
+                .withUrlPath(getApiTailUrl("secret-scanning/alerts"), String.valueOf(number))
+                .fetch(GHSecretScanningAlert.class)
+                .wrap(this);
+    }
+
     private <T> T downloadArchive(@Nonnull String type,
             @CheckForNull String ref,
             @Nonnull InputStreamFunction<T> streamFunction) throws IOException {
