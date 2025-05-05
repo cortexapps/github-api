@@ -5,7 +5,9 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 import java.io.IOException;
 import java.net.URL;
+import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
 
 /**
  * Secret scanning alert for a repository
@@ -18,15 +20,21 @@ public class GHSecretScanningAlert extends GHObject {
     private GHRepository owner;
     private long number;
     private String html_url;
+    private String locations_url;
     private GHSecretScanningAlertState state;
     private String resolution;
     private String resolved_at;
     private GHUser resolved_by;
     private String secret_type;
-    private Secret secret;
-    private String push_protection_bypassed;
+    private String secret_type_display_name;
+    private String secret;
+
+    private Boolean push_protection_bypassed;
     private GHUser push_protection_bypassed_by;
     private String push_protection_bypassed_at;
+
+    private String created_at;
+    private String updated_at;
 
     GHSecretScanningAlert wrap(GHRepository owner) {
         this.owner = owner;
@@ -52,6 +60,11 @@ public class GHSecretScanningAlert extends GHObject {
     @Override
     public long getId() {
         return getNumber();
+    }
+
+    @Override
+    public URL getHtmlUrl() throws IOException {
+        return GitHubClient.parseURL(html_url);
     }
 
     /**
@@ -105,11 +118,20 @@ public class GHSecretScanningAlert extends GHObject {
     }
 
     /**
-     * Secret that was detected
+     * Display name for tyype of secret that was detected
      *
-     * @return the secret
+     * @return the secret type display name
      */
-    public Secret getSecret() {
+    public String getSecretTypeDisplayName() {
+        return secret_type_display_name;
+    }
+
+    /**
+     * Secret value that was detected
+     *
+     * @return the secret value
+     */
+    public String getSecret() {
         return secret;
     }
 
@@ -118,8 +140,8 @@ public class GHSecretScanningAlert extends GHObject {
      *
      * @return true if push protection was bypassed, false otherwise
      */
-    public boolean isPushProtectionBypassed() {
-        return push_protection_bypassed != null && !push_protection_bypassed.isEmpty();
+    public Boolean isPushProtectionBypassed() {
+        return push_protection_bypassed;
     }
 
     /**
@@ -141,45 +163,43 @@ public class GHSecretScanningAlert extends GHObject {
         return GitHubClient.parseDate(push_protection_bypassed_at);
     }
 
-    @Override
-    public URL getHtmlUrl() throws IOException {
-        return GitHubClient.parseURL(html_url);
+    /**
+     * Gets created at.
+     *
+     * @return the created at
+     */
+    public Date getCreatedAt() {
+        return GitHubClient.parseDate(created_at);
     }
 
     /**
-     * Secret details
+     * Gets updated at.
+     *
+     * @return the updated at
      */
-    @SuppressFBWarnings(value = { "UWF_UNWRITTEN_FIELD" }, justification = "JSON API")
-    public static class Secret {
-        private String name;
-        private String type;
-        private String value;
-
-        /**
-         * Name of the secret
-         *
-         * @return the name
-         */
-        public String getName() {
-            return name;
-        }
-
-        /**
-         * Type of the secret
-         *
-         * @return the type
-         */
-        public String getType() {
-            return type;
-        }
-
-        /**
-         * Value of the secret
-         *
-         * @return the value
-         */
-        public String getValue() {
-            return value;
-        }
+    public Date getUpdatedAt() {
+        return GitHubClient.parseDate(updated_at);
     }
+
+    /**
+     * Gets locations url.
+     *
+     * @return the locations url
+     */
+    public String getLocationsUrl() {
+        return locations_url;
+    }
+
+    /**
+     * Gets locations.
+     *
+     * @return the locations array
+     * @throws IOException
+     *             the io exception
+     */
+    public List<GHSecretScanningAlertLocation> getLocations() throws IOException {
+        return Arrays.asList(
+                root().createRequest().withUrlPath(getLocationsUrl()).fetch(GHSecretScanningAlertLocation[].class));
+    }
+
 }
