@@ -3516,7 +3516,14 @@ public class GHRepository extends GHObject {
         return listSecretScanningAlerts(Collections.singletonMap("state", state.name().toLowerCase()));
     }
 
-    private PagedIterable<GHSecretScanningAlert> listSecretScanningAlerts(Map<String, Object> filters) {
+    /**
+     * Lists the secret scanning alerts for this repository filtered based on passed query params
+     *
+     * @param filters
+     *            query params
+     * @return the paged iterable
+     */
+    public PagedIterable<GHSecretScanningAlert> listSecretScanningAlerts(Map<String, Object> filters) {
         return new GHSecretScanningAlertsIterable(this,
                 root().createRequest().withUrlPath(getApiTailUrl("secret-scanning/alerts")).with(filters).build());
     }
