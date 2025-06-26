@@ -3520,7 +3520,7 @@ public class GHRepository extends GHObject {
      * Lists the secret scanning alerts for this repository filtered based on passed query params
      *
      * @param filters
-     *            query params
+     *            query param passed to request
      * @return the paged iterable
      */
     public PagedIterable<GHSecretScanningAlert> listSecretScanningAlerts(Map<String, Object> filters) {
