@@ -11,7 +11,7 @@
     <connection>scm:git:git@github.com/hub4j/${project.artifactId}.git</connection>
     <developerConnection>scm:git:ssh://git@github.com/hub4j/${project.artifactId}.git</developerConnection>
     <url>https://github.com/hub4j/github-api/</url>
-    <tag>HEAD</tag>
+    <tag>github-api-1.317</tag>
   </scm>
 
   <distributionManagement>
@@ -38,7 +38,7 @@
     <spotbugs-maven-plugin.failOnError>true</spotbugs-maven-plugin.failOnError>
     <hamcrest.version>2.2</hamcrest.version>
     <okhttp3.version>4.9.2</okhttp3.version>
-    <okio.version>2.10.0</okio.version>
+    <okio.version>3.5.0</okio.version>
     <!-- Using this as the minimum bar for code coverage.  Adding methods without covering them will fail this. -->
     <jacoco.coverage.target.bundle.method>0.70</jacoco.coverage.target.bundle.method>
     <jacoco.coverage.target.class.method>0.50</jacoco.coverage.target.class.method>
@@ -92,17 +92,17 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-source-plugin</artifactId>
-          <version>3.2.1</version>
+          <version>3.3.0</version>
         </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-gpg-plugin</artifactId>
-          <version>3.0.1</version>
+          <version>3.1.0</version>
         </plugin>
         <plugin>
           <groupId>org.jacoco</groupId>
           <artifactId>jacoco-maven-plugin</artifactId>
-          <version>0.8.8</version>
+          <version>0.8.10</version>
           <configuration>
             <!-- no need to get data about external code. It dramatically reduces performance of JaCoCo for nothing -->
             <excludes>
@@ -241,6 +241,9 @@
               <artifactId>java18</artifactId>
               <version>1.0</version>
             </signature>
+            <ignores>
+              java.net.http.*
+            </ignores>
           </configuration>
           <executions>
             <execution>
@@ -278,7 +281,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-project-info-reports-plugin</artifactId>
-        <version>3.4.1</version>
+        <version>3.4.2</version>
         <dependencies>
           <dependency>
             <groupId>org.apache.bcel</groupId>
@@ -301,18 +304,51 @@
             </annotationProcessorPath>
           </annotationProcessorPaths>
         </configuration>
+        <executions>
+          <execution>
+            <id>compile-java-11</id>
+            <phase>compile</phase>
+            <goals>
+              <goal>compile</goal>
+            </goals>
+            <configuration>
+              <release>11</release>
+              <source>11</source>
+              <target>11</target>
+              <compileSourceRoots>
+                <compileSourceRoot>${project.basedir}/src/main/java11</compileSourceRoot>
+              </compileSourceRoots>
+              <multiReleaseOutput>true</multiReleaseOutput>
+            </configuration>
+          </execution>
+        </executions>
       </plugin>
       <plugin>
         <artifactId>maven-surefire-plugin</artifactId>
+        <configuration>
+          <argLine>@{jacoco.surefire.argLine} ${surefire.argLine}</argLine>
+        </configuration>
         <executions>
           <execution>
             <id>default-test</id>
             <configuration>
               <excludesFile>src/test/resources/slow-or-flaky-tests.txt</excludesFile>
-              <argLine>@{jacoco.surefire.argLine} ${surefire.argLine}</argLine>
             </configuration>
           </execution>
         </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <version>3.3.0</version>
+        <configuration>
+          <archive>
+            <manifestEntries>
+              <Automatic-Module-Name>org.kohsuke.github.api</Automatic-Module-Name>
+              <Multi-Release>true</Multi-Release>
+            </manifestEntries>
+          </archive>
+        </configuration>
       </plugin>
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
@@ -431,7 +467,7 @@
     <dependency>
       <groupId>com.tngtech.archunit</groupId>
       <artifactId>archunit</artifactId>
-      <version>0.23.1</version>
+      <version>1.1.0</version>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -454,6 +490,12 @@
       <scope>test</scope>
     </dependency>
     <dependency>
+      <groupId>com.github.npathai</groupId>
+      <artifactId>hamcrest-optional</artifactId>
+      <version>2.0.0</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
       <version>4.13.2</version>
@@ -468,7 +510,7 @@
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-databind</artifactId>
-      <version>2.14.0</version>
+      <version>2.15.2</version>
     </dependency>
     <dependency>
       <groupId>commons-io</groupId>
@@ -485,7 +527,7 @@
     <dependency>
       <groupId>commons-fileupload</groupId>
       <artifactId>commons-fileupload</artifactId>
-      <version>1.4</version>
+      <version>1.5</version>
       <scope>test</scope>
     </dependency>
     <!-- for stapler-jetty -->
@@ -511,7 +553,7 @@
     <dependency>
       <groupId>org.eclipse.jgit</groupId>
       <artifactId>org.eclipse.jgit</artifactId>
-      <version>6.4.0.202211300538-r</version>
+      <version>6.7.0.202309050840-r</version>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -579,7 +621,7 @@
     <dependency>
       <groupId>com.github.tomakehurst</groupId>
       <artifactId>wiremock-jre8-standalone</artifactId>
-      <version>2.32.0</version>
+      <version>2.35.1</version>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -591,7 +633,7 @@
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-simple</artifactId>
-      <version>2.0.3</version>
+      <version>2.0.7</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
@@ -610,7 +652,7 @@
   <profiles>
     <!-- only enable slow-or-flaky-test if -Dtest= is not present -->
     <profile>
-      <id>slow-or-flaky-test</id>
+      <id>test-slow-multireleasejar-flaky</id>
       <activation>
         <property>
           <name>!test</name>

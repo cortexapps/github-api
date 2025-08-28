@@ -1,7 +1,9 @@
 package org.kohsuke.github;
 
 import com.fasterxml.jackson.databind.JsonMappingException;
+import com.google.common.collect.Sets;
 import org.apache.commons.io.IOUtils;
+import org.junit.Assert;
 import org.junit.Test;
 import org.kohsuke.github.GHCheckRun.Conclusion;
 import org.kohsuke.github.GHOrganization.RepositoryRole;
@@ -96,6 +98,7 @@ public class GHRepositoryTest extends AbstractGitHubWireMockTest {
         assertThat(r.isAllowMergeCommit(), is(true));
         assertThat(r.isAllowRebaseMerge(), is(true));
         assertThat(r.isAllowSquashMerge(), is(true));
+        assertThat(r.isAllowForking(), is(false));
 
         String httpTransport = "https://github.com/hub4j-test-org/temp-testGetters.git";
         assertThat(r.getHttpTransportUrl(), equalTo(httpTransport));
@@ -310,6 +313,57 @@ public class GHRepositoryTest extends AbstractGitHubWireMockTest {
     }
 
     /**
+     * Tests the creation of repositories with alternating visibilities for orgs.
+     *
+     * @throws Exception
+     *             the exception
+     */
+    @Test
+    public void testCreateVisibilityForOrganization() throws Exception {
+        GHOrganization organization = gitHub.getOrganization(GITHUB_API_TEST_ORG);
+
+        // can not test for internal, as test org is not assigned to an enterprise
+        for (Visibility visibility : Sets.newHashSet(Visibility.PUBLIC, Visibility.PRIVATE)) {
+            String repoName = String.format("test-repo-visibility-%s", visibility.toString());
+            GHRepository repository = organization.createRepository(repoName).visibility(visibility).create();
+            try {
+                assertThat(repository.getVisibility(), is(visibility));
+                assertThat(organization.getRepository(repoName).getVisibility(), is(visibility));
+            } finally {
+                repository.delete();
+            }
+        }
+    }
+
+    /**
+     * Tests the creation of repositories with alternating visibilities for users.
+     *
+     * @throws Exception
+     *             the exception
+     */
+    @Test
+    public void testCreateVisibilityForUser() throws Exception {
+
+        GHUser myself = gitHub.getMyself();
+
+        // can not test for internal, as test org is not assigned to an enterprise
+        for (Visibility visibility : Sets.newHashSet(Visibility.PUBLIC, Visibility.PRIVATE)) {
+            String repoName = String.format("test-repo-visibility-%s", visibility.toString());
+            boolean isPrivate = visibility.equals(Visibility.PRIVATE);
+            GHRepository repository = gitHub.createRepository(repoName)
+                    .private_(isPrivate)
+                    .visibility(visibility)
+                    .create();
+            try {
+                assertThat(repository.getVisibility(), is(visibility));
+                assertThat(myself.getRepository(repoName).getVisibility(), is(visibility));
+            } finally {
+                repository.delete();
+            }
+        }
+    }
+
+    /**
      * Test update repository.
      *
      * @throws Exception
@@ -327,6 +381,7 @@ public class GHRepositoryTest extends AbstractGitHubWireMockTest {
         GHRepository updated = builder.allowRebaseMerge(false)
                 .allowSquashMerge(false)
                 .deleteBranchOnMerge(true)
+                .allowForking(true)
                 .description(description)
                 .downloads(false)
                 .downloads(false)
@@ -341,6 +396,7 @@ public class GHRepositoryTest extends AbstractGitHubWireMockTest {
         assertThat(updated.isAllowRebaseMerge(), is(false));
         assertThat(updated.isAllowSquashMerge(), is(false));
         assertThat(updated.isDeleteBranchOnMerge(), is(true));
+        assertThat(updated.isAllowForking(), is(true));
         assertThat(updated.isPrivate(), is(true));
         assertThat(updated.hasDownloads(), is(false));
         assertThat(updated.hasIssues(), is(false));
@@ -1345,6 +1401,31 @@ public class GHRepositoryTest extends AbstractGitHubWireMockTest {
     }
 
     /**
+     * Filter out the checks from a reference
+     *
+     * @throws Exception
+     *             the exception
+     */
+    @Test
+    public void getCheckRunsWithParams() throws Exception {
+        final int expectedCount = 1;
+        // Use github-api repository as it has checks set up
+        final Map<String, Object> params = new HashMap<>(1);
+        params.put("check_name", "build-only (Java 17)");
+        PagedIterable<GHCheckRun> checkRuns = gitHub.getOrganization("hub4j")
+                .getRepository("github-api")
+                .getCheckRuns("54d60fbb53b4efa19f3081417bfb6a1de30c55e4", params);
+
+        // Check if the checkruns are all succeeded and if we got all of them
+        int checkRunsCount = 0;
+        for (GHCheckRun checkRun : checkRuns) {
+            assertThat(checkRun.getConclusion(), equalTo(Conclusion.SUCCESS));
+            checkRunsCount++;
+        }
+        assertThat(checkRunsCount, equalTo(expectedCount));
+    }
+
+    /**
      * Gets the last commit status.
      *
      * @throws Exception
@@ -1537,5 +1618,98 @@ public class GHRepositoryTest extends AbstractGitHubWireMockTest {
     public void createSecret() throws Exception {
         GHRepository repo = getTempRepository();
         repo.createSecret("secret", "encrypted", "public");
+    }
+
+    /**
+     * Test to check star method by verifying stargarzer count.
+     *
+     * @throws Exception
+     *             the exception
+     */
+    @Test
+    public void starTest() throws Exception {
+        String owner = "hub4j-test-org";
+        GHRepository repository = getRepository();
+        assertThat(repository.getOwner().getLogin(), equalTo(owner));
+        assertThat(repository.getStargazersCount(), is(0));
+        repository.star();
+        assertThat(repository.listStargazers2().toList().size(), is(1));
+        repository.unstar();
+        assertThat(repository.listStargazers().toList().size(), is(0));
+    }
+
+    /**
+     * Test to check getRepoVariable method.
+     *
+     * @throws Exception
+     *             the exception
+     */
+    @Test
+    public void testRepoActionVariable() throws Exception {
+        GHRepository repository = getRepository();
+        GHRepositoryVariable variable = repository.getRepoVariable("myvar");
+        assertThat(variable.getValue(), is("this is my var value"));
+    }
+
+    /**
+     * Test create repo action variable.
+     *
+     * @throws IOException
+     *             the exception
+     */
+    @Test
+    public void testCreateRepoActionVariable() throws IOException {
+        GHRepository repository = getRepository();
+        repository.createVariable("MYNEWVARIABLE", "mynewvalue");
+        GHRepositoryVariable variable = repository.getVariable("mynewvariable");
+        assertThat(variable.getName(), is("MYNEWVARIABLE"));
+        assertThat(variable.getValue(), is("mynewvalue"));
+    }
+
+    /**
+     * Test update repo action variable.
+     *
+     * @throws IOException
+     *             the exception
+     */
+    @Test
+    public void testUpdateRepoActionVariable() throws IOException {
+        GHRepository repository = getRepository();
+        GHRepositoryVariable variable = repository.getVariable("MYNEWVARIABLE");
+        variable.set().value("myupdatevalue");
+        variable = repository.getVariable("MYNEWVARIABLE");
+        assertThat(variable.getValue(), is("myupdatevalue"));
+    }
+
+    /**
+     * Test delete repo action variable.
+     *
+     * @throws IOException
+     *             the exception
+     */
+    @Test
+    public void testDeleteRepoActionVariable() throws IOException {
+        GHRepository repository = getRepository();
+        GHRepositoryVariable variable = repository.getVariable("mynewvariable");
+        variable.delete();
+        Assert.assertThrows(GHFileNotFoundException.class, () -> repository.getVariable("mynewvariable"));
+    }
+
+    /**
+     * Test demoing the issue with a user having the maintain permission on a repository.
+     *
+     * Test checking the permission fallback mechanism in case the Github API changes. The test was recorded at a time a
+     * new permission was added by mistake. If a re-recording it is needed, you'll like have to manually edit the
+     * generated mocks to get a non existing permission See
+     * https://github.com/hub4j/github-api/issues/1671#issuecomment-1577515662 for the details.
+     *
+     * @throws IOException
+     *             the exception
+     */
+    @Test
+    public void cannotRetrievePermissionMaintainUser() throws IOException {
+        GHRepository r = gitHub.getRepository("hub4j-test-org/maintain-permission-issue");
+        GHPermissionType permission = r.getPermission("alecharp");
+        assertThat(permission.toString(), is("UNKNOWN"));
     }
 }

@@ -9,9 +9,9 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
  *
  * @author Sourabh Sarvotham Parkala
  * @see <a href="https://developer.github.com/v3/git/tags/#signature-verification-object">tags signature
- *      verificatiion</a>
+ *      verification</a>
  * @see <a href="https://developer.github.com/v3/git/commits/#signature-verification-object">commits signature
- *      verificatiion</a>
+ *      verification</a>
  */
 @SuppressFBWarnings(value = { "UWF_UNWRITTEN_PUBLIC_OR_PROTECTED_FIELD", "UWF_UNWRITTEN_FIELD", "NP_UNWRITTEN_FIELD" },
         justification = "JSON API")
@@ -32,7 +32,7 @@ public class GHVerification {
     /**
      * Gets reason for verification value.
      *
-     * @return return reason of type {@link Reason}, such as "valid" or "unsigned". The possible values can be found in
+     * @return reason of type {@link Reason}, such as "valid" or "unsigned". The possible values can be found in
      *         {@link Reason}}
      */
     public Reason getReason() {
@@ -61,8 +61,8 @@ public class GHVerification {
      * The possible values for reason in verification object from github.
      *
      * @author Sourabh Sarvotham Parkala
-     * @see <a href="https://developer.github.com/v3/repos/commits/#signature-verification-object">List of possible
-     *      reason values</a>
+     * @see <a href="https://docs.github.com/en/graphql/reference/enums#gitsignaturestate">List of possible reason
+     *      values. Note graphQL documentation has currently the most updated values.</a>
      */
     public enum Reason {
 
