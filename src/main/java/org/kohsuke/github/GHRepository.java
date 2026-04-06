@@ -3544,6 +3544,54 @@ public class GHRepository extends GHObject {
                 .wrap(this);
     }
 
+    /**
+     * Lists the Dependabot alerts for this repository.
+     *
+     * @return the paged iterable
+     */
+    public PagedIterable<GHDependabotAlert> listDependabotAlerts() {
+        return listDependabotAlerts(Collections.emptyMap());
+    }
+
+    /**
+     * Lists the Dependabot alerts for this repository filtered on the alert state.
+     *
+     * @param state
+     *            state of the alert
+     * @return the paged iterable
+     */
+    public PagedIterable<GHDependabotAlert> listDependabotAlerts(GHDependabotAlertState state) {
+        return listDependabotAlerts(Collections.singletonMap("state", state.name().toLowerCase()));
+    }
+
+    /**
+     * Lists the Dependabot alerts for this repository filtered based on passed query params.
+     *
+     * @param filters
+     *            query params passed to request
+     * @return the paged iterable
+     */
+    public PagedIterable<GHDependabotAlert> listDependabotAlerts(Map<String, Object> filters) {
+        return new GHDependabotAlertsIterable(this,
+                root().createRequest().withUrlPath(getApiTailUrl("dependabot/alerts")).with(filters).build());
+    }
+
+    /**
+     * Get Dependabot alert by number.
+     *
+     * @param number
+     *            number of the Dependabot alert
+     * @return the Dependabot alert
+     * @throws IOException
+     *             the io exception
+     */
+    public GHDependabotAlert getDependabotAlert(long number) throws IOException {
+        return root().createRequest()
+                .withUrlPath(getApiTailUrl("dependabot/alerts"), String.valueOf(number))
+                .fetch(GHDependabotAlert.class)
+                .wrap(this);
+    }
+
     private <T> T downloadArchive(@Nonnull String type,
             @CheckForNull String ref,
             @Nonnull InputStreamFunction<T> streamFunction) throws IOException {
