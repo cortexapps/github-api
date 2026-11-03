@@ -1,13 +1,12 @@
 package org.kohsuke.github;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Collections;
-
-import static org.kohsuke.github.internal.Previews.ZZZAX;
 
 // TODO: Auto-generated Javadoc
 /**
@@ -20,10 +19,38 @@ import static org.kohsuke.github.internal.Previews.ZZZAX;
                 "URF_UNREAD_FIELD" },
         justification = "JSON API")
 public class GHBranchProtection extends GitHubInteractiveObject {
+
+    /**
+     * Create default GHBranchProtection instance
+     */
+    public GHBranchProtection() {
+    }
+
     private static final String REQUIRE_SIGNATURES_URI = "/required_signatures";
 
     @JsonProperty
+    private AllowDeletions allowDeletions;
+
+    @JsonProperty
+    private AllowForcePushes allowForcePushes;
+
+    @JsonProperty
+    private AllowForkSyncing allowForkSyncing;
+
+    @JsonProperty
+    private BlockCreations blockCreations;
+
+    @JsonProperty
     private EnforceAdmins enforceAdmins;
+
+    @JsonProperty
+    private LockBranch lockBranch;
+
+    @JsonProperty
+    private RequiredConversationResolution requiredConversationResolution;
+
+    @JsonProperty
+    private RequiredLinearHistory requiredLinearHistory;
 
     @JsonProperty("required_pull_request_reviews")
     private RequiredReviews requiredReviews;
@@ -43,7 +70,6 @@ public class GHBranchProtection extends GitHubInteractiveObject {
      * @throws IOException
      *             the io exception
      */
-    @Preview(ZZZAX)
     public void enabledSignedCommits() throws IOException {
         requester().method("POST").withUrlPath(url + REQUIRE_SIGNATURES_URI).fetch(RequiredSignatures.class);
     }
@@ -54,9 +80,44 @@ public class GHBranchProtection extends GitHubInteractiveObject {
      * @throws IOException
      *             the io exception
      */
-    @Preview(ZZZAX)
     public void disableSignedCommits() throws IOException {
         requester().method("DELETE").withUrlPath(url + REQUIRE_SIGNATURES_URI).send();
+    }
+
+    /**
+     * Gets allow deletions.
+     *
+     * @return the enforce admins
+     */
+    public AllowDeletions getAllowDeletions() {
+        return allowDeletions;
+    }
+
+    /**
+     * Gets allow force pushes.
+     *
+     * @return the enforce admins
+     */
+    public AllowForcePushes getAllowForcePushes() {
+        return allowForcePushes;
+    }
+
+    /**
+     * Gets allow fork syncing.
+     *
+     * @return the enforce admins
+     */
+    public AllowForkSyncing getAllowForkSyncing() {
+        return allowForkSyncing;
+    }
+
+    /**
+     * Gets block creations.
+     *
+     * @return the enforce admins
+     */
+    public BlockCreations getBlockCreations() {
+        return blockCreations;
     }
 
     /**
@@ -66,6 +127,33 @@ public class GHBranchProtection extends GitHubInteractiveObject {
      */
     public EnforceAdmins getEnforceAdmins() {
         return enforceAdmins;
+    }
+
+    /**
+     * Gets lock branch.
+     *
+     * @return the enforce admins
+     */
+    public LockBranch getLockBranch() {
+        return lockBranch;
+    }
+
+    /**
+     * Gets required conversation resolution.
+     *
+     * @return the enforce admins
+     */
+    public RequiredConversationResolution getRequiredConversationResolution() {
+        return requiredConversationResolution;
+    }
+
+    /**
+     * Gets required linear history.
+     *
+     * @return the enforce admins
+     */
+    public RequiredLinearHistory getRequiredLinearHistory() {
+        return requiredLinearHistory;
     }
 
     /**
@@ -84,7 +172,6 @@ public class GHBranchProtection extends GitHubInteractiveObject {
      * @throws IOException
      *             the io exception
      */
-    @Preview(ZZZAX)
     public boolean getRequiredSignatures() throws IOException {
         return requester().withUrlPath(url + REQUIRE_SIGNATURES_URI).fetch(RequiredSignatures.class).enabled;
     }
@@ -117,13 +204,165 @@ public class GHBranchProtection extends GitHubInteractiveObject {
     }
 
     private Requester requester() {
-        return root().createRequest().withPreview(ZZZAX);
+        return root().createRequest();
+    }
+
+    /**
+     * The type AllowDeletions.
+     */
+    public static class AllowDeletions {
+
+        /**
+         * Create default AllowDeletions instance
+         */
+        public AllowDeletions() {
+        }
+
+        @JsonProperty
+        private boolean enabled;
+
+        /**
+         * Is enabled boolean.
+         *
+         * @return the boolean
+         */
+        public boolean isEnabled() {
+            return enabled;
+        }
+    }
+
+    /**
+     * The type Check.
+     */
+    public static class Check {
+        private String context;
+
+        @JsonInclude(JsonInclude.Include.NON_NULL)
+        private Integer appId;
+
+        /**
+         * no-arg constructor for the serializer
+         */
+        public Check() {
+        }
+
+        /**
+         * Regular constructor for use in user business logic
+         *
+         * @param context
+         *            the context string of the check
+         * @param appId
+         *            the application ID the check is supposed to come from. Pass "-1" to explicitly allow any app to
+         *            set the status. Pass "null" to automatically select the GitHub App that has recently provided this
+         *            check.
+         */
+        public Check(String context, Integer appId) {
+            this.context = context;
+            this.appId = appId;
+        }
+
+        /**
+         * The context string of the check
+         *
+         * @return the string
+         */
+        public String getContext() {
+            return context;
+        }
+
+        /**
+         * The application ID the check is supposed to come from. The value "-1" indicates "any source".
+         *
+         * @return the integer
+         */
+        public Integer getAppId() {
+            return appId;
+        }
+    }
+
+    /**
+     * The type AllowForcePushes.
+     */
+    public static class AllowForcePushes {
+
+        /**
+         * Create default AllowForcePushes instance
+         */
+        public AllowForcePushes() {
+        }
+
+        @JsonProperty
+        private boolean enabled;
+
+        /**
+         * Is enabled boolean.
+         *
+         * @return the boolean
+         */
+        public boolean isEnabled() {
+            return enabled;
+        }
+    }
+
+    /**
+     * The type AllowForkSyncing.
+     */
+    public static class AllowForkSyncing {
+
+        /**
+         * Create default AllowForkSyncing instance
+         */
+        public AllowForkSyncing() {
+        }
+
+        @JsonProperty
+        private boolean enabled;
+
+        /**
+         * Is enabled boolean.
+         *
+         * @return the boolean
+         */
+        public boolean isEnabled() {
+            return enabled;
+        }
+    }
+
+    /**
+     * The type BlockCreations.
+     */
+    public static class BlockCreations {
+
+        /**
+         * Create default BlockCreations instance
+         */
+        public BlockCreations() {
+        }
+
+        @JsonProperty
+        private boolean enabled;
+
+        /**
+         * Is enabled boolean.
+         *
+         * @return the boolean
+         */
+        public boolean isEnabled() {
+            return enabled;
+        }
     }
 
     /**
      * The type EnforceAdmins.
      */
     public static class EnforceAdmins {
+
+        /**
+         * Create default EnforceAdmins instance
+         */
+        public EnforceAdmins() {
+        }
+
         @JsonProperty
         private boolean enabled;
 
@@ -150,15 +389,99 @@ public class GHBranchProtection extends GitHubInteractiveObject {
     }
 
     /**
+     * The type LockBranch.
+     */
+    public static class LockBranch {
+
+        /**
+         * Create default LockBranch instance
+         */
+        public LockBranch() {
+        }
+
+        @JsonProperty
+        private boolean enabled;
+
+        /**
+         * Is enabled boolean.
+         *
+         * @return the boolean
+         */
+        public boolean isEnabled() {
+            return enabled;
+        }
+    }
+
+    /**
+     * The type RequiredConversationResolution.
+     */
+    public static class RequiredConversationResolution {
+
+        /**
+         * Create default RequiredConversationResolution instance
+         */
+        public RequiredConversationResolution() {
+        }
+
+        @JsonProperty
+        private boolean enabled;
+
+        /**
+         * Is enabled boolean.
+         *
+         * @return the boolean
+         */
+        public boolean isEnabled() {
+            return enabled;
+        }
+    }
+
+    /**
+     * The type RequiredLinearHistory.
+     */
+    public static class RequiredLinearHistory {
+
+        /**
+         * Create default RequiredLinearHistory instance
+         */
+        public RequiredLinearHistory() {
+        }
+
+        @JsonProperty
+        private boolean enabled;
+
+        /**
+         * Is enabled boolean.
+         *
+         * @return the boolean
+         */
+        public boolean isEnabled() {
+            return enabled;
+        }
+    }
+
+    /**
      * The type RequiredReviews.
      */
     public static class RequiredReviews {
+
+        /**
+         * Create default RequiredReviews instance
+         */
+        public RequiredReviews() {
+        }
+
         @JsonProperty("dismissal_restrictions")
         private Restrictions dismissalRestriction;
 
+        @JsonProperty
         private boolean dismissStaleReviews;
 
+        @JsonProperty
         private boolean requireCodeOwnerReviews;
+
+        @JsonProperty
+        private boolean requireLastPushApproval;
 
         @JsonProperty("required_approving_review_count")
         private int requiredReviewers;
@@ -203,6 +526,15 @@ public class GHBranchProtection extends GitHubInteractiveObject {
         }
 
         /**
+         * Is require last push approval boolean.
+         *
+         * @return the boolean
+         */
+        public boolean isRequireLastPushApproval() {
+            return requireLastPushApproval;
+        }
+
+        /**
          * Gets required reviewers.
          *
          * @return the required reviewers
@@ -242,8 +574,18 @@ public class GHBranchProtection extends GitHubInteractiveObject {
      * The type RequiredStatusChecks.
      */
     public static class RequiredStatusChecks {
+
+        /**
+         * Create default RequiredStatusChecks instance
+         */
+        public RequiredStatusChecks() {
+        }
+
         @JsonProperty
         private Collection<String> contexts;
+
+        @JsonProperty
+        private Collection<Check> checks;
 
         @JsonProperty
         private boolean strict;
@@ -258,6 +600,15 @@ public class GHBranchProtection extends GitHubInteractiveObject {
          */
         public Collection<String> getContexts() {
             return Collections.unmodifiableCollection(contexts);
+        }
+
+        /**
+         * Gets checks.
+         *
+         * @return the checks
+         */
+        public Collection<Check> getChecks() {
+            return Collections.unmodifiableCollection(checks);
         }
 
         /**
@@ -283,6 +634,13 @@ public class GHBranchProtection extends GitHubInteractiveObject {
      * The type Restrictions.
      */
     public static class Restrictions {
+
+        /**
+         * Create default Restrictions instance
+         */
+        public Restrictions() {
+        }
+
         @JsonProperty
         private Collection<GHTeam> teams;
 

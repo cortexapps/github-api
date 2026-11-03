@@ -1,7 +1,9 @@
 package org.kohsuke.github;
 
 import com.fasterxml.jackson.databind.JsonMappingException;
+import com.google.common.collect.Sets;
 import org.apache.commons.io.IOUtils;
+import org.junit.Assert;
 import org.junit.Test;
 import org.kohsuke.github.GHCheckRun.Conclusion;
 import org.kohsuke.github.GHOrganization.RepositoryRole;
@@ -12,18 +14,15 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.time.LocalDate;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static org.hamcrest.Matchers.*;
 import static org.hamcrest.core.IsInstanceOf.instanceOf;
 import static org.junit.Assert.assertThrows;
-import static org.kohsuke.github.GHVerification.Reason.*;
+import static org.kohsuke.github.GHVerification.Reason.GPGVERIFY_ERROR;
+import static org.kohsuke.github.GHVerification.Reason.UNKNOWN_SIGNATURE_TYPE;
 
 // TODO: Auto-generated Javadoc
 /**
@@ -32,6 +31,12 @@ import static org.kohsuke.github.GHVerification.Reason.*;
  * @author Liam Newman
  */
 public class GHRepositoryTest extends AbstractGitHubWireMockTest {
+
+    /**
+     * Create default GHRepositoryTest instance
+     */
+    public GHRepositoryTest() {
+    }
 
     /**
      * Gets the repository.
@@ -46,6 +51,36 @@ public class GHRepositoryTest extends AbstractGitHubWireMockTest {
 
     private GHRepository getRepository(GitHub gitHub) throws IOException {
         return gitHub.getOrganization("hub4j-test-org").getRepository("github-api");
+    }
+
+    /**
+     * Test sync of fork
+     *
+     * @throws IOException
+     *             Signals that an I/O exception has occurred.
+     */
+    @Test
+    public void sync() throws IOException {
+        GHRepository r = getRepository();
+        GHBranchSync sync = r.sync("main");
+        assertThat(sync.getOwner().getFullName(), equalTo("hub4j-test-org/github-api"));
+        assertThat(sync.getMessage(), equalTo("Successfully fetched and fast-forwarded from upstream github-api:main"));
+        assertThat(sync.getMergeType(), equalTo("fast-forward"));
+        assertThat(sync.getBaseBranch(), equalTo("github-api:main"));
+    }
+
+    /**
+     * Test sync of repository not a fork
+     *
+     * @throws IOException
+     *             Signals that an I/O exception has occurred.
+     */
+    @Test(expected = HttpException.class)
+    public void syncNoFork() throws IOException {
+        GHRepository r = getRepository();
+        GHBranchSync sync = r.sync("main");
+        fail("Should have thrown an exception");
+
     }
 
     /**
@@ -96,6 +131,7 @@ public class GHRepositoryTest extends AbstractGitHubWireMockTest {
         assertThat(r.isAllowMergeCommit(), is(true));
         assertThat(r.isAllowRebaseMerge(), is(true));
         assertThat(r.isAllowSquashMerge(), is(true));
+        assertThat(r.isAllowForking(), is(false));
 
         String httpTransport = "https://github.com/hub4j-test-org/temp-testGetters.git";
         assertThat(r.getHttpTransportUrl(), equalTo(httpTransport));
@@ -310,6 +346,57 @@ public class GHRepositoryTest extends AbstractGitHubWireMockTest {
     }
 
     /**
+     * Tests the creation of repositories with alternating visibilities for orgs.
+     *
+     * @throws Exception
+     *             the exception
+     */
+    @Test
+    public void testCreateVisibilityForOrganization() throws Exception {
+        GHOrganization organization = gitHub.getOrganization(GITHUB_API_TEST_ORG);
+
+        // can not test for internal, as test org is not assigned to an enterprise
+        for (Visibility visibility : Sets.newHashSet(Visibility.PUBLIC, Visibility.PRIVATE)) {
+            String repoName = String.format("test-repo-visibility-%s", visibility.toString());
+            GHRepository repository = organization.createRepository(repoName).visibility(visibility).create();
+            try {
+                assertThat(repository.getVisibility(), is(visibility));
+                assertThat(organization.getRepository(repoName).getVisibility(), is(visibility));
+            } finally {
+                repository.delete();
+            }
+        }
+    }
+
+    /**
+     * Tests the creation of repositories with alternating visibilities for users.
+     *
+     * @throws Exception
+     *             the exception
+     */
+    @Test
+    public void testCreateVisibilityForUser() throws Exception {
+
+        GHUser myself = gitHub.getMyself();
+
+        // can not test for internal, as test org is not assigned to an enterprise
+        for (Visibility visibility : Sets.newHashSet(Visibility.PUBLIC, Visibility.PRIVATE)) {
+            String repoName = String.format("test-repo-visibility-%s", visibility.toString());
+            boolean isPrivate = visibility.equals(Visibility.PRIVATE);
+            GHRepository repository = gitHub.createRepository(repoName)
+                    .private_(isPrivate)
+                    .visibility(visibility)
+                    .create();
+            try {
+                assertThat(repository.getVisibility(), is(visibility));
+                assertThat(myself.getRepository(repoName).getVisibility(), is(visibility));
+            } finally {
+                repository.delete();
+            }
+        }
+    }
+
+    /**
      * Test update repository.
      *
      * @throws Exception
@@ -327,6 +414,7 @@ public class GHRepositoryTest extends AbstractGitHubWireMockTest {
         GHRepository updated = builder.allowRebaseMerge(false)
                 .allowSquashMerge(false)
                 .deleteBranchOnMerge(true)
+                .allowForking(true)
                 .description(description)
                 .downloads(false)
                 .downloads(false)
@@ -341,6 +429,7 @@ public class GHRepositoryTest extends AbstractGitHubWireMockTest {
         assertThat(updated.isAllowRebaseMerge(), is(false));
         assertThat(updated.isAllowSquashMerge(), is(false));
         assertThat(updated.isDeleteBranchOnMerge(), is(true));
+        assertThat(updated.isAllowForking(), is(true));
         assertThat(updated.isPrivate(), is(true));
         assertThat(updated.hasDownloads(), is(false));
         assertThat(updated.hasIssues(), is(false));
@@ -419,6 +508,31 @@ public class GHRepositoryTest extends AbstractGitHubWireMockTest {
     }
 
     /**
+     * List contributors.
+     *
+     * @throws IOException
+     *             Signals that an I/O exception has occurred.
+     */
+    @Test
+    public void listContributorsAnon() throws IOException {
+        GHRepository r = gitHub.getOrganization("hub4j").getRepository("github-api");
+        int i = 0;
+        boolean kohsuke = false;
+
+        for (GHRepository.Contributor c : r.listContributors(true)) {
+            if (c.getType().equals("Anonymous")) {
+                assertThat(c.getContributions(), is(3));
+                kohsuke = true;
+            }
+            if (++i > 1) {
+                break;
+            }
+        }
+
+        assertThat(kohsuke, is(true));
+    }
+
+    /**
      * Gets the permission.
      *
      * @throws Exception
@@ -440,7 +554,8 @@ public class GHRepositoryTest extends AbstractGitHubWireMockTest {
         }
 
         if (false) {
-            // can't easily test this; there's no private repository visible to the test user
+            // can't easily test this; there's no private repository visible to the test
+            // user
             r = gitHub.getOrganization("cloudbees").getRepository("private-repo-not-writable-by-me");
             try {
                 r.getPermission("jglick");
@@ -1106,7 +1221,8 @@ public class GHRepositoryTest extends AbstractGitHubWireMockTest {
         assertThat(ghRefsWithPrefix.get(0).getRef(), equalTo(ghRefs.get(0).getRef()));
 
         // git/refs/heads/gh-pages
-        // passing a specific ref to listRefs will fail to parse due to returning a single item not an array
+        // passing a specific ref to listRefs will fail to parse due to returning a
+        // single item not an array
         try {
             ghRefs = repo.listRefs("heads/gh-pages").toList();
             fail();
@@ -1345,6 +1461,31 @@ public class GHRepositoryTest extends AbstractGitHubWireMockTest {
     }
 
     /**
+     * Filter out the checks from a reference
+     *
+     * @throws Exception
+     *             the exception
+     */
+    @Test
+    public void getCheckRunsWithParams() throws Exception {
+        final int expectedCount = 1;
+        // Use github-api repository as it has checks set up
+        final Map<String, Object> params = new HashMap<>(1);
+        params.put("check_name", "build-only (Java 17)");
+        PagedIterable<GHCheckRun> checkRuns = gitHub.getOrganization("hub4j")
+                .getRepository("github-api")
+                .getCheckRuns("54d60fbb53b4efa19f3081417bfb6a1de30c55e4", params);
+
+        // Check if the checkruns are all succeeded and if we got all of them
+        int checkRunsCount = 0;
+        for (GHCheckRun checkRun : checkRuns) {
+            assertThat(checkRun.getConclusion(), equalTo(Conclusion.SUCCESS));
+            checkRunsCount++;
+        }
+        assertThat(checkRunsCount, equalTo(expectedCount));
+    }
+
+    /**
      * Gets the last commit status.
      *
      * @throws Exception
@@ -1537,5 +1678,306 @@ public class GHRepositoryTest extends AbstractGitHubWireMockTest {
     public void createSecret() throws Exception {
         GHRepository repo = getTempRepository();
         repo.createSecret("secret", "encrypted", "public");
+    }
+
+    /**
+     * Test to check star method by verifying stargarzer count.
+     *
+     * @throws Exception
+     *             the exception
+     */
+    @Test
+    public void starTest() throws Exception {
+        String owner = "hub4j-test-org";
+        GHRepository repository = getRepository();
+        assertThat(repository.getOwner().getLogin(), equalTo(owner));
+        assertThat(repository.getStargazersCount(), is(1));
+        repository.star();
+        assertThat(repository.listStargazers2().toList().size(), is(2));
+        repository.unstar();
+        assertThat(repository.listStargazers().toList().size(), is(1));
+    }
+
+    /**
+     * Test to check getRepoVariable method.
+     *
+     * @throws Exception
+     *             the exception
+     */
+    @Test
+    public void testRepoActionVariable() throws Exception {
+        GHRepository repository = getRepository();
+        GHRepositoryVariable variable = repository.getRepoVariable("myvar");
+        assertThat(variable.getValue(), is("this is my var value"));
+    }
+
+    /**
+     * Test create repo action variable.
+     *
+     * @throws IOException
+     *             the exception
+     */
+    @Test
+    public void testCreateRepoActionVariable() throws IOException {
+        GHRepository repository = getRepository();
+        repository.createVariable("MYNEWVARIABLE", "mynewvalue");
+        GHRepositoryVariable variable = repository.getVariable("mynewvariable");
+        assertThat(variable.getName(), is("MYNEWVARIABLE"));
+        assertThat(variable.getValue(), is("mynewvalue"));
+    }
+
+    /**
+     * Test update repo action variable.
+     *
+     * @throws IOException
+     *             the exception
+     */
+    @Test
+    public void testUpdateRepoActionVariable() throws IOException {
+        GHRepository repository = getRepository();
+        GHRepositoryVariable variable = repository.getVariable("MYNEWVARIABLE");
+        variable.set().value("myupdatevalue");
+        variable = repository.getVariable("MYNEWVARIABLE");
+        assertThat(variable.getValue(), is("myupdatevalue"));
+    }
+
+    /**
+     * Test delete repo action variable.
+     *
+     * @throws IOException
+     *             the exception
+     */
+    @Test
+    public void testDeleteRepoActionVariable() throws IOException {
+        GHRepository repository = getRepository();
+        GHRepositoryVariable variable = repository.getVariable("mynewvariable");
+        variable.delete();
+        Assert.assertThrows(GHFileNotFoundException.class, () -> repository.getVariable("mynewvariable"));
+    }
+
+    /**
+     * Test demoing the issue with a user having the maintain permission on a repository.
+     *
+     * Test checking the permission fallback mechanism in case the Github API changes. The test was recorded at a time a
+     * new permission was added by mistake. If a re-recording it is needed, you'll like have to manually edit the
+     * generated mocks to get a non existing permission See
+     * https://github.com/hub4j/github-api/issues/1671#issuecomment-1577515662 for the details.
+     *
+     * @throws IOException
+     *             the exception
+     */
+    @Test
+    public void cannotRetrievePermissionMaintainUser() throws IOException {
+        GHRepository r = gitHub.getRepository("hub4j-test-org/maintain-permission-issue");
+        GHPermissionType permission = r.getPermission("alecharp");
+        assertThat(permission.toString(), is("UNKNOWN"));
+    }
+
+    /**
+     * Test searching for pull requests.
+     *
+     * @throws IOException
+     *             the exception
+     */
+    @Test
+    public void testSearchPullRequests() throws Exception {
+        GHRepository repository = gitHub.getRepository("kgromov/temp-testSearchPullRequests");
+        // prepare branches
+        String mainHead = repository.getRef("heads/main").getObject().getSha();
+        GHRef draftBranch = repository.createRef("refs/heads/draft", mainHead);
+        repository.createContent()
+                .content("Draft content")
+                .message("test search")
+                .path(draftBranch.getRef())
+                .branch(draftBranch.getRef())
+                .commit();
+        GHRef branchToMerge = repository.createRef("refs/heads/branchToMerge", mainHead);
+        GHContentUpdateResponse commit = repository.createContent()
+                .content("Empty content")
+                .message("test search")
+                .path(branchToMerge.getRef())
+                .branch(branchToMerge.getRef())
+                .commit();
+        // prepare pull requests
+        GHPullRequest draftPR = repository.createPullRequest("Temp draft PR",
+                draftBranch.getRef(),
+                "refs/heads/main",
+                "Hello, draft PR",
+                true,
+                true);
+        draftPR.setLabels("test");
+        GHPullRequest mergedPR = repository
+                .createPullRequest("Temp merged PR", branchToMerge.getRef(), "refs/heads/main", "Hello, merged PR");
+        mergedPR.setLabels("test");
+        GHMyself myself = gitHub.getMyself();
+        mergedPR.assignTo(myself);
+        mergedPR.comment("@" + myself.getLogin() + " approved");
+        mergedPR.merge("Merged test PR");
+        Thread.sleep(1000);
+
+        // search by states
+        GHPullRequestSearchBuilder search = repository.searchPullRequests().isOpen().isDraft();
+        PagedSearchIterable<GHPullRequest> searchResult = search.list();
+        this.verifySingleResult(searchResult, draftPR);
+
+        search = repository.searchPullRequests().isClosed().isMerged();
+        searchResult = search.list();
+        this.verifySingleResult(searchResult, mergedPR);
+
+        // search by dates
+        LocalDate from = LocalDate.parse("2023-11-01");
+        LocalDate to = LocalDate.parse("2023-11-11");
+        LocalDate afterRange = LocalDate.parse("2023-11-12");
+
+        search = repository.searchPullRequests()
+                .created(from, to)
+                .updated(from, to)
+                .sort(GHPullRequestSearchBuilder.Sort.UPDATED);
+        searchResult = search.list();
+        this.verifyPluralResult(searchResult, mergedPR, draftPR);
+
+        search = repository.searchPullRequests().merged(from, to).closed(from, to);
+        searchResult = search.list();
+        this.verifySingleResult(searchResult, mergedPR);
+
+        search = repository.searchPullRequests().created(to).updated(to).closed(to).merged(to);
+        searchResult = search.list();
+        this.verifySingleResult(searchResult, mergedPR);
+
+        search = repository.searchPullRequests()
+                .createdAfter(from, false)
+                .updatedAfter(from, false)
+                .mergedAfter(from, true)
+                .closedAfter(from, true);
+        searchResult = search.list();
+        this.verifySingleResult(searchResult, mergedPR);
+
+        search = repository.searchPullRequests()
+                .createdBefore(afterRange, false)
+                .updatedBefore(afterRange, false)
+                .closedBefore(afterRange, true)
+                .mergedBefore(afterRange, false);
+        searchResult = search.list();
+        this.verifySingleResult(searchResult, mergedPR);
+
+        // search by version control
+        Map<String, GHBranch> branches = repository.getBranches();
+        search = repository.searchPullRequests()
+                .base(branches.get("main"))
+                .head(branches.get("branchToMerge"))
+                .commit(commit.getCommit().getSha());
+        searchResult = search.list();
+        this.verifySingleResult(searchResult, mergedPR);
+
+        // search by remaining filters
+        search = repository.searchPullRequests()
+                .titleLike("Temp")
+                .sort(GHPullRequestSearchBuilder.Sort.CREATED)
+                .order(GHDirection.ASC);
+        searchResult = search.list();
+        this.verifyPluralResult(searchResult, draftPR, mergedPR);
+
+        search = repository.searchPullRequests().inLabels(Arrays.asList("test")).order(GHDirection.DESC);
+        searchResult = search.list();
+        this.verifyPluralResult(searchResult, mergedPR, draftPR);
+
+        search = repository.searchPullRequests().assigned(myself).mentions(myself);
+        searchResult = search.list();
+        this.verifySingleResult(searchResult, mergedPR);
+    }
+
+    /**
+     * Test getTopReferralPaths.
+     *
+     * @throws Exception
+     *             the exception
+     */
+    @Test
+    public void testGetTopReferralPaths() throws Exception {
+        GHRepository repository = gitHub.getRepository("ihrigb/node-doorbird");
+        List<GHRepositoryTrafficTopReferralPath> referralPaths = repository.getTopReferralPaths();
+        assertThat(referralPaths.size(), greaterThan(0));
+    }
+
+    /**
+     * Test getTopReferralSources.
+     *
+     * @throws Exception
+     *             the exception
+     */
+    @Test
+    public void testGetTopReferralSources() throws Exception {
+        GHRepository repository = gitHub.getRepository("ihrigb/node-doorbird");
+        List<GHRepositoryTrafficTopReferralSources> referralSources = repository.getTopReferralSources();
+        assertThat(referralSources.size(), greaterThan(0));
+    }
+
+    /**
+     * Test getRulesForBranch.
+     *
+     * @throws Exception
+     *             the exception
+     */
+    @Test
+    public void testGetRulesForBranch() throws Exception {
+        GHRepository repository = gitHub.getRepository("ihrigb/node-doorbird");
+        List<GHRepositoryRule> rules = repository.listRulesForBranch("main").toList();
+        assertThat(rules.size(), equalTo(3));
+
+        GHRepositoryRule rule = rules.get(0);
+        assertThat(rule.getType(), is(equalTo(GHRepositoryRule.Type.DELETION)));
+        assertThat(rule.getRulesetSourceType(), is(equalTo(GHRepositoryRule.RulesetSourceType.REPOSITORY)));
+        assertThat(rule.getRulesetSource(), is(equalTo("ihrigb/node-doorbird")));
+        assertThat(rule.getRulesetId(), is(equalTo(1170520L)));
+
+        rule = rules.get(1);
+        assertThat(rule.getType(), is(equalTo(GHRepositoryRule.Type.NON_FAST_FORWARD)));
+        assertThat(rule.getRulesetSourceType(), is(equalTo(GHRepositoryRule.RulesetSourceType.REPOSITORY)));
+        assertThat(rule.getRulesetSource(), is(equalTo("ihrigb/node-doorbird")));
+        assertThat(rule.getRulesetId(), is(equalTo(1170520L)));
+
+        rule = rules.get(2);
+        assertThat(rule.getType(), is(equalTo(GHRepositoryRule.Type.PULL_REQUEST)));
+        assertThat(rule.getRulesetSourceType(), is(equalTo(GHRepositoryRule.RulesetSourceType.REPOSITORY)));
+        assertThat(rule.getRulesetSource(), is(equalTo("ihrigb/node-doorbird")));
+        assertThat(rule.getRulesetId(), is(equalTo(1170520L)));
+
+        // check parameters
+        assertThat(rule.getParameter(GHRepositoryRule.Parameters.NEGATE).isPresent(), is(equalTo(false)));
+        assertThat(rule.getParameter(GHRepositoryRule.Parameters.REQUIRED_APPROVING_REVIEW_COUNT).get(),
+                is(equalTo(1)));
+        assertThat(rule.getParameter(GHRepositoryRule.Parameters.DISMISS_STALE_REVIEWS_ON_PUSH).get(),
+                is(equalTo(true)));
+        assertThat(rule.getParameter(GHRepositoryRule.Parameters.REQUIRE_CODE_OWNER_REVIEW).get(), is(equalTo(false)));
+    }
+
+    /**
+     * Test getVulnerabilityAlerts.
+     *
+     * @throws Exception
+     *             the exception
+     */
+    @Test
+    public void testIsVulnerabilityAlertsEnabled() throws Exception {
+        GHRepository repository = gitHub.getRepository("ihrigb/node-doorbird");
+        assertThat(repository.isVulnerabilityAlertsEnabled(), is(true));
+    }
+
+    private void verifyEmptyResult(PagedSearchIterable<GHPullRequest> searchResult) {
+        assertThat(searchResult.getTotalCount(), is(0));
+    }
+
+    private void verifySingleResult(PagedSearchIterable<GHPullRequest> searchResult, GHPullRequest expectedPR)
+            throws IOException {
+        assertThat(searchResult.getTotalCount(), is(1));
+        assertThat(searchResult.toList().get(0).getNumber(), is(expectedPR.getNumber()));
+    }
+
+    private void verifyPluralResult(PagedSearchIterable<GHPullRequest> searchResult,
+            GHPullRequest expectedPR1,
+            GHPullRequest expectedPR2) throws IOException {
+        assertThat(searchResult.getTotalCount(), is(2));
+        assertThat(searchResult.toList().get(0).getNumber(), is(expectedPR1.getNumber()));
+        assertThat(searchResult.toList().get(1).getNumber(), is(expectedPR2.getNumber()));
     }
 }

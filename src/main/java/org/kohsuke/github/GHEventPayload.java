@@ -1,10 +1,12 @@
 package org.kohsuke.github;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSetter;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 import java.io.IOException;
 import java.io.Reader;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
@@ -143,6 +145,13 @@ public abstract class GHEventPayload extends GitHubInteractiveObject {
      * @see <a href="https://docs.github.com/en/rest/reference/checks#check-runs">Check Runs</a>
      */
     public static class CheckRun extends GHEventPayload {
+
+        /**
+         * Create default CheckRun instance
+         */
+        public CheckRun() {
+        }
+
         private int number;
         private GHCheckRun checkRun;
         private GHRequestedAction requestedAction;
@@ -226,6 +235,13 @@ public abstract class GHEventPayload extends GitHubInteractiveObject {
      * @see <a href="https://docs.github.com/en/rest/reference/checks#check-suites">Check Suites</a>
      */
     public static class CheckSuite extends GHEventPayload {
+
+        /**
+         * Create default CheckSuite instance
+         */
+        public CheckSuite() {
+        }
+
         private GHCheckSuite checkSuite;
 
         /**
@@ -265,16 +281,53 @@ public abstract class GHEventPayload extends GitHubInteractiveObject {
      * @see <a href="https://docs.github.com/en/rest/reference/apps#installations">GitHub App Installation</a>
      */
     public static class Installation extends GHEventPayload {
-        private List<GHRepository> repositories;
 
         /**
-         * Gets repositories.
+         * Create default Installation instance
+         */
+        public Installation() {
+        }
+
+        private List<Repository> repositories;
+        private List<GHRepository> ghRepositories = null;
+
+        /**
+         * Gets repositories. For the "deleted" action please rather call {@link #getRawRepositories()}
          *
          * @return the repositories
          */
         public List<GHRepository> getRepositories() {
+            if ("deleted".equalsIgnoreCase(getAction())) {
+                throw new IllegalStateException("Can't call #getRepositories() on Installation event "
+                        + "with 'deleted' action. Call #getRawRepositories() instead.");
+            }
+
+            if (ghRepositories == null) {
+                ghRepositories = new ArrayList<>(repositories.size());
+                try {
+                    for (Repository singleRepo : repositories) {
+                        // populate each repository
+                        // the repository information provided here is so limited
+                        // as to be unusable without populating, so we do it eagerly
+                        ghRepositories.add(this.root().getRepositoryById(singleRepo.getId()));
+                    }
+                } catch (IOException e) {
+                    throw new GHException("Failed to refresh repositories", e);
+                }
+            }
+
+            return Collections.unmodifiableList(ghRepositories);
+        }
+
+        /**
+         * Returns a list of raw, unpopulated repositories. Useful when calling from within Installation event with
+         * action "deleted". You can't fetch the info for repositories of an already deleted installation.
+         *
+         * @return the list of raw Repository records
+         */
+        public List<Repository> getRawRepositories() {
             return Collections.unmodifiableList(repositories);
-        };
+        }
 
         /**
          * Late bind.
@@ -286,17 +339,71 @@ public abstract class GHEventPayload extends GitHubInteractiveObject {
                         "Expected installation payload, but got something else. Maybe we've got another type of event?");
             }
             super.lateBind();
-            if (repositories != null && !repositories.isEmpty()) {
-                try {
-                    for (GHRepository singleRepo : repositories) {
-                        // populate each repository
-                        // the repository information provided here is so limited
-                        // as to be unusable without populating, so we do it eagerly
-                        singleRepo.populate();
-                    }
-                } catch (IOException e) {
-                    throw new GHException("Failed to refresh repositories", e);
-                }
+        }
+
+        /**
+         * A special minimal implementation of a {@link GHRepository} which contains only fields from "Properties of
+         * repositories" from <a href=
+         * "https://docs.github.com/en/webhooks-and-events/webhooks/webhook-events-and-payloads#installation">here</a>
+         */
+        public static class Repository {
+
+            /**
+             * Create default Repository instance
+             */
+            public Repository() {
+            }
+
+            private long id;
+            private String fullName;
+            private String name;
+            private String nodeId;
+            @JsonProperty(value = "private")
+            private boolean isPrivate;
+
+            /**
+             * Get the id.
+             *
+             * @return the id
+             */
+            public long getId() {
+                return id;
+            }
+
+            /**
+             * Gets the full name.
+             *
+             * @return the full name
+             */
+            public String getFullName() {
+                return fullName;
+            }
+
+            /**
+             * Gets the name.
+             *
+             * @return the name
+             */
+            public String getName() {
+                return name;
+            }
+
+            /**
+             * Gets the node id.
+             *
+             * @return the node id
+             */
+            public String getNodeId() {
+                return nodeId;
+            }
+
+            /**
+             * Gets the repository private flag.
+             *
+             * @return whether the repository is private
+             */
+            public boolean isPrivate() {
+                return isPrivate;
             }
         }
     }
@@ -310,6 +417,13 @@ public abstract class GHEventPayload extends GitHubInteractiveObject {
      * @see <a href="https://docs.github.com/en/rest/reference/apps#installations">GitHub App installation</a>
      */
     public static class InstallationRepositories extends GHEventPayload {
+
+        /**
+         * Create default InstallationRepositories instance
+         */
+        public InstallationRepositories() {
+        }
+
         private String repositorySelection;
         private List<GHRepository> repositoriesAdded;
         private List<GHRepository> repositoriesRemoved;
@@ -379,6 +493,13 @@ public abstract class GHEventPayload extends GitHubInteractiveObject {
      */
     @SuppressFBWarnings(value = { "NP_UNWRITTEN_FIELD" }, justification = "JSON API")
     public static class PullRequest extends GHEventPayload {
+
+        /**
+         * Create default PullRequest instance
+         */
+        public PullRequest() {
+        }
+
         private int number;
         private GHPullRequest pullRequest;
         private GHLabel label;
@@ -448,6 +569,13 @@ public abstract class GHEventPayload extends GitHubInteractiveObject {
      * @see <a href="https://docs.github.com/en/rest/reference/pulls#reviews">Pull Request Reviews</a>
      */
     public static class PullRequestReview extends GHEventPayload {
+
+        /**
+         * Create default PullRequestReview instance
+         */
+        public PullRequestReview() {
+        }
+
         private GHPullRequestReview review;
         private GHPullRequest pullRequest;
 
@@ -499,6 +627,12 @@ public abstract class GHEventPayload extends GitHubInteractiveObject {
     @SuppressFBWarnings(value = "UWF_UNWRITTEN_FIELD", justification = "JSON API")
     public static class CommentChanges {
 
+        /**
+         * Create default CommentChanges instance
+         */
+        public CommentChanges() {
+        }
+
         private GHFrom body;
 
         /**
@@ -514,6 +648,13 @@ public abstract class GHEventPayload extends GitHubInteractiveObject {
          * Wrapper for changed values.
          */
         public static class GHFrom {
+
+            /**
+             * Create default GHFrom instance
+             */
+            public GHFrom() {
+            }
+
             private String from;
 
             /**
@@ -536,6 +677,13 @@ public abstract class GHEventPayload extends GitHubInteractiveObject {
      * @see <a href="https://docs.github.com/en/rest/reference/pulls#review-comments">Pull Request Review Comments</a>
      */
     public static class PullRequestReviewComment extends GHEventPayload {
+
+        /**
+         * Create default PullRequestReviewComment instance
+         */
+        public PullRequestReviewComment() {
+        }
+
         private GHPullRequestReviewComment comment;
         private GHPullRequest pullRequest;
         private CommentChanges changes;
@@ -596,6 +744,13 @@ public abstract class GHEventPayload extends GitHubInteractiveObject {
      * @see <a href="https://docs.github.com/en/rest/reference/issues#comments">Issues Comments</a>
      */
     public static class Issue extends GHEventPayload {
+
+        /**
+         * Create default Issue instance
+         */
+        public Issue() {
+        }
+
         private GHIssue issue;
 
         private GHLabel label;
@@ -666,6 +821,13 @@ public abstract class GHEventPayload extends GitHubInteractiveObject {
      * @see <a href="https://docs.github.com/en/rest/reference/issues#comments">Issue Comments</a>
      */
     public static class IssueComment extends GHEventPayload {
+
+        /**
+         * Create default IssueComment instance
+         */
+        public IssueComment() {
+        }
+
         private GHIssueComment comment;
         private GHIssue issue;
         private CommentChanges changes;
@@ -746,6 +908,13 @@ public abstract class GHEventPayload extends GitHubInteractiveObject {
      * @see <a href="https://docs.github.com/en/rest/reference/repos#comments">Comments</a>
      */
     public static class CommitComment extends GHEventPayload {
+
+        /**
+         * Create default CommitComment instance
+         */
+        public CommitComment() {
+        }
+
         private GHCommitComment comment;
 
         /**
@@ -791,6 +960,13 @@ public abstract class GHEventPayload extends GitHubInteractiveObject {
      * @see <a href="https://docs.github.com/en/rest/reference/git">Git data</a>
      */
     public static class Create extends GHEventPayload {
+
+        /**
+         * Create default Create instance
+         */
+        public Create() {
+        }
+
         private String ref;
         private String refType;
         private String masterBranch;
@@ -843,6 +1019,13 @@ public abstract class GHEventPayload extends GitHubInteractiveObject {
      * @see <a href="https://docs.github.com/en/rest/reference/git">Git data</a>
      */
     public static class Delete extends GHEventPayload {
+
+        /**
+         * Create default Delete instance
+         */
+        public Delete() {
+        }
+
         private String ref;
         private String refType;
 
@@ -873,6 +1056,13 @@ public abstract class GHEventPayload extends GitHubInteractiveObject {
      * @see <a href="https://docs.github.com/en/rest/reference/repos#deployments">Deployments</a>
      */
     public static class Deployment extends GHEventPayload {
+
+        /**
+         * Create default Deployment instance
+         */
+        public Deployment() {
+        }
+
         private GHDeployment deployment;
 
         /**
@@ -919,6 +1109,13 @@ public abstract class GHEventPayload extends GitHubInteractiveObject {
      * @see <a href="https://docs.github.com/en/rest/reference/repos#deployments">Deployments</a>
      */
     public static class DeploymentStatus extends GHEventPayload {
+
+        /**
+         * Create default DeploymentStatus instance
+         */
+        public DeploymentStatus() {
+        }
+
         private GHDeploymentStatus deploymentStatus;
         private GHDeployment deployment;
 
@@ -988,6 +1185,13 @@ public abstract class GHEventPayload extends GitHubInteractiveObject {
      * @see <a href="https://docs.github.com/en/rest/reference/repos#forks">Forks</a>
      */
     public static class Fork extends GHEventPayload {
+
+        /**
+         * Create default Fork instance
+         */
+        public Fork() {
+        }
+
         private GHRepository forkee;
 
         /**
@@ -1020,6 +1224,13 @@ public abstract class GHEventPayload extends GitHubInteractiveObject {
      * event</a>
      */
     public static class Ping extends GHEventPayload {
+
+        /**
+         * Create default Ping instance
+         */
+        public Ping() {
+        }
+
     }
 
     /**
@@ -1029,6 +1240,13 @@ public abstract class GHEventPayload extends GitHubInteractiveObject {
      *      public event</a>
      */
     public static class Public extends GHEventPayload {
+
+        /**
+         * Create default Public instance
+         */
+        public Public() {
+        }
+
     }
 
     /**
@@ -1038,6 +1256,13 @@ public abstract class GHEventPayload extends GitHubInteractiveObject {
      *      event</a>
      */
     public static class Push extends GHEventPayload {
+
+        /**
+         * Create default Push instance
+         */
+        public Push() {
+        }
+
         private String head, before;
         private boolean created, deleted, forced;
         private String ref;
@@ -1170,6 +1395,13 @@ public abstract class GHEventPayload extends GitHubInteractiveObject {
          * The type Pusher.
          */
         public static class Pusher {
+
+            /**
+             * Create default Pusher instance
+             */
+            public Pusher() {
+            }
+
             private String name, email;
 
             /**
@@ -1219,6 +1451,13 @@ public abstract class GHEventPayload extends GitHubInteractiveObject {
          * Commit in a push. Note: sha is an alias for id.
          */
         public static class PushCommit {
+
+            /**
+             * Create default PushCommit instance
+             */
+            public PushCommit() {
+            }
+
             private GitUser author;
             private GitUser committer;
             private String url, sha, message, timestamp;
@@ -1332,6 +1571,13 @@ public abstract class GHEventPayload extends GitHubInteractiveObject {
     @SuppressFBWarnings(value = { "UWF_FIELD_NOT_INITIALIZED_IN_CONSTRUCTOR", "NP_UNWRITTEN_FIELD" },
             justification = "Constructed by JSON deserialization")
     public static class Release extends GHEventPayload {
+
+        /**
+         * Create default Release instance
+         */
+        public Release() {
+        }
+
         private GHRelease release;
 
         /**
@@ -1366,6 +1612,23 @@ public abstract class GHEventPayload extends GitHubInteractiveObject {
      */
     public static class Repository extends GHEventPayload {
 
+        /**
+         * Create default Repository instance
+         */
+        public Repository() {
+        }
+
+        private GHRepositoryChanges changes;
+
+        /**
+         * Get changes.
+         *
+         * @return GHRepositoryChanges
+         */
+        public GHRepositoryChanges getChanges() {
+            return changes;
+        }
+
     }
 
     /**
@@ -1376,6 +1639,13 @@ public abstract class GHEventPayload extends GitHubInteractiveObject {
      * @see <a href="https://docs.github.com/en/rest/reference/repos#statuses">Repository Statuses</a>
      */
     public static class Status extends GHEventPayload {
+
+        /**
+         * Create default Status instance
+         */
+        public Status() {
+        }
+
         private String context;
         private String description;
         private GHCommitState state;
@@ -1483,6 +1753,13 @@ public abstract class GHEventPayload extends GitHubInteractiveObject {
      *      trigger workflows</a>
      */
     public static class WorkflowDispatch extends GHEventPayload {
+
+        /**
+         * Create default WorkflowDispatch instance
+         */
+        public WorkflowDispatch() {
+        }
+
         private Map<String, Object> inputs;
         private String ref;
         private String workflow;
@@ -1524,6 +1801,13 @@ public abstract class GHEventPayload extends GitHubInteractiveObject {
      * @see <a href="https://docs.github.com/en/rest/reference/actions#workflow-runs">Actions Workflow Runs</a>
      */
     public static class WorkflowRun extends GHEventPayload {
+
+        /**
+         * Create default WorkflowRun instance
+         */
+        public WorkflowRun() {
+        }
+
         private GHWorkflowRun workflowRun;
         private GHWorkflow workflow;
 
@@ -1576,6 +1860,12 @@ public abstract class GHEventPayload extends GitHubInteractiveObject {
      */
     public static class WorkflowJob extends GHEventPayload {
 
+        /**
+         * Create default WorkflowJob instance
+         */
+        public WorkflowJob() {
+        }
+
         private GHWorkflowJob workflowJob;
 
         /**
@@ -1614,6 +1904,12 @@ public abstract class GHEventPayload extends GitHubInteractiveObject {
      */
     public static class Label extends GHEventPayload {
 
+        /**
+         * Create default Label instance
+         */
+        public Label() {
+        }
+
         private GHLabel label;
 
         private GHLabelChanges changes;
@@ -1639,14 +1935,20 @@ public abstract class GHEventPayload extends GitHubInteractiveObject {
     }
 
     /**
-     * A discussion was created, edited, deleted, pinned, unpinned, locked, unlocked, transferred, category_changed,
-     * answered, or unanswered.
+     * A discussion was closed, reopened, created, edited, deleted, pinned, unpinned, locked, unlocked, transferred,
+     * category_changed, answered, or unanswered.
      *
      * @see <a href=
      *      "https://docs.github.com/en/developers/webhooks-and-events/webhooks/webhook-events-and-payloads#discussion">
      *      discussion event</a>
      */
     public static class Discussion extends GHEventPayload {
+
+        /**
+         * Create default Discussion instance
+         */
+        public Discussion() {
+        }
 
         private GHRepositoryDiscussion discussion;
 
@@ -1674,6 +1976,46 @@ public abstract class GHEventPayload extends GitHubInteractiveObject {
     }
 
     /**
+     * A discussion comment was created, deleted, or edited.
+     *
+     * @see <a href=
+     *      "https://docs.github.com/en/developers/webhooks-and-events/webhooks/webhook-events-and-payloads#discussion_comment">
+     *      discussion event</a>
+     */
+    public static class DiscussionComment extends GHEventPayload {
+
+        /**
+         * Create default DiscussionComment instance
+         */
+        public DiscussionComment() {
+        }
+
+        private GHRepositoryDiscussion discussion;
+
+        private GHRepositoryDiscussionComment comment;
+
+        /**
+         * Gets discussion.
+         *
+         * @return the discussion
+         */
+        @SuppressFBWarnings(value = { "EI_EXPOSE_REP" }, justification = "Expected")
+        public GHRepositoryDiscussion getDiscussion() {
+            return discussion;
+        }
+
+        /**
+         * Gets discussion comment.
+         *
+         * @return the discussion
+         */
+        @SuppressFBWarnings(value = { "EI_EXPOSE_REP" }, justification = "Expected")
+        public GHRepositoryDiscussionComment getComment() {
+            return comment;
+        }
+    }
+
+    /**
      * A star was created or deleted on a repository.
      *
      * @see <a href=
@@ -1681,6 +2023,12 @@ public abstract class GHEventPayload extends GitHubInteractiveObject {
      *      event</a>
      */
     public static class Star extends GHEventPayload {
+
+        /**
+         * Create default Star instance
+         */
+        public Star() {
+        }
 
         private String starredAt;
 
@@ -1698,10 +2046,16 @@ public abstract class GHEventPayload extends GitHubInteractiveObject {
      * A project v2 item was archived, converted, created, edited, restored, deleted, or reordered.
      *
      * @see <a href=
-     *      "https://docs.github.com/en/developers/webhooks-and-events/webhooks/webhook-events-and-payloads#projects_v2_item">star
+     *      "https://docs.github.com/en/developers/webhooks-and-events/webhooks/webhook-events-and-payloads#projects_v2_item">projects_v2_item
      *      event</a>
      */
     public static class ProjectsV2Item extends GHEventPayload {
+
+        /**
+         * Create default ProjectsV2Item instance
+         */
+        public ProjectsV2Item() {
+        }
 
         private GHProjectsV2Item projectsV2Item;
         private GHProjectsV2ItemChanges changes;
@@ -1723,6 +2077,195 @@ public abstract class GHEventPayload extends GitHubInteractiveObject {
          */
         public GHProjectsV2ItemChanges getChanges() {
             return changes;
+        }
+    }
+
+    /**
+     * A team_add event was triggered.
+     *
+     * @see <a href="https://docs.github.com/en/webhooks/webhook-events-and-payloads#team_add">team_add event</a>
+     */
+    public static class TeamAdd extends GHEventPayload {
+
+        /**
+         * Create default TeamAdd instance
+         */
+        public TeamAdd() {
+        }
+
+        private GHTeam team;
+
+        /**
+         * Gets the team.
+         *
+         * @return the team
+         */
+        @SuppressFBWarnings(value = { "EI_EXPOSE_REP" }, justification = "Expected")
+        public GHTeam getTeam() {
+            return team;
+        }
+
+        /**
+         * Late bind.
+         */
+        @Override
+        void lateBind() {
+            if (team == null) {
+                throw new IllegalStateException(
+                        "Expected team payload, but got something else. Maybe we've got another type of event?");
+            }
+            super.lateBind();
+            GHOrganization organization = getOrganization();
+            if (organization == null) {
+                throw new IllegalStateException("Organization must not be null");
+            }
+            team.wrapUp(organization);
+        }
+    }
+
+    /**
+     * A team event was triggered.
+     *
+     * @see <a href="https://docs.github.com/en/webhooks/webhook-events-and-payloads#team">team event</a>
+     */
+    public static class Team extends GHEventPayload {
+
+        /**
+         * Create default Team instance
+         */
+        public Team() {
+        }
+
+        private GHTeam team;
+
+        private GHTeamChanges changes;
+
+        /**
+         * Gets the team.
+         *
+         * @return the team
+         */
+        @SuppressFBWarnings(value = { "EI_EXPOSE_REP" }, justification = "Expected")
+        public GHTeam getTeam() {
+            return team;
+        }
+
+        /**
+         * Gets the changes made to the team.
+         *
+         * @return the changes made to the team, null unless action is "edited".
+         */
+        public GHTeamChanges getChanges() {
+            return changes;
+        }
+
+        /**
+         * Late bind.
+         */
+        @Override
+        void lateBind() {
+            if (team == null) {
+                throw new IllegalStateException(
+                        "Expected team payload, but got something else. Maybe we've got another type of event?");
+            }
+            super.lateBind();
+            GHOrganization organization = getOrganization();
+            if (organization == null) {
+                throw new IllegalStateException("Organization must not be null");
+            }
+            team.wrapUp(organization);
+        }
+    }
+
+    /**
+     * A member event was triggered.
+     *
+     * @see <a href="https://docs.github.com/en/webhooks/webhook-events-and-payloads#member">member event</a>
+     */
+    public static class Member extends GHEventPayload {
+
+        /**
+         * Create default Member instance
+         */
+        public Member() {
+        }
+
+        private GHUser member;
+
+        private GHMemberChanges changes;
+
+        /**
+         * Gets the member.
+         *
+         * @return the member
+         */
+        @SuppressFBWarnings(value = { "EI_EXPOSE_REP" }, justification = "Expected")
+        public GHUser getMember() {
+            return member;
+        }
+
+        /**
+         * Gets the changes made to the member.
+         *
+         * @return the changes made to the member
+         */
+        public GHMemberChanges getChanges() {
+            return changes;
+        }
+    }
+
+    /**
+     * A membership event was triggered.
+     *
+     * @see <a href="https://docs.github.com/en/webhooks/webhook-events-and-payloads#membership">membership event</a>
+     */
+    public static class Membership extends GHEventPayload {
+
+        /**
+         * Create default Membership instance
+         */
+        public Membership() {
+        }
+
+        private GHTeam team;
+
+        private GHUser member;
+
+        /**
+         * Gets the team.
+         *
+         * @return the team
+         */
+        @SuppressFBWarnings(value = { "EI_EXPOSE_REP" }, justification = "Expected")
+        public GHTeam getTeam() {
+            return team;
+        }
+
+        /**
+         * Gets the member.
+         *
+         * @return the member
+         */
+        @SuppressFBWarnings(value = { "EI_EXPOSE_REP" }, justification = "Expected")
+        public GHUser getMember() {
+            return member;
+        }
+
+        /**
+         * Late bind.
+         */
+        @Override
+        void lateBind() {
+            if (team == null) {
+                throw new IllegalStateException(
+                        "Expected membership payload, but got something else. Maybe we've got another type of event?");
+            }
+            super.lateBind();
+            GHOrganization organization = getOrganization();
+            if (organization == null) {
+                throw new IllegalStateException("Organization must not be null");
+            }
+            team.wrapUp(organization);
         }
     }
 }

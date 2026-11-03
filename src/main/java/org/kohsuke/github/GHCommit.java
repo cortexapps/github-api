@@ -10,9 +10,6 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
-import static org.kohsuke.github.internal.Previews.ANTIOPE;
-import static org.kohsuke.github.internal.Previews.GROOT;
-
 // TODO: Auto-generated Javadoc
 /**
  * A commit in a repository.
@@ -23,6 +20,7 @@ import static org.kohsuke.github.internal.Previews.GROOT;
  */
 @SuppressFBWarnings(value = { "NP_UNWRITTEN_FIELD", "UWF_UNWRITTEN_FIELD" }, justification = "JSON API")
 public class GHCommit {
+
     private GHRepository owner;
 
     private ShortInfo commit;
@@ -118,6 +116,12 @@ public class GHCommit {
      */
     public static class Stats {
 
+        /**
+         * Create default Stats instance
+         */
+        public Stats() {
+        }
+
         /** The deletions. */
         int total, additions, deletions;
     }
@@ -125,8 +129,14 @@ public class GHCommit {
     /**
      * A file that was modified.
      */
-    @SuppressFBWarnings(value = "UWF_UNWRITTEN_FIELD", justification = "It's being initilized by JSON deserialization")
+    @SuppressFBWarnings(value = "UWF_UNWRITTEN_FIELD", justification = "It's being initialized by JSON deserialization")
     public static class File {
+
+        /**
+         * Create default File instance
+         */
+        public File() {
+        }
 
         /** The status. */
         String status;
@@ -242,6 +252,12 @@ public class GHCommit {
      */
     public static class Parent {
 
+        /**
+         * Create default Parent instance
+         */
+        public Parent() {
+        }
+
         /** The url. */
         @SuppressFBWarnings(value = "UUF_UNUSED_PUBLIC_OR_PROTECTED_FIELD", justification = "used in backend code")
         public String url;
@@ -270,7 +286,7 @@ public class GHCommit {
     }
 
     /** The sha. */
-    String url, html_url, sha;
+    String url, html_url, sha, message;
 
     /** The files. */
     List<File> files;
@@ -309,6 +325,7 @@ public class GHCommit {
         sha = commit.getSha();
         url = commit.getUrl();
         parents = commit.getParents();
+        message = commit.getMessage();
     }
 
     /**
@@ -415,10 +432,28 @@ public class GHCommit {
      * @return Can be empty but never null.
      * @throws IOException
      *             on error
+     * @deprecated Use {@link #listFiles()} instead.
      */
+    @Deprecated
     public List<File> getFiles() throws IOException {
+        return listFiles().toList();
+    }
+
+    /**
+     * List of files changed/added/removed in this commit. Uses a paginated list if the files returned by GitHub exceed
+     * 300 in quantity.
+     *
+     * @return the List of files
+     * @see <a href="https://docs.github.com/en/rest/commits/commits?apiVersion=2022-11-28#get-a-commit">Get a
+     *      commit</a>
+     * @throws IOException
+     *             on error
+     */
+    public PagedIterable<File> listFiles() throws IOException {
+
         populate();
-        return files != null ? Collections.unmodifiableList(files) : Collections.<File>emptyList();
+
+        return new GHCommitFileIterable(owner, sha, files);
     }
 
     /**
@@ -528,11 +563,9 @@ public class GHCommit {
      *
      * @return {@link PagedIterable} with the pull requests which contain this commit
      */
-    @Preview(GROOT)
     public PagedIterable<GHPullRequest> listPullRequests() {
         return owner.root()
                 .createRequest()
-                .withPreview(GROOT)
                 .withUrlPath(String.format("/repos/%s/%s/commits/%s/pulls", owner.getOwnerName(), owner.getName(), sha))
                 .toIterable(GHPullRequest[].class, item -> item.wrapUp(owner));
     }
@@ -544,11 +577,9 @@ public class GHCommit {
      * @throws IOException
      *             the io exception
      */
-    @Preview(GROOT)
     public PagedIterable<GHBranch> listBranchesWhereHead() throws IOException {
         return owner.root()
                 .createRequest()
-                .withPreview(GROOT)
                 .withUrlPath(String.format("/repos/%s/%s/commits/%s/branches-where-head",
                         owner.getOwnerName(),
                         owner.getName(),
@@ -638,7 +669,6 @@ public class GHCommit {
      * @throws IOException
      *             on error
      */
-    @Preview(ANTIOPE)
     public PagedIterable<GHCheckRun> getCheckRuns() throws IOException {
         return owner.getCheckRuns(sha);
     }

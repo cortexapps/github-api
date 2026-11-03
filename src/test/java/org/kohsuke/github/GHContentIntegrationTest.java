@@ -15,13 +15,18 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import static org.hamcrest.Matchers.*;
-import static org.hamcrest.Matchers.equalTo;
 
 // TODO: Auto-generated Javadoc
 /**
  * Integration test for {@link GHContent}.
  */
 public class GHContentIntegrationTest extends AbstractGitHubWireMockTest {
+
+    /**
+     * Create default GHContentIntegrationTest instance
+     */
+    public GHContentIntegrationTest() {
+    }
 
     private GHRepository repo;
 
@@ -73,6 +78,20 @@ public class GHContentIntegrationTest extends AbstractGitHubWireMockTest {
         assertThat(testRepo.getName(), equalTo(repo.getName()));
         testRepo = gitHub.getRepositoryById(Long.toString(repo.getId()));
         assertThat(testRepo.getName(), equalTo(repo.getName()));
+    }
+
+    /**
+     * Test get repository created from a template repository
+     *
+     * @throws Exception
+     *             the exception
+     */
+    @Test
+    public void testGetRepositoryWithTemplateRepositoryInfo() throws Exception {
+        GHRepository testRepo = gitHub.getRepositoryById(repo.getId());
+        assertThat(testRepo.getTemplateRepository(), notNullValue());
+        assertThat(testRepo.getTemplateRepository().getOwnerName(), equalTo("octocat"));
+        assertThat(testRepo.getTemplateRepository().isTemplate(), equalTo(true));
     }
 
     /**

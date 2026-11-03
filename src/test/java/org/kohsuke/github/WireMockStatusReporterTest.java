@@ -20,6 +20,12 @@ import static org.junit.Assume.assumeTrue;
 public class WireMockStatusReporterTest extends AbstractGitHubWireMockTest {
 
     /**
+     * Create default WireMockStatusReporterTest instance
+     */
+    public WireMockStatusReporterTest() {
+    }
+
+    /**
      * User when proxying auth correctly configured.
      *
      * @throws Exception
@@ -147,7 +153,7 @@ public class WireMockStatusReporterTest extends AbstractGitHubWireMockTest {
         assertThat(e, Matchers.<Exception>instanceOf(GHFileNotFoundException.class));
         assertThat(e.getMessage(),
                 containsString(
-                        "{\"message\":\"Not Found\",\"documentation_url\":\"https://docs.github.com/rest/reference/repos#get-a-repository\"}"));
+                        "{\"message\":\"Not Found\",\"documentation_url\":\"https://docs.github.com/rest/repos/repos#get-a-repository\"}"));
     }
 
     /**

@@ -1,8 +1,6 @@
 package org.kohsuke.github.extras.authorization;
 
-import io.jsonwebtoken.JwtBuilder;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.kohsuke.github.authorization.AuthorizationProvider;
 
 import java.io.File;
@@ -18,7 +16,6 @@ import java.security.spec.PKCS8EncodedKeySpec;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Base64;
-import java.util.Date;
 
 import javax.annotation.Nonnull;
 
@@ -27,6 +24,7 @@ import javax.annotation.Nonnull;
  * authenticate as an application. This token provider does not provide any kind of caching, and will always request a
  * new token to the API.
  */
+@SuppressFBWarnings(value = { "CT_CONSTRUCTOR_THROW" }, justification = "TODO")
 public class JWTTokenProvider implements AuthorizationProvider {
 
     private final PrivateKey privateKey;
@@ -122,7 +120,7 @@ public class JWTTokenProvider implements AuthorizationProvider {
      * <p>
      * Made internal for testing
      *
-     * @return false if the the token has been refreshed within the required window, otherwise true
+     * @return false if the token has been refreshed within the required window, otherwise true
      */
     boolean isNotValid() {
         return Instant.now().isAfter(validUntil);
@@ -170,18 +168,10 @@ public class JWTTokenProvider implements AuthorizationProvider {
         // Setting the issued at to a time in the past to allow for clock skew
         Instant issuedAt = getIssuedAt(now);
 
-        // Let's set the JWT Claims
-        JwtBuilder builder = Jwts.builder()
-                .setIssuedAt(Date.from(issuedAt))
-                .setExpiration(Date.from(expiration))
-                .setIssuer(this.applicationId)
-                .signWith(privateKey, SignatureAlgorithm.RS256);
-
         // Token will refresh 2 minutes before it expires
         validUntil = expiration.minus(Duration.ofMinutes(2));
 
-        // Builds the JWT and serializes it to a compact, URL-safe string
-        return builder.compact();
+        return JwtBuilderUtil.buildJwt(issuedAt, expiration, applicationId, privateKey);
     }
 
     Instant getIssuedAt(Instant now) {

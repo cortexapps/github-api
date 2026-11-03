@@ -25,6 +25,12 @@ import static java.lang.String.*;
  */
 public class GHRelease extends GHObject {
 
+    /**
+     * Create default GHRelease instance
+     */
+    public GHRelease() {
+    }
+
     /** The owner. */
     GHRepository owner;
 
@@ -280,7 +286,10 @@ public class GHRelease extends GHObject {
         Requester builder = owner.root().createRequest().method("POST");
         String url = getUploadUrl();
         // strip the helpful garbage from the url
-        url = url.substring(0, url.indexOf('{'));
+        int endIndex = url.indexOf('{');
+        if (endIndex != -1) {
+            url = url.substring(0, endIndex);
+        }
         url += "?name=" + URLEncoder.encode(filename, "UTF-8");
         return builder.contentType(contentType).with(stream).withUrlPath(url).fetch(GHAsset.class).wrap(this);
     }

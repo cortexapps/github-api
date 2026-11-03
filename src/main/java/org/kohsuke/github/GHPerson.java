@@ -19,6 +19,12 @@ import java.util.TreeMap;
  */
 public abstract class GHPerson extends GHObject {
 
+    /**
+     * Create default GHPerson instance
+     */
+    public GHPerson() {
+    }
+
     /** The avatar url. */
     // core data fields that exist even for "small" user data (such as the user info in pull request)
     protected String login, avatar_url;
@@ -55,6 +61,10 @@ public abstract class GHPerson extends GHObject {
         if (isOffline()) {
             return; // cannot populate, will have to live with what we have
         }
+        if (login == null) {
+            return; // anonymous contributors have no user record to fetch
+        }
+        // Resolve against the client's base URL rather than the API-returned url, so proxied clients keep working.
         root().createRequest().withUrlPath("/users/" + login).fetchInto(this);
     }
 

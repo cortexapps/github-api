@@ -11,7 +11,6 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
-import org.kohsuke.github.junit.GitHubWireMockRule;
 import wiremock.com.github.jknack.handlebars.Helper;
 import wiremock.com.github.jknack.handlebars.Options;
 
@@ -226,7 +225,7 @@ public abstract class AbstractGitHubWireMockTest {
      * Creates a temporary repository that will be deleted at the end of the test.
      *
      * @param name
-     *            string name of the the repository
+     *            string name of the repository
      *
      * @return a temporary repository
      * @throws IOException
@@ -398,6 +397,12 @@ public abstract class AbstractGitHubWireMockTest {
 
         /** The test start date. */
         public Date testStartDate = new Date();
+
+        /**
+         * Instantiate TemplatingHelper
+         */
+        public TemplatingHelper() {
+        }
 
         /**
          * New response transformer.

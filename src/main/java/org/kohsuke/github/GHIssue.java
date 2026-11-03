@@ -27,6 +27,7 @@ package org.kohsuke.github;
 import com.infradna.tool.bridge_method_injector.WithBridgeMethods;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.apache.commons.lang3.StringUtils;
+import org.kohsuke.github.internal.EnumUtils;
 
 import java.io.IOException;
 import java.net.URL;
@@ -35,11 +36,11 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Objects;
-
-import static org.kohsuke.github.internal.Previews.SQUIRREL_GIRL;
 
 // TODO: Auto-generated Javadoc
 /**
@@ -52,6 +53,13 @@ import static org.kohsuke.github.internal.Previews.SQUIRREL_GIRL;
  * @see GHIssueSearchBuilder
  */
 public class GHIssue extends GHObject implements Reactable {
+
+    /**
+     * Create default GHIssue instance
+     */
+    public GHIssue() {
+    }
+
     private static final String ASSIGNEES = "assignees";
 
     /** The owner. */
@@ -66,6 +74,9 @@ public class GHIssue extends GHObject implements Reactable {
 
     /** The state. */
     protected String state;
+
+    /** The state reason. */
+    protected String state_reason;
 
     /** The number. */
     protected int number;
@@ -199,6 +210,15 @@ public class GHIssue extends GHObject implements Reactable {
     }
 
     /**
+     * Gets state reason.
+     *
+     * @return the state reason
+     */
+    public GHIssueStateReason getStateReason() {
+        return EnumUtils.getNullableEnumOrDefault(GHIssueStateReason.class, state_reason, GHIssueStateReason.UNKNOWN);
+    }
+
+    /**
      * Gets labels.
      *
      * @return the labels
@@ -273,6 +293,10 @@ public class GHIssue extends GHObject implements Reactable {
         root().createRequest().with(key, value).method("PATCH").withUrlPath(getApiRoute()).send();
     }
 
+    private void edit(Map<String, Object> map) throws IOException {
+        root().createRequest().with(map).method("PATCH").withUrlPath(getApiRoute()).send();
+    }
+
     /**
      * Identical to edit(), but allows null for the value.
      */
@@ -292,6 +316,21 @@ public class GHIssue extends GHObject implements Reactable {
      */
     public void close() throws IOException {
         edit("state", "closed");
+    }
+
+    /**
+     * Closes this issue.
+     *
+     * @param reason
+     *            the reason the issue was closed
+     * @throws IOException
+     *             the io exception
+     */
+    public void close(GHIssueStateReason reason) throws IOException {
+        Map<String, Object> map = new HashMap<>();
+        map.put("state", "closed");
+        map.put("state_reason", reason.name().toLowerCase(Locale.ENGLISH));
+        edit(map);
     }
 
     /**
@@ -517,7 +556,7 @@ public class GHIssue extends GHObject implements Reactable {
     }
 
     /**
-     * Obtains all the comments associated with this issue, witout any filter.
+     * Obtains all the comments associated with this issue, without any filter.
      *
      * @return the paged iterable
      * @throws IOException
@@ -550,13 +589,11 @@ public class GHIssue extends GHObject implements Reactable {
      * @throws IOException
      *             Signals that an I/O exception has occurred.
      */
-    @Preview(SQUIRREL_GIRL)
     public GHReaction createReaction(ReactionContent content) throws IOException {
         return root().createRequest()
                 .method("POST")
-                .withPreview(SQUIRREL_GIRL)
                 .with("content", content.getContent())
-                .withUrlPath(getApiRoute() + "/reactions")
+                .withUrlPath(getIssuesApiRoute() + "/reactions")
                 .fetch(GHReaction.class);
     }
 
@@ -572,7 +609,7 @@ public class GHIssue extends GHObject implements Reactable {
         owner.root()
                 .createRequest()
                 .method("DELETE")
-                .withUrlPath(getApiRoute(), "reactions", String.valueOf(reaction.getId()))
+                .withUrlPath(getIssuesApiRoute(), "reactions", String.valueOf(reaction.getId()))
                 .send();
     }
 
@@ -581,11 +618,9 @@ public class GHIssue extends GHObject implements Reactable {
      *
      * @return the paged iterable
      */
-    @Preview(SQUIRREL_GIRL)
     public PagedIterable<GHReaction> listReactions() {
         return root().createRequest()
-                .withPreview(SQUIRREL_GIRL)
-                .withUrlPath(getApiRoute() + "/reactions")
+                .withUrlPath(getIssuesApiRoute() + "/reactions")
                 .toIterable(GHReaction[].class, null);
     }
 
@@ -793,6 +828,13 @@ public class GHIssue extends GHObject implements Reactable {
      */
     @SuppressFBWarnings(value = { "UWF_UNWRITTEN_FIELD" }, justification = "JSON API")
     public static class PullRequest {
+
+        /**
+         * Create default PullRequest instance
+         */
+        public PullRequest() {
+        }
+
         private String diff_url, patch_url, html_url;
 
         /**

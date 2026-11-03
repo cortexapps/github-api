@@ -21,6 +21,12 @@ import static org.hamcrest.Matchers.notNullValue;
  */
 public class GHWorkflowTest extends AbstractGitHubWireMockTest {
 
+    /**
+     * Create default GHWorkflowTest instance
+     */
+    public GHWorkflowTest() {
+    }
+
     private static String REPO_NAME = "hub4j-test-org/GHWorkflowTest";
 
     private GHRepository repo;
@@ -121,9 +127,9 @@ public class GHWorkflowTest extends AbstractGitHubWireMockTest {
         workflow.dispatch("main", Collections.singletonMap("parameter", "value"));
         verify(postRequestedFor(
                 urlPathEqualTo("/repos/hub4j-test-org/GHWorkflowTest/actions/workflows/6817859/dispatches"))
-                        .withRequestBody(containing("inputs"))
-                        .withRequestBody(containing("parameter"))
-                        .withRequestBody(containing("value")));
+                .withRequestBody(containing("inputs"))
+                .withRequestBody(containing("parameter"))
+                .withRequestBody(containing("value")));
     }
 
     /**

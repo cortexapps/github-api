@@ -13,7 +13,18 @@ import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
-import static org.hamcrest.Matchers.*;
+import static org.hamcrest.Matchers.contains;
+import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.empty;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasProperty;
+import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.instanceOf;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.not;
+import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.Matchers.nullValue;
 
 // TODO: Auto-generated Javadoc
 /**
@@ -22,6 +33,12 @@ import static org.hamcrest.Matchers.*;
  * @author Kohsuke Kawaguchi
  */
 public class GHPullRequestTest extends AbstractGitHubWireMockTest {
+
+    /**
+     * Create default GHPullRequestTest instance
+     */
+    public GHPullRequestTest() {
+    }
 
     /**
      * Clean up.
@@ -179,6 +196,32 @@ public class GHPullRequestTest extends AbstractGitHubWireMockTest {
     }
 
     /**
+     * Get list of commits from searched PR.
+     *
+     * This would result in a wrong API URL used, resulting in a GHFileNotFoundException.
+     *
+     * For more details, please have a look at the bug description in https://github.com/hub4j/github-api/issues/1778.
+     *
+     * @throws Exception
+     *             the exception
+     */
+    @Test
+    public void getListOfCommits() throws Exception {
+        String name = "getListOfCommits";
+        GHPullRequestSearchBuilder builder = getRepository().searchPullRequests().isClosed();
+        Optional<GHPullRequest> firstPR = builder.list().toList().stream().findFirst();
+
+        try {
+            String val = firstPR.get().listCommits().toArray()[0].getApiUrl().toString();
+            assertThat(val, notNullValue());
+        } catch (GHFileNotFoundException e) {
+            if (e.getMessage().contains("/issues/")) {
+                fail("Issued a request against the wrong path");
+            }
+        }
+    }
+
+    /**
      * Close pull request.
      *
      * @throws Exception
@@ -205,14 +248,20 @@ public class GHPullRequestTest extends AbstractGitHubWireMockTest {
     public void pullRequestReviews() throws Exception {
         String name = "testPullRequestReviews";
         GHPullRequest p = getRepository().createPullRequest(name, "test/stable", "main", "## test");
+
+        List<GHPullRequestReview> reviews = p.listReviews().toList();
+        assertThat(reviews.size(), is(0));
+
         GHPullRequestReview draftReview = p.createReview()
                 .body("Some draft review")
                 .comment("Some niggle", "README.md", 1)
+                .singleLineComment("A single line comment", "README.md", 2)
+                .multiLineComment("A multiline comment", "README.md", 2, 3)
                 .create();
         assertThat(draftReview.getState(), is(GHPullRequestReviewState.PENDING));
         assertThat(draftReview.getBody(), is("Some draft review"));
         assertThat(draftReview.getCommitId(), notNullValue());
-        List<GHPullRequestReview> reviews = p.listReviews().toList();
+        reviews = p.listReviews().toList();
         assertThat(reviews.size(), is(1));
         GHPullRequestReview review = reviews.get(0);
         assertThat(review.getState(), is(GHPullRequestReviewState.PENDING));
@@ -220,11 +269,49 @@ public class GHPullRequestTest extends AbstractGitHubWireMockTest {
         assertThat(review.getCommitId(), notNullValue());
         draftReview.submit("Some review comment", GHPullRequestReviewEvent.COMMENT);
         List<GHPullRequestReviewComment> comments = review.listReviewComments().toList();
-        assertThat(comments.size(), equalTo(1));
+        assertThat(comments.size(), equalTo(3));
         GHPullRequestReviewComment comment = comments.get(0);
         assertThat(comment.getBody(), equalTo("Some niggle"));
+        comment = comments.get(1);
+        assertThat(comment.getBody(), equalTo("A single line comment"));
+        assertThat(comment.getPosition(), equalTo(4));
+        comment = comments.get(2);
+        assertThat(comment.getBody(), equalTo("A multiline comment"));
+        assertThat(comment.getPosition(), equalTo(5));
         draftReview = p.createReview().body("Some new review").comment("Some niggle", "README.md", 1).create();
         draftReview.delete();
+    }
+
+    /**
+     * Comments objects in pull request review builder.
+     */
+    @Test
+    public void commentsInPullRequestReviewBuilder() {
+        GHPullRequestReviewBuilder.DraftReviewComment draftReviewComment = new GHPullRequestReviewBuilder.DraftReviewComment(
+                "comment",
+                "path/to/file.txt",
+                1);
+        assertThat(draftReviewComment.getBody(), equalTo("comment"));
+        assertThat(draftReviewComment.getPath(), equalTo("path/to/file.txt"));
+        assertThat(draftReviewComment.getPosition(), equalTo(1));
+
+        GHPullRequestReviewBuilder.SingleLineDraftReviewComment singleLineDraftReviewComment = new GHPullRequestReviewBuilder.SingleLineDraftReviewComment(
+                "comment",
+                "path/to/file.txt",
+                2);
+        assertThat(singleLineDraftReviewComment.getBody(), equalTo("comment"));
+        assertThat(singleLineDraftReviewComment.getPath(), equalTo("path/to/file.txt"));
+        assertThat(singleLineDraftReviewComment.getLine(), equalTo(2));
+
+        GHPullRequestReviewBuilder.MultilineDraftReviewComment multilineDraftReviewComment = new GHPullRequestReviewBuilder.MultilineDraftReviewComment(
+                "comment",
+                "path/to/file.txt",
+                1,
+                2);
+        assertThat(multilineDraftReviewComment.getBody(), equalTo("comment"));
+        assertThat(multilineDraftReviewComment.getPath(), equalTo("path/to/file.txt"));
+        assertThat(multilineDraftReviewComment.getStartLine(), equalTo(1));
+        assertThat(multilineDraftReviewComment.getLine(), equalTo(2));
     }
 
     /**
@@ -238,11 +325,25 @@ public class GHPullRequestTest extends AbstractGitHubWireMockTest {
         String name = "pullRequestReviewComments";
         GHPullRequest p = getRepository().createPullRequest(name, "test/stable", "main", "## test");
         try {
-            // System.out.println(p.getUrl());
             assertThat(p.listReviewComments().toList(), is(empty()));
+
+            // Call the deprecated method to ensure continued support
             p.createReviewComment("Sample review comment", p.getHead().getSha(), "README.md", 1);
+            p.createReviewComment()
+                    .commitId(p.getHead().getSha())
+                    .body("A single line review comment")
+                    .path("README.md")
+                    .line(2)
+                    .create();
+            p.createReviewComment()
+                    .commitId(p.getHead().getSha())
+                    .body("A multiline review comment")
+                    .path("README.md")
+                    .lines(2, 3)
+                    .create();
             List<GHPullRequestReviewComment> comments = p.listReviewComments().toList();
-            assertThat(comments.size(), equalTo(1));
+            assertThat(comments.size(), equalTo(3));
+
             GHPullRequestReviewComment comment = comments.get(0);
             assertThat(comment.getBody(), equalTo("Sample review comment"));
             assertThat(comment.getInReplyToId(), equalTo(-1L));
@@ -253,42 +354,86 @@ public class GHPullRequestTest extends AbstractGitHubWireMockTest {
             assertThat(comment.getOriginalCommitId(), equalTo("07374fe73aff1c2024a8d4114b32406c7a8e89b7"));
             assertThat(comment.getAuthorAssociation(), equalTo(GHCommentAuthorAssociation.MEMBER));
             assertThat(comment.getUser(), notNullValue());
+            assertThat(comment.getStartLine(), equalTo(-1));
+            assertThat(comment.getOriginalStartLine(), equalTo(-1));
+            assertThat(comment.getStartSide(), equalTo(GHPullRequestReviewComment.Side.UNKNOWN));
+            assertThat(comment.getLine(), equalTo(1));
+            assertThat(comment.getOriginalLine(), equalTo(1));
+            assertThat(comment.getSide(), equalTo(GHPullRequestReviewComment.Side.LEFT));
+            assertThat(comment.getPullRequestUrl(), notNullValue());
+            assertThat(comment.getPullRequestUrl().toString(), containsString("hub4j-test-org/github-api/pulls/"));
+            assertThat(comment.getBodyHtml(), nullValue());
+            assertThat(comment.getBodyText(), nullValue());
             // Assert htmlUrl is not null
             assertThat(comment.getHtmlUrl(), notNullValue());
             assertThat(comment.getHtmlUrl().toString(),
                     containsString("hub4j-test-org/github-api/pull/" + p.getNumber()));
 
+            comment = comments.get(1);
+            assertThat(comment.getBody(), equalTo("A single line review comment"));
+            assertThat(comment.getLine(), equalTo(2));
+
+            comment = comments.get(2);
+            assertThat(comment.getBody(), equalTo("A multiline review comment"));
+            assertThat(comment.getStartLine(), equalTo(2));
+            assertThat(comment.getLine(), equalTo(3));
+
+            comment.createReaction(ReactionContent.EYES);
+            GHReaction toBeRemoved = comment.createReaction(ReactionContent.CONFUSED);
+            comment.createReaction(ReactionContent.ROCKET);
+            comment.createReaction(ReactionContent.HOORAY);
+            comment.createReaction(ReactionContent.HEART);
+            comment.createReaction(ReactionContent.MINUS_ONE);
+            comment.createReaction(ReactionContent.PLUS_ONE);
+            comment.createReaction(ReactionContent.LAUGH);
+            GHPullRequestReviewCommentReactions commentReactions = p.listReviewComments()
+                    .toList()
+                    .get(2)
+                    .getReactions();
+            assertThat(commentReactions.getUrl().toString(), equalTo(comment.getUrl().toString().concat("/reactions")));
+            assertThat(commentReactions.getTotalCount(), equalTo(8));
+            assertThat(commentReactions.getPlusOne(), equalTo(1));
+            assertThat(commentReactions.getMinusOne(), equalTo(1));
+            assertThat(commentReactions.getLaugh(), equalTo(1));
+            assertThat(commentReactions.getHooray(), equalTo(1));
+            assertThat(commentReactions.getConfused(), equalTo(1));
+            assertThat(commentReactions.getHeart(), equalTo(1));
+            assertThat(commentReactions.getRocket(), equalTo(1));
+            assertThat(commentReactions.getEyes(), equalTo(1));
+
+            comment.deleteReaction(toBeRemoved);
+
             List<GHReaction> reactions = comment.listReactions().toList();
-            assertThat(reactions, is(empty()));
+            assertThat(reactions.size(), equalTo(7));
 
             GHReaction reaction = comment.createReaction(ReactionContent.CONFUSED);
             assertThat(reaction.getContent(), equalTo(ReactionContent.CONFUSED));
 
             reactions = comment.listReactions().toList();
-            assertThat(reactions.size(), equalTo(1));
+            assertThat(reactions.size(), equalTo(8));
 
             comment.deleteReaction(reaction);
 
             reactions = comment.listReactions().toList();
-            assertThat(reactions.size(), equalTo(0));
+            assertThat(reactions.size(), equalTo(7));
 
             GHPullRequestReviewComment reply = comment.reply("This is a reply.");
             assertThat(reply.getInReplyToId(), equalTo(comment.getId()));
             comments = p.listReviewComments().toList();
 
-            assertThat(comments.size(), equalTo(2));
+            assertThat(comments.size(), equalTo(4));
 
             comment.update("Updated review comment");
             comments = p.listReviewComments().toList();
-            comment = comments.get(0);
+            comment = comments.get(2);
             assertThat(comment.getBody(), equalTo("Updated review comment"));
 
             comment.delete();
             comments = p.listReviewComments().toList();
             // Reply is still present after delete of original comment, but no longer has replyToId
-            assertThat(comments.size(), equalTo(1));
-            assertThat(comments.get(0).getId(), equalTo(reply.getId()));
-            assertThat(comments.get(0).getInReplyToId(), equalTo(-1L));
+            assertThat(comments.size(), equalTo(3));
+            assertThat(comments.get(2).getId(), equalTo(reply.getId()));
+            assertThat(comments.get(2).getInReplyToId(), equalTo(-1L));
         } finally {
             p.close();
         }
@@ -820,6 +965,64 @@ public class GHPullRequestTest extends AbstractGitHubWireMockTest {
 
         assertThat(review, notNullValue());
         assertThat(reviewer, notNullValue());
+    }
+
+    /**
+     * Create/Delete reaction for pull requests.
+     *
+     * @throws Exception
+     *             the exception
+     */
+    @Test
+    public void reactions() throws Exception {
+        String name = "createPullRequest";
+        GHRepository repo = getRepository();
+        GHPullRequest p = repo.createPullRequest(name, "test/stable", "main", "## test");
+
+        assertThat(p.listReactions().toList(), hasSize(0));
+        GHReaction reaction = p.createReaction(ReactionContent.CONFUSED);
+        assertThat(p.listReactions().toList(), hasSize(1));
+
+        p.deleteReaction(reaction);
+        assertThat(p.listReactions().toList(), hasSize(0));
+    }
+
+    /**
+     * Test refreshing a PR coming from the search results.
+     *
+     * @throws Exception
+     *             the exception
+     */
+    @Test
+    public void refreshFromSearchResults() throws Exception {
+        // To re-record, uncomment the Thread.sleep() calls below
+        snapshotNotAllowed();
+
+        String prName = "refreshFromSearchResults";
+        GHRepository repository = getRepository();
+
+        repository.createPullRequest(prName, "test/stable", "main", "## test");
+
+        // we need to wait a bit for the pull request to be indexed by GitHub
+        // Thread.sleep(2000);
+
+        GHPullRequest pullRequestFromSearchResults = repository.searchPullRequests()
+                .isOpen()
+                .titleLike(prName)
+                .list()
+                .toList()
+                .get(0);
+
+        pullRequestFromSearchResults.getMergeableState();
+
+        // wait a bit for the mergeable state to get populated
+        // Thread.sleep(5000);
+
+        assertThat("Pull request is supposed to have been refreshed and have a mergeable state",
+                pullRequestFromSearchResults.getMergeableState(),
+                equalTo("clean"));
+
+        pullRequestFromSearchResults.close();
     }
 
     /**

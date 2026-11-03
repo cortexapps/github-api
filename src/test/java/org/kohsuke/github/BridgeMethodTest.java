@@ -24,6 +24,12 @@ import static org.hamcrest.Matchers.*;
 public class BridgeMethodTest extends Assert {
 
     /**
+     * Create default BridgeMethodTest instance
+     */
+    public BridgeMethodTest() {
+    }
+
+    /**
      * Test bridge methods.
      *
      * @throws IOException
@@ -59,6 +65,15 @@ public class BridgeMethodTest extends Assert {
         verifyBridgeMethods(GHUser.class, "getId", int.class, long.class, String.class);
 
         verifyBridgeMethods(GHTeam.class, "getId", int.class, long.class, String.class);
+
+        verifyBridgeMethods(GHMemberChanges.FromToPermission.class,
+                "getTo",
+                String.class,
+                GHOrganization.Permission.class);
+        verifyBridgeMethods(GHMemberChanges.FromToPermission.class,
+                "getFrom",
+                String.class,
+                GHOrganization.Permission.class);
 
         // verifyBridgeMethods(GitHub.class, "getMyself", GHMyself.class, GHUser.class);
 

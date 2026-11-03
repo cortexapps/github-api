@@ -6,10 +6,11 @@
 [![codecov](https://codecov.io/gh/hub4j/github-api/branch/main/graph/badge.svg?token=j1jQqydZLJ)](https://codecov.io/gh/hub4j/github-api)
 
 
-See https://github-api.kohsuke.org/ for more details
+See https://hub4j.github.io/github-api/ for more details
 
 To locally publish changes to this API, update the version in `pom.xml` to a unique identifier.
 Then run `mvn install -Dmaven.test.skip -Dspotless.check.skip=true -Dgpg.skip -Dmaven.javadoc.skip=true -Djacoco.skip=true -Dspotbugs.skip`. 
 To use this dependency in `brain-backend`, update the version of `cortexapps-github-api` in `build.gradle.kts (:web)` to the same identifier.
 
-See this [Notion doc](https://www.notion.so/cortexio/How-to-publish-Github-Api-e80324a13abf4497afaa67e0a215e53a) for how to publish this client.
+Merging to `main` publishes the `pom.xml` version to GitHub Packages through the CI `deploy` job, so bump the version in the same PR.
+See this [Notion doc](https://www.notion.so/cortexio/How-to-publish-Github-Api-e80324a13abf4497afaa67e0a215e53a) for more on publishing this client.

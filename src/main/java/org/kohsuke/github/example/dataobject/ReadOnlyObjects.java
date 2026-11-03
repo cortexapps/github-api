@@ -32,6 +32,12 @@ import javax.annotation.Nonnull;
 public final class ReadOnlyObjects {
 
     /**
+     * Placeholder constructor.
+     */
+    public ReadOnlyObjects() {
+    }
+
+    /**
      * All GHMeta data objects should expose these values.
      *
      * @author Liam Newman
@@ -94,7 +100,7 @@ public final class ReadOnlyObjects {
      * <ul>
      * <li>Easy to create</li>
      * <li>Not much code</li>
-     * <li>Mininal annotations</li>
+     * <li>Minimal annotations</li>
      * </ul>
      * Con:
      * <ul>
@@ -107,6 +113,12 @@ public final class ReadOnlyObjects {
      * @see org.kohsuke.github.GHMeta
      */
     public static class GHMetaPublic implements GHMetaExample {
+
+        /**
+         * Create default GHMetaPublic instance
+         */
+        public GHMetaPublic() {
+        }
 
         @JsonProperty("verifiable_password_authentication")
         private boolean verifiablePasswordAuthentication;
@@ -251,6 +263,12 @@ public final class ReadOnlyObjects {
      */
     public static class GHMetaPackage implements GHMetaExample {
 
+        /**
+         * Create default GHMetaPackage instance
+         */
+        public GHMetaPackage() {
+        }
+
         private boolean verifiablePasswordAuthentication;
         private List<String> hooks;
         private List<String> git;
@@ -373,7 +391,7 @@ public final class ReadOnlyObjects {
      * <ul>
      * <li>Very Easy to create</li>
      * <li>Minimal code</li>
-     * <li>Mininal annotations</li>
+     * <li>Minimal annotations</li>
      * <li>Fields effectively final and lists unmodifiable</li>
      * </ul>
      * Con:
@@ -387,6 +405,12 @@ public final class ReadOnlyObjects {
      * @see org.kohsuke.github.GHMeta
      */
     public static class GHMetaGettersUnmodifiable implements GHMetaExample {
+
+        /**
+         * Create default GHMetaGettersUnmodifiable instance
+         */
+        public GHMetaGettersUnmodifiable() {
+        }
 
         @JsonProperty("verifiable_password_authentication")
         private boolean verifiablePasswordAuthentication;

@@ -3,11 +3,15 @@ package org.kohsuke.github;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TimeZone;
 
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.assertThrows;
@@ -19,6 +23,12 @@ import static org.junit.Assert.assertThrows;
  * @author Paulo Miguel Almeida
  */
 public class GHAppTest extends AbstractGHAppInstallationTest {
+
+    /**
+     * Create default GHAppTest instance
+     */
+    public GHAppTest() {
+    }
 
     /**
      * Gets the git hub builder.
@@ -70,6 +80,28 @@ public class GHAppTest extends AbstractGHAppInstallationTest {
     }
 
     /**
+     * List installation requests.
+     *
+     * @throws IOException
+     *             Signals that an I/O exception has occurred.
+     */
+    @Test
+    public void listInstallationRequests() throws IOException {
+        GHApp app = gitHub.getApp();
+        List<GHAppInstallationRequest> installations = app.listInstallationRequests().toList();
+        assertThat(installations.size(), is(1));
+
+        GHAppInstallationRequest appInstallation = installations.get(0);
+        assertThat(appInstallation.getId(), is((long) 1037204));
+        assertThat(appInstallation.getAccount().getId(), is((long) 195438329));
+        assertThat(appInstallation.getAccount().getLogin(), is("approval-test"));
+        assertThat(appInstallation.getRequester().getId(), is((long) 195437694));
+        assertThat(appInstallation.getRequester().getLogin(), is("kaladinstormblessed2"));
+        assertThat(appInstallation.getCreatedAt(), is(GitHubClient.parseDate("2025-01-17T15:50:51Z")));
+        assertThat(appInstallation.getNodeId(), is("MDMwOkludGVncmF0aW9uSW5zdGFsbGF0aW9uUmVxdWVzdDEwMzcyMDQ="));
+    }
+
+    /**
      * List installations.
      *
      * @throws IOException
@@ -79,6 +111,28 @@ public class GHAppTest extends AbstractGHAppInstallationTest {
     public void listInstallations() throws IOException {
         GHApp app = gitHub.getApp();
         List<GHAppInstallation> installations = app.listInstallations().toList();
+        assertThat(installations.size(), is(1));
+
+        GHAppInstallation appInstallation = installations.get(0);
+        testAppInstallation(appInstallation);
+    }
+
+    /**
+     * List installations that have been updated since a given date.
+     *
+     * @throws IOException
+     *             Signals that an I/O exception has occurred.
+     *
+     * @throws ParseException
+     *             Issue parsing date string.
+     */
+    @Test
+    public void listInstallationsSince() throws IOException, ParseException {
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd");
+        simpleDateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
+        Date localDate = simpleDateFormat.parse("2023-11-01");
+        GHApp app = gitHub.getApp();
+        List<GHAppInstallation> installations = app.listInstallations(localDate).toList();
         assertThat(installations.size(), is(1));
 
         GHAppInstallation appInstallation = installations.get(0);

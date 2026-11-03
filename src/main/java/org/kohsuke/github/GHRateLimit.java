@@ -347,7 +347,7 @@ public class GHRateLimit {
     }
 
     /**
-     * A limit record used as a placeholder when the the actual limit is not known.
+     * A limit record used as a placeholder when the actual limit is not known.
      *
      * @since 1.100
      */
@@ -527,8 +527,8 @@ public class GHRateLimit {
                 return this;
             } else if (!(other instanceof UnknownLimitRecord)) {
                 // If the above is not the case that means other has a later reset
-                // or the same resent and fewer requests remaining.
-                // If the other record is not an unknown record, the the other is more recent
+                // or the same reset and fewer requests remaining.
+                // If the other record is not an unknown record, the other is more recent
                 return other;
             } else if (this.isExpired() && !other.isExpired()) {
                 // The other is an unknown record.

@@ -16,6 +16,13 @@ import static org.hamcrest.Matchers.*;
  * The Class GHTreeBuilderTest.
  */
 public class GHTreeBuilderTest extends AbstractGitHubWireMockTest {
+
+    /**
+     * Create default GHTreeBuilderTest instance
+     */
+    public GHTreeBuilderTest() {
+    }
+
     private static String REPO_NAME = "hub4j-test-org/GHTreeBuilderTest";
 
     private static String PATH_SCRIPT = "app/run.sh";
@@ -132,6 +139,46 @@ public class GHTreeBuilderTest extends AbstractGitHubWireMockTest {
         assertThat(commit.getCommitShortInfo().getAuthor().getEmail(), equalTo("author@author.com"));
         assertThat(commit.getCommitShortInfo().getCommitter().getEmail(), equalTo("committer@committer.com"));
 
+    }
+
+    /**
+     * Test delete.
+     *
+     * @throws Exception
+     *             the exception
+     */
+    @Test
+    public void testDelete() throws Exception {
+        // add test tree
+        treeBuilder.add(PATH_README, CONTENT_README, false);
+        treeBuilder.add(PATH_DATA1, CONTENT_DATA1, false);
+
+        GHCommit commit = updateTree();
+
+        assertThat(getFileSize(PATH_README), equalTo((long) CONTENT_README.length()));
+        assertThat(getFileSize(PATH_DATA1), equalTo((long) CONTENT_DATA1.length));
+
+        assertThat(commit.getCommitShortInfo().getAuthor().getEmail(), equalTo("author@author.com"));
+        assertThat(commit.getCommitShortInfo().getCommitter().getEmail(), equalTo("committer@committer.com"));
+
+        // remove a file from tree
+        mainRef = repo.getRef("heads/main");
+        treeBuilder = repo.createTree().baseTree(commit.getTree().getSha());
+        treeBuilder.delete(PATH_DATA1);
+
+        GHCommit deleteCommit = updateTree();
+
+        assertThat(getFileSize(PATH_README), equalTo((long) CONTENT_README.length()));
+
+        assertThat(deleteCommit.getCommitShortInfo().getAuthor().getEmail(), equalTo("author@author.com"));
+        assertThat(deleteCommit.getCommitShortInfo().getCommitter().getEmail(), equalTo("committer@committer.com"));
+
+        try {
+            getFileSize(PATH_DATA1);
+            fail("File " + PATH_DATA1 + " should not exist");
+        } catch (IOException e) {
+            assertThat(e.getMessage(), stringContainsInOrder(PATH_DATA1, "Not Found"));
+        }
     }
 
     private GHCommit updateTree() throws IOException {

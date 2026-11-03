@@ -37,9 +37,6 @@ import java.util.Objects;
 
 import javax.annotation.CheckForNull;
 
-import static org.kohsuke.github.internal.Previews.LYDIAN;
-import static org.kohsuke.github.internal.Previews.SHADOW_CAT;
-
 // TODO: Auto-generated Javadoc
 /**
  * A pull request.
@@ -49,6 +46,12 @@ import static org.kohsuke.github.internal.Previews.SHADOW_CAT;
  */
 @SuppressWarnings({ "UnusedDeclaration" })
 public class GHPullRequest extends GHIssue implements Refreshable {
+
+    /**
+     * Create default GHPullRequest instance
+     */
+    public GHPullRequest() {
+    }
 
     private static final String COMMENTS_ACTION = "/comments";
     private static final String REQUEST_REVIEWERS = "/requested_reviewers";
@@ -100,7 +103,12 @@ public class GHPullRequest extends GHIssue implements Refreshable {
         if (owner == null) {
             // Issues returned from search to do not have an owner. Attempt to use url.
             final URL url = Objects.requireNonNull(getUrl(), "Missing instance URL!");
-            return StringUtils.prependIfMissing(url.toString().replace(root().getApiUrl(), ""), "/");
+            // The url sourced above is of the form '/repos/<owner>/<reponame>/issues/', which
+            // subsequently issues requests against the `/issues/` handler, causing a 404 when
+            // asking for, say, a list of commits associated with a PR. Replace the `/issues/`
+            // with `/pulls/` to avoid that.
+            return StringUtils.prependIfMissing(url.toString().replace(root().getApiUrl(), ""), "/")
+                    .replace("/issues/", "/pulls/");
         }
         return "/repos/" + owner.getOwnerName() + "/" + owner.getName() + "/pulls/" + number;
     }
@@ -242,9 +250,9 @@ public class GHPullRequest extends GHIssue implements Refreshable {
     }
 
     /**
-     * Gets commits.
+     * Gets the number of commits.
      *
-     * @return the commits
+     * @return the number of commits
      * @throws IOException
      *             the io exception
      */
@@ -410,10 +418,10 @@ public class GHPullRequest extends GHIssue implements Refreshable {
             return; // cannot populate, will have to live with what we have
         }
 
-        URL url = getUrl();
-        if (url != null) {
-            root().createRequest().withPreview(SHADOW_CAT).setRawUrlPath(url.toString()).fetchInto(this).wrapUp(owner);
-        }
+        // we do not want to use getUrl() here as it points to the issues API
+        // and not the pull request one
+        URL absoluteUrl = GitHubRequest.getApiURL(root().getApiUrl(), getApiRoute());
+        root().createRequest().setRawUrlPath(absoluteUrl.toString()).fetchInto(this).wrapUp(owner);
     }
 
     /**
@@ -521,6 +529,15 @@ public class GHPullRequest extends GHIssue implements Refreshable {
     }
 
     /**
+     * Create gh pull request review comment builder.
+     *
+     * @return the gh pull request review comment builder.
+     */
+    public GHPullRequestReviewCommentBuilder createReviewComment() {
+        return new GHPullRequestReviewCommentBuilder(this);
+    }
+
+    /**
      * Create review comment gh pull request review comment.
      *
      * @param body
@@ -534,18 +551,12 @@ public class GHPullRequest extends GHIssue implements Refreshable {
      * @return the gh pull request review comment
      * @throws IOException
      *             the io exception
+     * @deprecated use {@link #createReviewComment()}
      */
+    @Deprecated
     public GHPullRequestReviewComment createReviewComment(String body, String sha, String path, int position)
             throws IOException {
-        return root().createRequest()
-                .method("POST")
-                .with("body", body)
-                .with("commit_id", sha)
-                .with("path", path)
-                .with("position", position)
-                .withUrlPath(getApiRoute() + COMMENTS_ACTION)
-                .fetch(GHPullRequestReviewComment.class)
-                .wrapUp(this);
+        return createReviewComment().body(body).commitId(sha).path(path).position(position).create();
     }
 
     /**
@@ -607,10 +618,8 @@ public class GHPullRequest extends GHIssue implements Refreshable {
      * @throws IOException
      *             the io exception
      */
-    @Preview(LYDIAN)
     public void updateBranch() throws IOException {
         root().createRequest()
-                .withPreview(LYDIAN)
                 .method("PUT")
                 .with("expected_head_sha", head.getSha())
                 .withUrlPath(getApiRoute() + "/update-branch")
@@ -691,6 +700,12 @@ public class GHPullRequest extends GHIssue implements Refreshable {
      */
     @SuppressFBWarnings(value = "UWF_UNWRITTEN_FIELD", justification = "Field comes from JSON deserialization")
     public static class AutoMerge {
+
+        /**
+         * Create default AutoMerge instance
+         */
+        public AutoMerge() {
+        }
 
         private GHUser enabled_by;
         private MergeMethod merge_method;

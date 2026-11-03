@@ -1,13 +1,13 @@
 package org.kohsuke.github;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.stream.Collectors;
 
 // TODO: Auto-generated Javadoc
 /**
@@ -16,6 +16,12 @@ import java.util.TreeMap;
  * @author Kohsuke Kawaguchi
  */
 public class GHMyself extends GHUser {
+
+    /**
+     * Create default GHMyself instance
+     */
+    public GHMyself() {
+    }
 
     /**
      * Type of repositories returned during listing.
@@ -44,15 +50,11 @@ public class GHMyself extends GHUser {
      * @return the emails
      * @throws IOException
      *             the io exception
-     * @deprecated Use {@link #getEmails2()}
+     * @deprecated Use {@link #listEmails()}
      */
+    @Deprecated
     public List<String> getEmails() throws IOException {
-        List<GHEmail> src = getEmails2();
-        List<String> r = new ArrayList<String>(src.size());
-        for (GHEmail e : src) {
-            r.add(e.getEmail());
-        }
-        return r;
+        return getEmails2().stream().map(email -> email.getEmail()).collect(Collectors.toList());
     }
 
     /**
@@ -65,14 +67,27 @@ public class GHMyself extends GHUser {
      * @throws IOException
      *             the io exception
      */
+    @Deprecated
     public List<GHEmail> getEmails2() throws IOException {
-        return root().createRequest().withUrlPath("/user/emails").toIterable(GHEmail[].class, null).toList();
+        return listEmails().toList();
     }
 
     /**
-     * Returns the read-only list of all the pulic keys of the current user.
+     * Returns the read-only list of e-mail addresses configured for you.
      * <p>
-     * NOTE: When using OAuth authenticaiton, the READ/WRITE User scope is required by the GitHub APIs, otherwise you
+     * This corresponds to the stuff you configure in https://github.com/settings/emails, and not to be confused with
+     * {@link #getEmail()} that shows your public e-mail address set in https://github.com/settings/profile
+     *
+     * @return Always non-null.
+     */
+    public PagedIterable<GHEmail> listEmails() {
+        return root().createRequest().withUrlPath("/user/emails").toIterable(GHEmail[].class, null);
+    }
+
+    /**
+     * Returns the read-only list of all the public keys of the current user.
+     * <p>
+     * NOTE: When using OAuth authentication, the READ/WRITE User scope is required by the GitHub APIs, otherwise you
      * will get a 404 NOT FOUND.
      *
      * @return Always non-null.
@@ -81,6 +96,28 @@ public class GHMyself extends GHUser {
      */
     public List<GHKey> getPublicKeys() throws IOException {
         return root().createRequest().withUrlPath("/user/keys").toIterable(GHKey[].class, null).toList();
+    }
+
+    /**
+     * Add public SSH key for the user.
+     * <p>
+     * https://docs.github.com/en/rest/users/keys?apiVersion=2022-11-28#create-a-public-ssh-key-for-the-authenticated-user
+     *
+     * @param title
+     *            Title of the SSH key
+     * @param key
+     *            the public key
+     * @return the newly created Github key
+     * @throws IOException
+     *             the io exception
+     */
+    public GHKey addPublicKey(String title, String key) throws IOException {
+        return root().createRequest()
+                .withUrlPath("/user/keys")
+                .method("POST")
+                .with("title", title)
+                .with("key", key)
+                .fetch(GHKey.class);
     }
 
     /**

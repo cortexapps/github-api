@@ -55,6 +55,7 @@ public class GitHubRequest implements GitHubConnectorRequest {
 
     private final URL url;
 
+    @SuppressFBWarnings(value = { "CT_CONSTRUCTOR_THROW" }, justification = "Basic argument validation")
     private GitHubRequest(@Nonnull List<Entry> args,
             @Nonnull Map<String, List<String>> headers,
             @Nonnull Map<String, Object> injectedMappingValues,
@@ -228,7 +229,7 @@ public class GitHubRequest implements GitHubConnectorRequest {
     }
 
     /**
-     * The content type to to be sent by this request.
+     * The content type to be sent by this request.
      *
      * @return the content type.
      */
@@ -262,7 +263,7 @@ public class GitHubRequest implements GitHubConnectorRequest {
     /**
      * Whether arguments for this request should be included in the URL or in the body of the request.
      *
-     * @return true if the arguements should be sent in the body of the request.
+     * @return true if the arguments should be sent in the body of the request.
      */
     @Override
     public boolean hasBody() {
@@ -426,6 +427,18 @@ public class GitHubRequest implements GitHubConnectorRequest {
         }
 
         /**
+         * Removes the named request HTTP header.
+         *
+         * @param name
+         *            the name
+         * @return the request builder
+         */
+        public B removeHeader(String name) {
+            headers.remove(name);
+            return (B) this;
+        }
+
+        /**
          * Sets the request HTTP header.
          * <p>
          * If a header of the same name is already set, this method overrides it.
@@ -494,6 +507,7 @@ public class GitHubRequest implements GitHubConnectorRequest {
          *            the name
          * @return the b
          */
+        @Deprecated
         public B withPreview(String name) {
             return withHeader("Accept", name);
         }
@@ -505,8 +519,20 @@ public class GitHubRequest implements GitHubConnectorRequest {
          *            the preview
          * @return the b
          */
+        @Deprecated
         public B withPreview(Previews preview) {
             return withPreview(preview.mediaType());
+        }
+
+        /**
+         * With accept header.
+         *
+         * @param name
+         *            the name
+         * @return the b
+         */
+        public B withAccept(String name) {
+            return withPreview(name);
         }
 
         /**

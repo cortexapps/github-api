@@ -18,6 +18,12 @@ import static org.kohsuke.github.GHMarketplaceAccountType.ORGANIZATION;
 public class GitHubTest extends AbstractGitHubWireMockTest {
 
     /**
+     * Create default GitHubTest instance
+     */
+    public GitHubTest() {
+    }
+
+    /**
      * List users.
      *
      * @throws IOException
@@ -277,6 +283,8 @@ public class GitHubTest extends AbstractGitHubWireMockTest {
     public void getMeta() throws IOException {
         GHMeta meta = gitHub.getMeta();
         assertThat(meta.isVerifiablePasswordAuthentication(), is(true));
+        assertThat(meta.getSshKeyFingerprints().size(), equalTo(4));
+        assertThat(meta.getSshKeys().size(), equalTo(3));
         assertThat(meta.getApi().size(), equalTo(19));
         assertThat(meta.getGit().size(), equalTo(36));
         assertThat(meta.getHooks().size(), equalTo(4));
@@ -396,5 +404,21 @@ public class GitHubTest extends AbstractGitHubWireMockTest {
         assertThat("KeySet from header fields should also be case-insensitive",
                 org.getResponseHeaderFields().keySet().contains("CacHe-ControL"));
         assertThat(org.getResponseHeaderFields().get("cachE-cOntrol").get(0), is("private, max-age=60, s-maxage=60"));
+    }
+
+    /**
+     * Test expect GitHub {@link ServiceDownException}
+     *
+     */
+    @Test
+    public void testCatchServiceDownException() {
+        snapshotNotAllowed();
+        try {
+            GHRepository repo = gitHub.getRepository("hub4j-test-org/github-api");
+            repo.getFileContent("ghcontent-ro/service-down");
+            fail("Exception was expected");
+        } catch (IOException e) {
+            assertThat(e.getClass().getName(), equalToIgnoringCase(ServiceDownException.class.getName()));
+        }
     }
 }

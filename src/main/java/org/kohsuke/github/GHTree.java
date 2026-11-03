@@ -1,5 +1,7 @@
 package org.kohsuke.github;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 import java.net.URL;
 import java.util.Arrays;
 import java.util.Collections;
@@ -14,7 +16,15 @@ import java.util.List;
  * @see GHRepository#getTree(String) GHRepository#getTree(String)
  * @see GHTreeEntry#asTree() GHTreeEntry#asTree()
  */
+@SuppressFBWarnings(value = { "UWF_UNWRITTEN_PUBLIC_OR_PROTECTED_FIELD", "UWF_UNWRITTEN_FIELD", "NP_UNWRITTEN_FIELD" },
+        justification = "JSON API")
 public class GHTree {
+
+    /**
+     * Create default GHTree instance
+     */
+    public GHTree() {
+    }
 
     /** The repo. */
     /* package almost final */GHRepository repo;
@@ -61,7 +71,7 @@ public class GHTree {
     /**
      * Returns true if the number of items in the tree array exceeded the GitHub maximum limit.
      *
-     * @return true true if the number of items in the tree array exceeded the GitHub maximum limit otherwise false.
+     * @return true if the number of items in the tree array exceeded the GitHub maximum limit otherwise false.
      */
     public boolean isTruncated() {
         return truncated;

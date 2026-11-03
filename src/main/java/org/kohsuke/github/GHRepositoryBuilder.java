@@ -5,9 +5,6 @@ import org.kohsuke.github.GHRepository.Visibility;
 import java.io.IOException;
 import java.net.URL;
 
-import static org.kohsuke.github.internal.Previews.BAPTISTE;
-import static org.kohsuke.github.internal.Previews.NEBULA;
-
 // TODO: Auto-generated Javadoc
 /**
  * The Class GHRepositoryBuilder.
@@ -74,6 +71,19 @@ abstract class GHRepositoryBuilder<S> extends AbstractBuilder<GHRepository, S> {
      */
     public S allowRebaseMerge(boolean enabled) throws IOException {
         return with("allow_rebase_merge", enabled);
+    }
+
+    /**
+     * Allow or disallow private forks
+     *
+     * @param enabled
+     *            true if enabled
+     * @return a builder to continue with building
+     * @throws IOException
+     *             In case of any networking error or error from the server.
+     */
+    public S allowForking(boolean enabled) throws IOException {
+        return with("allow_forking", enabled);
     }
 
     /**
@@ -166,7 +176,6 @@ abstract class GHRepositoryBuilder<S> extends AbstractBuilder<GHRepository, S> {
      *             In case of any networking error or error from the server.
      */
     public S visibility(final Visibility visibility) throws IOException {
-        requester.withPreview(NEBULA);
         return with("visibility", visibility.toString());
     }
 
@@ -231,9 +240,7 @@ abstract class GHRepositoryBuilder<S> extends AbstractBuilder<GHRepository, S> {
      * @throws IOException
      *             In case of any networking error or error from the server.
      */
-    @Preview(BAPTISTE)
     public S isTemplate(boolean enabled) throws IOException {
-        requester.withPreview(BAPTISTE);
         return with("is_template", enabled);
     }
 

@@ -19,6 +19,12 @@ import javax.annotation.Nonnull;
  */
 public class GHCompare {
 
+    /**
+     * Create default GHCompare instance
+     */
+    public GHCompare() {
+    }
+
     private String url, html_url, permalink_url, diff_url, patch_url;
     private Status status;
     private int ahead_by, behind_by, total_commits;
@@ -186,6 +192,10 @@ public class GHCompare {
     /**
      * Gets an array of files.
      *
+     * By default, the file array is limited to 300 results. To retrieve the full list of files, iterate over each
+     * commit returned by {@link GHCompare#listCommits} and use {@link GHCommit#listFiles} to get the files for each
+     * commit.
+     *
      * @return A copy of the array being stored in the class.
      */
     public GHCommit.File[] getFiles() {
@@ -224,12 +234,18 @@ public class GHCompare {
     }
 
     /**
-     * Compare commits had a child commit element with additional details we want to capture. This extenstion of
-     * GHCommit provides that.
+     * Compare commits had a child commit element with additional details we want to capture. This extension of GHCommit
+     * provides that.
      */
     @SuppressFBWarnings(value = { "UWF_UNWRITTEN_PUBLIC_OR_PROTECTED_FIELD", "UWF_UNWRITTEN_FIELD" },
             justification = "JSON API")
     public static class Commit extends GHCommit {
+
+        /**
+         * Create default Commit instance
+         */
+        public Commit() {
+        }
 
         private InnerCommit commit;
 
@@ -247,6 +263,13 @@ public class GHCompare {
      * The type InnerCommit.
      */
     public static class InnerCommit {
+
+        /**
+         * Create default InnerCommit instance
+         */
+        public InnerCommit() {
+        }
+
         private String url, sha, message;
         private User author, committer;
         private Tree tree;
@@ -312,6 +335,13 @@ public class GHCompare {
      * The type Tree.
      */
     public static class Tree {
+
+        /**
+         * Create default Tree instance
+         */
+        public Tree() {
+        }
+
         private String url, sha;
 
         /**
@@ -339,6 +369,11 @@ public class GHCompare {
      * @deprecated use {@link GitUser} instead.
      */
     public static class User extends GitUser {
+        /**
+         * Create default User instance
+         */
+        public User() {
+        }
     }
 
     /**
