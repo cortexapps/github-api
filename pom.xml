@@ -216,6 +216,15 @@
                       <exclude>org.kohsuke.github.GHReleaseUpdater</exclude>
                       <exclude>org.kohsuke.github.GHRequestedAction</exclude>
                       <exclude>org.kohsuke.github.GHVerifiedKey</exclude>
+
+                      <!-- Cortex-only additions with no recorded coverage (the code scanning fixtures hold no dismissed alerts) -->
+                      <exclude>org.kohsuke.github.GHCodeScanningAlert</exclude>
+                      <exclude>org.kohsuke.github.GHCodeScanningAlertInstance</exclude>
+                      <exclude>org.kohsuke.github.GHCodeScanningAlertInstance.Location</exclude>
+                      <exclude>org.kohsuke.github.GHCodeScanningAlertInstancesIterable</exclude>
+                      <exclude>org.kohsuke.github.GHCodeScanningAlertInstancesIterable.1</exclude>
+                      <exclude>org.kohsuke.github.GHContentBuilder.UserInfo</exclude>
+                      <exclude>org.kohsuke.github.GHReleaseQueryBuilder</exclude>
                     </excludes>
                   </rule>
                 </rules>
