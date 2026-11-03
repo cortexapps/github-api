@@ -9,6 +9,48 @@
     "name": "org.kohsuke.github.EnforcementLevel"
   },
   {
+    "name": "org.kohsuke.github.GHCodeScanningAlert"
+  },
+  {
+    "name": "org.kohsuke.github.GHCodeScanningAlert$Rule"
+  },
+  {
+    "name": "org.kohsuke.github.GHCodeScanningAlert$Tool"
+  },
+  {
+    "name": "org.kohsuke.github.GHCodeScanningAlertInstance"
+  },
+  {
+    "name": "org.kohsuke.github.GHCodeScanningAlertInstance$Location"
+  },
+  {
+    "name": "org.kohsuke.github.GHCodeScanningAlertInstance$Message"
+  },
+  {
+    "name": "org.kohsuke.github.GHCodeScanningAlertInstancesIterable"
+  },
+  {
+    "name": "org.kohsuke.github.GHCodeScanningAlertInstancesIterable$1"
+  },
+  {
+    "name": "org.kohsuke.github.GHCodeScanningAlertState"
+  },
+  {
+    "name": "org.kohsuke.github.GHCodeScanningAlertsIterable"
+  },
+  {
+    "name": "org.kohsuke.github.GHCodeScanningAlertsIterable$1"
+  },
+  {
+    "name": "org.kohsuke.github.GHContentBuilder$1"
+  },
+  {
+    "name": "org.kohsuke.github.GHContentBuilder$UserInfo"
+  },
+  {
+    "name": "org.kohsuke.github.GHReleaseQueryBuilder"
+  },
+  {
     "name": "org.kohsuke.github.GHRepositoryRule"
   },
   {
@@ -1099,6 +1141,24 @@
   },
   {
     "name": "org.kohsuke.github.GHSearchBuilder"
+  },
+  {
+    "name": "org.kohsuke.github.GHSecretScanningAlert"
+  },
+  {
+    "name": "org.kohsuke.github.GHSecretScanningAlertLocation"
+  },
+  {
+    "name": "org.kohsuke.github.GHSecretScanningAlertLocationDetails"
+  },
+  {
+    "name": "org.kohsuke.github.GHSecretScanningAlertState"
+  },
+  {
+    "name": "org.kohsuke.github.GHSecretScanningAlertsIterable"
+  },
+  {
+    "name": "org.kohsuke.github.GHSecretScanningAlertsIterable$1"
   },
   {
     "name": "org.kohsuke.github.GHStargazer"
